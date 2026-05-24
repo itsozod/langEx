@@ -14,13 +14,17 @@ export const Colors = {
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
+    heroGradientStart: '#F5F2FF',
+    heroGradientEnd: '#FFFFFF',
   },
   dark: {
     text: '#ffffff',
-    background: '#000000',
+    background: '#221D30',
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
+    heroGradientStart: '#534AB7',
+    heroGradientEnd: '#151023',
   },
 } as const;
 
