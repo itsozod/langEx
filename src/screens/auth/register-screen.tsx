@@ -2,22 +2,20 @@ import GradientBackground from '@/components/ui/gradient-background';
 import SubTitle from '@/components/ui/sub-title';
 import Title from '@/components/ui/title';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useAppTheme } from '@/context/ThemeContext';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LoginForm from './_shared/components/login-form';
+import RegisterForm from './_shared/components/register-form';
 
-const LoginScreen = () => {
-  const appTheme = useAppTheme();
+const RegisterScreen = () => {
   return (
     <GradientBackground>
       <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
-        <Title style={styles.title}>Welcome Back.</Title>
+        <Title style={styles.title}>Join LangEx</Title>
         <SubTitle style={styles.subTitle}>
-          Continue your premium language {'\n'} exchange journey with elite partners.
+          Start your premium language journey {'\n'} today.
         </SubTitle>
-        <LoginForm />
+        <RegisterForm />
       </SafeAreaView>
     </GradientBackground>
   );
@@ -35,7 +33,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    lineHeight: 30,
+    lineHeight: 40,
   },
   subTitle: {
     fontSize: 16,
@@ -44,4 +42,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default RegisterScreen;

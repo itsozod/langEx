@@ -16,7 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, View } from 'tamagui';
 
 const WelcomeScreen = () => {
-  const apptheme = useAppTheme();
+  const { theme: appTheme } = useAppTheme();
+  const styles = useStyles();
   return (
     <GradientBackground>
       <SafeAreaView style={styles.safeArea}>
@@ -46,10 +47,10 @@ const WelcomeScreen = () => {
               icon={<GoogleIcon />}
               style={styles.googleButton}
               borderWidth={1}
-              borderColor={'#928F9E'}
+              borderColor={appTheme === 'dark' ? '#928F9E' : '#C8C4D5'}
               pressStyle={{ opacity: 0.85, bg: 'transparent' }}
               hoverStyle={{ bg: 'transparent' }}>
-              <ThemedText type="smallBold" style={{ color: '#E8DEF9' }}>
+              <ThemedText type="smallBold" style={styles.googleButtonText}>
                 Continue with Google
               </ThemedText>
             </Button>
@@ -72,7 +73,7 @@ const WelcomeScreen = () => {
             <Link
               href={'/login'}
               style={{
-                color: apptheme.theme === 'dark' ? '#FFB95D' : '#3B309E',
+                color: appTheme === 'dark' ? '#FFB95D' : '#3B309E',
                 fontSize: 12,
                 fontWeight: 'bold',
               }}>
@@ -82,7 +83,7 @@ const WelcomeScreen = () => {
           <ThemedText
             style={{
               fontSize: 10,
-              color: apptheme.theme === 'dark' ? '#E8DEF9' : '#787584',
+              color: appTheme === 'dark' ? '#E8DEF9' : '#787584',
               lineHeight: 15,
               letterSpacing: 1.8,
             }}>
@@ -94,75 +95,82 @@ const WelcomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingTop: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    flex: 1,
-    gap: 38,
-  },
-  header: {
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundColor: 'transparent',
-    gap: 1,
-  },
+const useStyles = () => {
+  const { theme: appTheme } = useAppTheme();
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      paddingHorizontal: Spacing.four,
+      alignItems: 'center',
+      gap: Spacing.three,
+      paddingTop: Spacing.three,
+      paddingBottom: BottomTabInset + Spacing.three,
+      maxWidth: MaxContentWidth,
+    },
+    heroSection: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+      flex: 1,
+      gap: 38,
+    },
+    header: {
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: 'transparent',
+      gap: 1,
+    },
 
-  title: {
-    fontSize: 32,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  subTitle: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  imageContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
-  },
-  signInContainer: {
-    display: 'flex',
-    width: 'auto',
-    flexDirection: 'column',
-    backgroundColor: 'transparent',
-    gap: 12,
-  },
-  languageSvg: {
-    width: 240,
-    height: 240,
-    position: 'relative',
-    left: 80,
-  },
-  googleButton: {
-    borderRadius: 12,
-    backgroundColor: '#151023',
-    height: 56,
-    width: 342,
-  },
-  emailButton: {
-    fontSize: 14,
-    width: 342,
-    height: 56,
-  },
-  peopleImage: {
-    width: 240,
-    height: 240,
-    position: 'relative',
-    top: 60,
-    right: 60,
-  },
-});
+    title: {
+      fontSize: 32,
+      textAlign: 'center',
+      fontWeight: 'bold',
+    },
+    subTitle: {
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    imageContainer: {
+      display: 'flex',
+      flexDirection: 'row',
+      backgroundColor: 'transparent',
+    },
+    signInContainer: {
+      display: 'flex',
+      width: 'auto',
+      flexDirection: 'column',
+      backgroundColor: 'transparent',
+      gap: 12,
+    },
+    languageSvg: {
+      width: 240,
+      height: 240,
+      position: 'relative',
+      left: 80,
+    },
+    googleButton: {
+      borderRadius: 14,
+      backgroundColor: appTheme === 'dark' ? '#151023' : '#ffffff',
+      height: 52,
+      width: 342,
+    },
+
+    googleButtonText: {
+      color: appTheme === 'dark' ? '#E8DEF9' : '#191C1D',
+    },
+    emailButton: {
+      fontSize: 14,
+      width: 342,
+      height: 52,
+    },
+    peopleImage: {
+      width: 240,
+      height: 240,
+      position: 'relative',
+      top: 60,
+      right: 60,
+    },
+  });
+};
 
 export default WelcomeScreen;

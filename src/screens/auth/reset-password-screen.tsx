@@ -2,22 +2,20 @@ import GradientBackground from '@/components/ui/gradient-background';
 import SubTitle from '@/components/ui/sub-title';
 import Title from '@/components/ui/title';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useAppTheme } from '@/context/ThemeContext';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LoginForm from './_shared/components/login-form';
+import ResetPasswordForm from './_shared/components/reset-password-form';
 
-const LoginScreen = () => {
-  const appTheme = useAppTheme();
+const ResetPasswordScreen = () => {
   return (
     <GradientBackground>
       <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
-        <Title style={styles.title}>Welcome Back.</Title>
+        <Title style={styles.title}>Reset Password</Title>
         <SubTitle style={styles.subTitle}>
-          Continue your premium language {'\n'} exchange journey with elite partners.
+          Enter your email and we'll send you a reset {'\n'} link.
         </SubTitle>
-        <LoginForm />
+        <ResetPasswordForm />
       </SafeAreaView>
     </GradientBackground>
   );
@@ -44,4 +42,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default ResetPasswordScreen;
