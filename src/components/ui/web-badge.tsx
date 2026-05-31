@@ -1,5 +1,5 @@
-import { version } from 'expo/package.json';
 import { Image } from 'expo-image';
+import { version } from 'expo/package.json';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThemedText, ThemedTextProps } from '../themed-text';
+import { ThemedText, ThemedTextProps } from './themed-text';
 
 interface TitleProps extends ThemedTextProps {}
 

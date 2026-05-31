@@ -1,12 +1,12 @@
 import EmailIcon from '@/assets/images/email.svg';
 import GoogleIcon from '@/assets/images/google.svg';
-import ThemeToggle from '@/components/theme-toggle';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import AppLogo from '@/components/ui/app-logo';
 import GradientBackground from '@/components/ui/gradient-background';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import SubTitle from '@/components/ui/sub-title';
+import ThemeToggle from '@/components/ui/theme-toggle';
+import { ThemedText } from '@/components/ui/themed-text';
+import { ThemedView } from '@/components/ui/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useAppTheme } from '@/context/ThemeContext';
 import { Image } from 'expo-image';

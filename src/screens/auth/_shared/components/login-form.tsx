@@ -1,5 +1,5 @@
 import GoogleIcon from '@/assets/images/google.svg';
-import { ThemedText } from '@/components/themed-text';
+import { ThemedText } from '@/components/ui/themed-text';
 import { InputWithIcon } from '@/components/ui/input-with-icon';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { useAppTheme } from '@/context/ThemeContext';

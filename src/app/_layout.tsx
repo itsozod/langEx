@@ -17,7 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { TamaguiProvider } from 'tamagui';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AnimatedSplashOverlay } from '@/components/ui/animated-icon';
 import { ThemeProvider, useAppTheme } from '@/context/ThemeContext';
 
 import tamaguiConfig from '../../tamagui.config';
@@ -32,7 +32,7 @@ function ThemedAppShell() {
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme={theme}>
       <NavigationThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
-        <StatusBar style="auto" />
+        <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <AnimatedSplashOverlay />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Protected guard={isSignedIn}>

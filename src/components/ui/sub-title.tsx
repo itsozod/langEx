@@ -1,6 +1,6 @@
 import { useAppTheme } from '@/context/ThemeContext';
 import React from 'react';
-import { ThemedText, ThemedTextProps } from '../themed-text';
+import { ThemedText, ThemedTextProps } from './themed-text';
 
 interface SubTitleProps extends ThemedTextProps {}
 

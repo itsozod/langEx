@@ -1,5 +1,5 @@
-import AuthHeader from '@/components/auth-header';
 import { useTheme } from '@/hooks/use-theme';
+import AuthHeader from '@/screens/auth/_shared/components/auth-header';
 import { Stack } from 'expo-router';
 import React from 'react';
 
