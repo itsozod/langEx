@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 19.1.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://langex-backend.onrender.com"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://langex-backend.onrender.com"
+      }
+    }
+  }
+}

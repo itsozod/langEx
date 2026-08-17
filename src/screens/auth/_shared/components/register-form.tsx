@@ -1,82 +1,202 @@
-import { ThemedText } from '@/components/ui/themed-text';
-import { InputWithIcon } from '@/components/ui/input-with-icon';
-import { PrimaryButton } from '@/components/ui/primary-button';
-import { useAppTheme } from '@/context/ThemeContext';
-import { useTheme } from '@/hooks/use-theme';
+import { ThemedText } from '@/shared/components/ui/themed-text';
+import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
+import { useAppTheme } from '@/providers/theme-provider';
+import { useRegisterMutation } from '@/screens/auth/hooks';
+import { registerSchema, type RegisterFormValues } from '@/screens/auth/schemas';
+import { useTheme } from '@/shared/hooks/use-theme';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Form, Label, View } from 'tamagui';
+import { Controller, useForm } from 'react-hook-form';
+import { StyleSheet, View } from 'react-native';
+import { Form } from 'tamagui';
+import AuthFormCard from './auth-form-card';
+import AuthFormField from './auth-form-field';
+import AuthPrimaryButton from './auth-primary-button';
+import PasswordInput from './password-input';
 
 const RegisterForm = () => {
   const theme = useTheme();
   const styles = useStyles();
+  const registerMutation = useRegisterMutation();
+  const {
+    control,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { email: '', password: '', confirmPassword: '' },
+  });
+
+  const onSubmit = async (values: RegisterFormValues) => {
+    try {
+      await registerMutation.mutateAsync({
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+      });
+    } catch (error) {
+      setError('root.server', {
+        type: 'server',
+        message: error instanceof Error ? error.message : 'Unable to create your account.',
+      });
+    }
+  };
+
+  const submit = handleSubmit(onSubmit);
+
   return (
-    <>
-      <View style={styles.registerForm}>
-        <Form style={{ display: 'flex', gap: 20 }}>
-          <View>
-            <Label style={styles.label}>Full name</Label>
-            <InputWithIcon icon="person" iconColor={theme.textSecondary} />
-            <Label style={styles.label}>Email</Label>
-            <InputWithIcon icon="envelope" type="email" iconColor={theme.textSecondary} />
-            <Label style={styles.label}>Password</Label>
-            <InputWithIcon icon="lock" type="password" iconColor={theme.textSecondary} />
-            <Label style={styles.label}>Confirm password</Label>
-            <InputWithIcon icon="lock" type="password" iconColor={theme.textSecondary} />
+    <View style={styles.wrapper}>
+      <AuthFormCard>
+        <Form style={styles.form}>
+          <View style={styles.fields}>
+            <AuthFormField label="Email address" error={errors.email?.message}>
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onBlur, onChange, value } }) => (
+                  <InputWithIcon
+                    icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
+                    iconColor={theme.textSecondary}
+                    hasError={Boolean(errors.email)}
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      clearErrors('root.server');
+                    }}
+                    placeholder="you@example.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    disabled={registerMutation.isPending}
+                    returnKeyType="next"
+                  />
+                )}
+              />
+            </AuthFormField>
+
+            <AuthFormField label="Password" error={errors.password?.message}>
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onBlur, onChange, value } }) => (
+                  <PasswordInput
+                    hasError={Boolean(errors.password)}
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      clearErrors('confirmPassword');
+                      clearErrors('root.server');
+                    }}
+                    placeholder="Create a password"
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    textContentType="newPassword"
+                    disabled={registerMutation.isPending}
+                    returnKeyType="next"
+                  />
+                )}
+              />
+            </AuthFormField>
+
+            <AuthFormField label="Confirm password" error={errors.confirmPassword?.message}>
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field: { onBlur, onChange, value } }) => (
+                  <PasswordInput
+                    hasError={Boolean(errors.confirmPassword)}
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      clearErrors('root.server');
+                    }}
+                    placeholder="Repeat your password"
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    textContentType="newPassword"
+                    disabled={registerMutation.isPending}
+                    returnKeyType="done"
+                    onSubmitEditing={() => void submit()}
+                  />
+                )}
+              />
+            </AuthFormField>
           </View>
-          <PrimaryButton style={{ height: 52 }}>
-            <ThemedText type="bold" style={{ color: '#462A00' }}>
-              Create account
-            </ThemedText>
-          </PrimaryButton>
+
+          {errors.root?.server?.message ? (
+            <View style={styles.serverError}>
+              <ThemedText style={styles.serverErrorText}>{errors.root.server.message}</ThemedText>
+            </View>
+          ) : null}
+
+          <AuthPrimaryButton
+            label={registerMutation.isPending ? 'Creating account…' : 'Create account'}
+            pending={registerMutation.isPending}
+            onPress={() => void submit()}
+          />
         </Form>
-      </View>
-      <View
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          flexDirection: 'row',
-          gap: 5,
-        }}>
-        <ThemedText style={styles.haveAccount}>Already have an account?</ThemedText>
-        <Link href={'/login'} replace style={styles.logIn}>
-          Log in
+      </AuthFormCard>
+
+      <View style={styles.footer}>
+        <ThemedText themeColor="textSecondary" style={styles.footerText}>
+          Already have an account?
+        </ThemedText>
+        <Link href="/login" replace style={styles.footerLink}>
+          Sign in
         </Link>
       </View>
-    </>
+    </View>
   );
 };
 
 const useStyles = () => {
-  const { theme: appTheme } = useAppTheme();
-  const theme = useTheme();
+  const { theme } = useAppTheme();
+  const isDark = theme === 'dark';
+
   return StyleSheet.create({
-    registerForm: {
-      width: '100%',
-      padding: 25,
-      borderRadius: 16,
-      backgroundColor: theme.background,
-      boxShadow:
-        appTheme === 'dark'
-          ? '0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(126, 95, 255, 0.25)'
-          : '0 12px 32px rgba(82, 63, 184, 0.18), 0 2px 6px rgba(82, 63, 184, 0.10)',
-      marginTop: 10,
+    wrapper: {
+      gap: 20,
     },
-    label: {
+    form: {
+      gap: 20,
+    },
+    fields: {
+      gap: 16,
+    },
+    serverError: {
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 12,
+      backgroundColor: isDark ? 'rgba(255, 112, 112, 0.10)' : '#FFF1F0',
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(255, 140, 140, 0.22)' : '#FFD0CC',
+    },
+    serverErrorText: {
+      color: isDark ? '#FFAAAA' : '#9F2018',
       fontSize: 12,
-      color: appTheme === 'dark' ? '#C8C4D5' : '#474553',
-      letterSpacing: 0.3,
+      lineHeight: 18,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 6,
+    },
+    footerText: {
+      fontSize: 13,
+    },
+    footerLink: {
+      color: isDark ? '#BFB1FF' : '#5B49B8',
+      fontSize: 13,
       fontWeight: '700',
-    },
-    haveAccount: {
-      fontSize: 14,
-      color: appTheme === 'dark' ? '#C8C4D5' : '#474553',
-    },
-    logIn: {
-      color: appTheme === 'dark' ? '#FFB95D' : '#3B309E',
-      fontSize: 14,
-      fontWeight: 'bold',
     },
   });
 };

@@ -1,117 +1,189 @@
-import GoogleIcon from '@/assets/images/google.svg';
-import { ThemedText } from '@/components/ui/themed-text';
-import { InputWithIcon } from '@/components/ui/input-with-icon';
-import { PrimaryButton } from '@/components/ui/primary-button';
-import { useAppTheme } from '@/context/ThemeContext';
-import { useTheme } from '@/hooks/use-theme';
+import { ThemedText } from '@/shared/components/ui/themed-text';
+import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
+import { useAppTheme } from '@/providers/theme-provider';
+import { useLoginMutation } from '@/screens/auth/hooks';
+import { loginSchema, type LoginFormValues } from '@/screens/auth/schemas';
+import { useTheme } from '@/shared/hooks/use-theme';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Button, Form, Label, View } from 'tamagui';
+import { Controller, useForm } from 'react-hook-form';
+import { StyleSheet, View } from 'react-native';
+import { Form } from 'tamagui';
+import AuthFormCard from './auth-form-card';
+import AuthFormField from './auth-form-field';
+import AuthPrimaryButton from './auth-primary-button';
+import PasswordInput from './password-input';
 
 const LoginForm = () => {
   const theme = useTheme();
   const styles = useStyles();
-  const { theme: appTheme } = useAppTheme();
+  const loginMutation = useLoginMutation();
+  const {
+    control,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
+
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      await loginMutation.mutateAsync(values);
+    } catch (error) {
+      setError('root.server', {
+        type: 'server',
+        message: error instanceof Error ? error.message : 'Unable to log in.',
+      });
+    }
+  };
+
+  const submit = handleSubmit(onSubmit);
+
   return (
-    <>
-      <View style={styles.loginForm}>
-        <Form style={{ display: 'flex', gap: 20 }}>
-          <View>
-            <Label style={styles.label}>Email address</Label>
-            <InputWithIcon icon="envelope" type="email" iconColor={theme.textSecondary} />
-            <Label style={styles.label}>Password</Label>
-            <InputWithIcon icon="lock" type="password" iconColor={theme.textSecondary} />
-            <Link href={'/reset-password'} style={styles.forgotPassword}>
-              Forgot password?
-            </Link>
+    <View style={styles.wrapper}>
+      <AuthFormCard>
+        <Form style={styles.form}>
+          <View style={styles.fields}>
+            <AuthFormField label="Email address" error={errors.email?.message}>
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onBlur, onChange, value } }) => (
+                  <InputWithIcon
+                    icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
+                    iconColor={theme.textSecondary}
+                    hasError={Boolean(errors.email)}
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      clearErrors('root.server');
+                    }}
+                    placeholder="you@example.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    disabled={loginMutation.isPending}
+                    returnKeyType="next"
+                  />
+                )}
+              />
+            </AuthFormField>
+
+            <AuthFormField label="Password" error={errors.password?.message}>
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onBlur, onChange, value } }) => (
+                  <PasswordInput
+                    hasError={Boolean(errors.password)}
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      clearErrors('root.server');
+                    }}
+                    placeholder="Enter your password"
+                    autoCapitalize="none"
+                    autoComplete="current-password"
+                    textContentType="password"
+                    disabled={loginMutation.isPending}
+                    returnKeyType="done"
+                    onSubmitEditing={() => void submit()}
+                  />
+                )}
+              />
+            </AuthFormField>
+
+            <View style={styles.forgotRow}>
+              <Link href="/reset-password" style={styles.forgotPassword}>
+                Forgot password?
+              </Link>
+            </View>
           </View>
-          <PrimaryButton style={{ height: 52 }}>
-            <ThemedText type="bold" style={{ color: '#462A00' }}>
-              Log in
-            </ThemedText>
-          </PrimaryButton>
-          <ThemedText style={styles.continue}>OR CONTINUE WITH</ThemedText>
-          <Button
-            icon={<GoogleIcon />}
-            style={styles.googleButton}
-            borderWidth={1}
-            borderColor={appTheme === 'dark' ? '#928F9E' : '#C8C4D5'}
-            pressStyle={{ opacity: 0.85, bg: 'transparent' }}
-            hoverStyle={{ bg: 'transparent' }}>
-            <ThemedText type="smallBold" style={styles.googleButtonText}>
-              Continue with Google
-            </ThemedText>
-          </Button>
+
+          {errors.root?.server?.message ? (
+            <View style={styles.serverError}>
+              <ThemedText style={styles.serverErrorText}>{errors.root.server.message}</ThemedText>
+            </View>
+          ) : null}
+
+          <AuthPrimaryButton
+            label={loginMutation.isPending ? 'Signing in…' : 'Sign in'}
+            pending={loginMutation.isPending}
+            onPress={() => void submit()}
+          />
         </Form>
-      </View>
-      <View
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          flexDirection: 'row',
-          gap: 5,
-        }}>
-        <ThemedText style={styles.noAccount}>Don't have an account?</ThemedText>
-        <Link href={'/register'} replace style={styles.signUp}>
-          Sign up
+      </AuthFormCard>
+
+      <View style={styles.footer}>
+        <ThemedText themeColor="textSecondary" style={styles.footerText}>
+          New to LangEx?
+        </ThemedText>
+        <Link href="/register" replace style={styles.footerLink}>
+          Create an account
         </Link>
       </View>
-    </>
+    </View>
   );
 };
 
 const useStyles = () => {
-  const { theme: appTheme } = useAppTheme();
-  const theme = useTheme();
+  const { theme } = useAppTheme();
+  const isDark = theme === 'dark';
+
   return StyleSheet.create({
-    loginForm: {
-      width: '100%',
-      padding: 25,
-      borderRadius: 16,
-      backgroundColor: theme.background,
-      boxShadow:
-        appTheme === 'dark'
-          ? '0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(126, 95, 255, 0.25)'
-          : '0 12px 32px rgba(82, 63, 184, 0.18), 0 2px 6px rgba(82, 63, 184, 0.10)',
-      marginTop: 10,
+    wrapper: {
+      gap: 20,
     },
-    label: {
-      fontSize: 12,
-      color: appTheme === 'dark' ? '#C8C4D5' : '#474553',
-      letterSpacing: 0.3,
-      fontWeight: '700',
+    form: {
+      gap: 20,
+    },
+    fields: {
+      gap: 16,
+    },
+    forgotRow: {
+      alignItems: 'flex-end',
+      marginTop: -4,
     },
     forgotPassword: {
-      color: appTheme === 'dark' ? '#FFB95D' : '#3B309E',
-      fontSize: 12,
-      textAlign: 'right',
-      marginTop: 10,
+      color: isDark ? '#BFB1FF' : '#5B49B8',
+      fontSize: 13,
+      fontWeight: '600',
+      paddingVertical: 4,
     },
-    continue: {
-      fontSize: 12,
-      color: '#928F9E',
-      letterSpacing: 0.6,
-      textAlign: 'center',
-    },
-    googleButton: {
+    serverError: {
+      paddingHorizontal: 12,
+      paddingVertical: 10,
       borderRadius: 12,
-      backgroundColor: appTheme === 'dark' ? '#151023' : '#ffffff',
-      height: 52,
-      width: '100%',
+      backgroundColor: isDark ? 'rgba(255, 112, 112, 0.10)' : '#FFF1F0',
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(255, 140, 140, 0.22)' : '#FFD0CC',
     },
-
-    googleButtonText: {
-      color: appTheme === 'dark' ? '#E8DEF9' : '#191C1D',
+    serverErrorText: {
+      color: isDark ? '#FFAAAA' : '#9F2018',
+      fontSize: 12,
+      lineHeight: 18,
     },
-    noAccount: {
-      fontSize: 14,
-      color: appTheme === 'dark' ? '#C8C4D5' : '#474553',
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 6,
     },
-    signUp: {
-      color: appTheme === 'dark' ? '#FFB95D' : '#3B309E',
-      fontSize: 14,
-      fontWeight: 'bold',
+    footerText: {
+      fontSize: 13,
+    },
+    footerLink: {
+      color: isDark ? '#BFB1FF' : '#5B49B8',
+      fontSize: 13,
+      fontWeight: '700',
     },
   });
 };

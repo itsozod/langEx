@@ -1,7 +1,11 @@
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/shared/hooks/use-theme';
 import AuthHeader from '@/screens/auth/_shared/components/auth-header';
 import { Stack } from 'expo-router';
 import React from 'react';
+
+export const unstable_settings = {
+  initialRouteName: 'welcome',
+};
 
 const AuthLayout = () => {
   const theme = useTheme();

@@ -1,5 +1,5 @@
-import HomeScreen from '@/screens/home/home-screen';
+import { Redirect } from 'expo-router';
 
 export default function Home() {
-  return <HomeScreen />;
+  return <Redirect href="/(tabs)/chats" />;
 }
