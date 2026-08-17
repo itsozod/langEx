@@ -8,16 +8,16 @@ on:
 
 concurrency:
   group: mobile-release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android:
     name: Android APK
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 120
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -38,5 +38,32 @@ jobs:
           packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Start Android release build
-        run: eas build --platform android --profile preview --non-interactive --no-wait
+      - name: Build Android release APK
+        run: eas build --platform android --profile preview --non-interactive --wait --json > eas-build.json
+
+      - name: Download APK from EAS
+        id: apk
+        run: |
+          apk_url="$(jq -er 'if type == "array" then .[0] else . end | .artifacts.buildUrl // .artifacts.applicationArchiveUrl' eas-build.json)"
+          apk_name="LangEx-android-${GITHUB_RUN_NUMBER}.apk"
+          curl --fail --location "$apk_url" --output "$apk_name"
+          echo "name=$apk_name" >> "$GITHUB_OUTPUT"
+
+      - name: Attach APK to workflow run
+        uses: actions/upload-artifact@v4
+        with:
+          name: LangEx-android-${{ github.run_number }}
+          path: ${{ steps.apk.outputs.name }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "android-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
+            "${{ steps.apk.outputs.name }}#Installable Android APK" \
+            --target "$GITHUB_SHA" \
+            --title "LangEx Android build ${GITHUB_RUN_NUMBER}" \
+            --notes "Standalone Android build from main using the production LangEx backend." \
+            --prerelease
