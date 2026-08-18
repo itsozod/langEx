@@ -1,5 +1,5 @@
 import { useAppTheme, type ThemePreference } from '@/providers/theme-provider';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-view';
 import { Pressable, StyleSheet } from 'react-native';
 
 const ICONS: Record<ThemePreference, SymbolViewProps['name']> = {

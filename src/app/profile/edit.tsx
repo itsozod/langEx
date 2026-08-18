@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { Controller, useForm } from 'react-hook-form';
 import {
   KeyboardAvoidingView,

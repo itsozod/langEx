@@ -1,4 +1,4 @@
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,

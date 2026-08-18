@@ -2,11 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import { OnboardingCard } from '@/screens/onboarding/components/onboarding-card';

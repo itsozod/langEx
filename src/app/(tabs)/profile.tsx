@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-view';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

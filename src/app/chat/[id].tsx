@@ -1,6 +1,5 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import {
   GiftedChat,
   InputToolbar,
@@ -12,10 +11,11 @@ import {
   type SendProps,
 } from 'react-native-gifted-chat';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '@/shared/components/ui/gradient-background';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import { chatQueryKeys, useConversation } from '@/screens/chat/hooks';
@@ -34,6 +34,8 @@ import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chatStore';
 
 type GiftedMessage = IMessage & { pending?: boolean };
+
+const CHAT_HEADER_HEIGHT = 68;
 
 function initials(name?: string | null) {
   const value = name?.trim() || 'Language partner';
@@ -93,6 +95,7 @@ export default function ChatScreen() {
   const isDraft = routeId === 'new' && Boolean(participantId);
   const conversationId = isDraft ? undefined : routeId;
   const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const { theme } = useAppTheme();
   const currentUser = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
@@ -468,8 +471,8 @@ export default function ChatScreen() {
               keyboardShouldPersistTaps: 'handled',
             }}
             keyboardAvoidingViewProps={{
-              automaticOffset: true,
-              keyboardVerticalOffset: 0,
+              automaticOffset: false,
+              keyboardVerticalOffset: insets.top + CHAT_HEADER_HEIGHT,
             }}
             textInputProps={{
               onChangeText: handleInputChange,
@@ -616,7 +619,7 @@ const useStyles = () => {
   return StyleSheet.create({
     safeArea: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' },
     header: {
-      height: 68,
+      height: CHAT_HEADER_HEIGHT,
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 16,
@@ -763,7 +766,9 @@ const useStyles = () => {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 34,
-      transform: [{ scaleY: -1 }],
+      ...Platform.select({
+        ios: { transform: [{ scaleY: -1 }] },
+      }),
     },
     emptyTitle: { fontSize: 17, lineHeight: 23, textAlign: 'center' },
     emptyMessage: { marginTop: 6, fontSize: 12, lineHeight: 19, textAlign: 'center' },

@@ -2,7 +2,7 @@ import AppLogo from '@/shared/components/ui/app-logo';
 import { useAppTheme } from '@/providers/theme-provider';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { router, type NativeStackHeaderProps } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

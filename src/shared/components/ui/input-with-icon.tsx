@@ -1,5 +1,5 @@
-import { SymbolView, SymbolViewProps } from 'expo-symbols';
 import { useAppTheme } from '@/providers/theme-provider';
+import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-view';
 import { Pressable, StyleSheet } from 'react-native';
 import { Input, View } from 'tamagui';
 

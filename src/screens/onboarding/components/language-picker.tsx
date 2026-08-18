@@ -1,7 +1,7 @@
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import { LANGUAGES } from '@/screens/onboarding/data';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import React, { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

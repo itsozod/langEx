@@ -6,7 +6,7 @@ import {
   TabTrigger,
   TabTriggerSlotProps,
 } from 'expo-router/ui';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 

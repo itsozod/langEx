@@ -1,7 +1,7 @@
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { useAppTheme } from '@/providers/theme-provider';
-import { SymbolView } from 'expo-symbols';
 import React, { type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
