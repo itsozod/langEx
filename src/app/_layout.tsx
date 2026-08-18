@@ -17,6 +17,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { TamaguiProvider } from 'tamagui';
 
 import { AnimatedSplashOverlay } from '@/shared/components/ui/animated-icon';
@@ -79,7 +80,7 @@ function ThemedAppShell() {
             <Stack.Protected guard={isSignedIn && isProfileComplete}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="profile" />
-              <Stack.Screen name="chat" />
+              <Stack.Screen name="chat/[id]" />
             </Stack.Protected>
 
             <Stack.Protected guard={!isSignedIn}>
@@ -131,10 +132,12 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryProvider>
-      <ThemeProvider>
-        <ThemedAppShell />
-      </ThemeProvider>
-    </QueryProvider>
+    <KeyboardProvider preload={false}>
+      <QueryProvider>
+        <ThemeProvider>
+          <ThemedAppShell />
+        </ThemeProvider>
+      </QueryProvider>
+    </KeyboardProvider>
   );
 }

@@ -1,8 +1,18 @@
+import type { IMessage } from 'react-native-gifted-chat';
+
+export type GiftedMessage = IMessage & { pending?: boolean };
+
 export type ChatParticipant = {
   id: string;
   displayName: string | null;
   avatarUrl: string | null;
   country: string | null;
+};
+
+export type MessageReply = {
+  id: string;
+  content: string;
+  senderId: string;
 };
 
 export type Message = {
@@ -11,6 +21,7 @@ export type Message = {
   senderId: string;
   conversationId?: string;
   createdAt: string;
+  replyTo?: MessageReply | null;
   isOptimistic?: boolean;
 };
 
@@ -29,8 +40,14 @@ export type ConversationsResponse = {
   conversations: Conversation[];
 };
 
+export type ConversationPageInfo = {
+  hasMore: boolean;
+  olderCursor: string | null;
+};
+
 export type ConversationResponse = {
   conversation: Conversation & { messages: Message[] };
+  pageInfo: ConversationPageInfo;
 };
 
 export type DirectConversationResponse = {

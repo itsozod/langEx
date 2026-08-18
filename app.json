@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.ozod2905.langEx"
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#181220",
         "foregroundImage": "./assets/images/langex-adaptive-foreground.png",

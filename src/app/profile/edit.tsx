@@ -78,9 +78,10 @@ export default function EditProfile() {
   return (
     <GradientBackground>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}>
         <ScrollView
+          keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>

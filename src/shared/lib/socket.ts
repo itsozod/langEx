@@ -19,7 +19,12 @@ type ClientToServerEvents = {
   ) => void;
   leave_room: (conversationId: string) => void;
   send_message: (
-    payload: { conversationId?: string; participantId?: string; content: string },
+    payload: {
+      conversationId?: string;
+      participantId?: string;
+      content: string;
+      replyToId?: string;
+    },
     acknowledgement?: (response: SocketAcknowledgement) => void,
   ) => void;
   typing: (conversationId: string) => void;

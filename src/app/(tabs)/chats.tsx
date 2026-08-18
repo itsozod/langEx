@@ -80,6 +80,10 @@ export default function Chats() {
       <ConversationRow
         conversation={item}
         participant={participant}
+        onOpenProfile={() => {
+          if (!participant?.id) return;
+          router.push({ pathname: '/profile/[id]', params: { id: participant.id } });
+        }}
         onPress={() => router.push({ pathname: '/chat/[id]', params: { id: item.id } })}
       />
     );
@@ -195,10 +199,12 @@ export default function Chats() {
 function ConversationRow({
   conversation,
   participant,
+  onOpenProfile,
   onPress,
 }: {
   conversation: Conversation;
   participant?: ChatParticipant;
+  onOpenProfile: () => void;
   onPress: () => void;
 }) {
   const styles = useStyles();
@@ -210,7 +216,16 @@ function ConversationRow({
       accessibilityLabel={`Open chat with ${name}`}
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <View style={styles.avatarWrap}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`View ${name}'s profile`}
+        disabled={!participant?.id}
+        hitSlop={5}
+        onPress={(event) => {
+          event.stopPropagation();
+          onOpenProfile();
+        }}
+        style={({ pressed }) => [styles.avatarWrap, pressed && styles.avatarPressed]}>
         {participant?.avatarUrl ? (
           <Image source={{ uri: participant.avatarUrl }} contentFit="cover" style={styles.avatar} />
         ) : (
@@ -221,11 +236,11 @@ function ConversationRow({
           </View>
         )}
         {participant?.country ? (
-          <View style={styles.countryBadge}>
+          <View pointerEvents="none" style={styles.countryBadge}>
             <CountryFlag country={participant.country} size={14} boxSize={19} />
           </View>
         ) : null}
-      </View>
+      </Pressable>
 
       <View style={styles.rowCopy}>
         <View style={styles.rowTop}>
@@ -314,6 +329,7 @@ const useStyles = () => {
     },
     pressed: { opacity: 0.72, transform: [{ scale: 0.995 }] },
     avatarWrap: { width: 54, height: 54 },
+    avatarPressed: { opacity: 0.72, transform: [{ scale: 0.96 }] },
     avatar: { width: 54, height: 54, borderRadius: 27 },
     avatarPlaceholder: {
       width: 54,

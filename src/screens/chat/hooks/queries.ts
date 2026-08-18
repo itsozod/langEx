@@ -1,8 +1,8 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/store/auth-store';
 
-import { findDirectConversation, getConversation, getConversations } from './api';
+import { findDirectConversation, getConversation, getConversations } from '../api';
 
 export const chatQueryKeys = {
   all: ['chats'] as const,
@@ -23,11 +23,12 @@ export function useConversations() {
 export function useConversation(id?: string) {
   const token = useAuthStore((state) => state.token);
 
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: chatQueryKeys.conversation(id ?? ''),
-    queryFn: () => getConversation(id as string),
+    queryFn: ({ pageParam }) => getConversation(id as string, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.pageInfo?.olderCursor ?? undefined,
     enabled: Boolean(token && id),
-    refetchOnMount: 'always',
   });
 }
 

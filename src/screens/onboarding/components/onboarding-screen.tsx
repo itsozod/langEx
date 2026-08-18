@@ -35,11 +35,12 @@ export function OnboardingScreen({
   return (
     <GradientBackground>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          keyboardShouldPersistTaps="always"
           showsVerticalScrollIndicator={false}>
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.content}>

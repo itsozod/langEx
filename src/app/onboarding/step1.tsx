@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Keyboard, Pressable, StyleSheet, View } from 'react-native';
 
 import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
@@ -68,8 +68,15 @@ export default function OnboardingStepOne() {
   };
 
   const onNext = ({ displayName: nextDisplayName }: BasicInfoFormValues) => {
+    Keyboard.dismiss();
     update({ displayName: nextDisplayName });
     router.push('/onboarding/step2');
+  };
+
+  const submitStep = handleSubmit(onNext);
+  const submit = () => {
+    if (avatarMutation.isPending) return;
+    void submitStep();
   };
 
   const avatarSource = previewUri ?? avatarUrl;
@@ -139,17 +146,13 @@ export default function OnboardingStepOne() {
                 autoComplete="name"
                 textContentType="name"
                 returnKeyType="done"
-                onSubmitEditing={() => void handleSubmit(onNext)()}
+                onSubmitEditing={submit}
               />
             )}
           />
         </AuthFormField>
 
-        <AuthPrimaryButton
-          label="Next"
-          disabled={avatarMutation.isPending}
-          onPress={() => void handleSubmit(onNext)()}
-        />
+        <AuthPrimaryButton label="Next" pending={avatarMutation.isPending} onPress={submit} />
       </OnboardingCard>
     </OnboardingScreen>
   );

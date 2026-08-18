@@ -10,6 +10,7 @@ type ChatState = {
   updateConversationFromMessage: (message: Message) => void;
   clearConversationUnread: (conversationId: string) => void;
   addMessage: (message: Message) => void;
+  mergeMessages: (messages: Message[]) => void;
   removeMessage: (messageId: string) => void;
   setActiveMessages: (messages: Message[]) => void;
   setTyping: (userId: string, isTyping: boolean) => void;
@@ -59,7 +60,8 @@ export const useChatStore = create<ChatState>((set) => ({
         (item) =>
           item.isOptimistic &&
           item.senderId === message.senderId &&
-          item.content === message.content,
+          item.content === message.content &&
+          item.replyTo?.id === message.replyTo?.id,
       );
 
       if (optimisticIndex >= 0 && !message.isOptimistic) {
@@ -69,6 +71,27 @@ export const useChatStore = create<ChatState>((set) => ({
       }
 
       return { activeMessages: [...state.activeMessages, message] };
+    }),
+  mergeMessages: (messages) =>
+    set((state) => {
+      if (!messages.length) return state;
+
+      const activeMessages = [...state.activeMessages];
+      const messageIndexes = new Map(
+        activeMessages.map((message, index) => [message.id, index] as const),
+      );
+
+      for (const message of messages) {
+        const existingIndex = messageIndexes.get(message.id);
+        if (existingIndex === undefined) {
+          messageIndexes.set(message.id, activeMessages.length);
+          activeMessages.push(message);
+        } else if (!activeMessages[existingIndex].isOptimistic) {
+          activeMessages[existingIndex] = message;
+        }
+      }
+
+      return { activeMessages };
     }),
   removeMessage: (messageId) =>
     set((state) => ({

@@ -1,8 +1,8 @@
 import { apiRequest } from '@/shared/lib/api-client';
 
 import type {
-  ConversationResponse,
   ConversationReadResponse,
+  ConversationResponse,
   ConversationsResponse,
   DirectConversationResponse,
 } from './types';
@@ -11,8 +11,13 @@ export function getConversations() {
   return apiRequest<ConversationsResponse>('/conversations');
 }
 
-export function getConversation(conversationId: string) {
-  return apiRequest<ConversationResponse>(`/conversations/${encodeURIComponent(conversationId)}`);
+export function getConversation(conversationId: string, before?: string | null) {
+  const query = new URLSearchParams({ limit: '40' });
+  if (before) query.set('before', before);
+
+  return apiRequest<ConversationResponse>(
+    `/conversations/${encodeURIComponent(conversationId)}?${query.toString()}`,
+  );
 }
 
 export function findDirectConversation(participantId: string) {

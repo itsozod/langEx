@@ -1,8 +1,11 @@
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import React, { type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const AUTH_SUBMIT_CLEARANCE = 150;
 
 type AuthScreenProps = {
   title: string;
@@ -13,29 +16,28 @@ type AuthScreenProps = {
 const AuthScreen = ({ title, subtitle, children }: AuthScreenProps) => {
   return (
     <GradientBackground>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 16 : 0}
+      <KeyboardAwareScrollView
+        bottomOffset={AUTH_SUBMIT_CLEARANCE}
+        contentContainerStyle={styles.scrollContent}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="always"
+        mode="layout"
+        showsVerticalScrollIndicator={false}
         style={styles.keyboardView}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
-            <View style={styles.content}>
-              <View style={styles.heading}>
-                <ThemedText type="title" style={styles.title}>
-                  {title}
-                </ThemedText>
-                <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-                  {subtitle}
-                </ThemedText>
-              </View>
-              {children}
+        <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
+          <View style={styles.content}>
+            <View style={styles.heading}>
+              <ThemedText type="title" style={styles.title}>
+                {title}
+              </ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+                {subtitle}
+              </ThemedText>
             </View>
-          </SafeAreaView>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {children}
+          </View>
+        </SafeAreaView>
+      </KeyboardAwareScrollView>
     </GradientBackground>
   );
 };
