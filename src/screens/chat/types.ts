@@ -43,6 +43,8 @@ export type ConversationsResponse = {
 export type ConversationPageInfo = {
   hasMore: boolean;
   olderCursor: string | null;
+  hasMoreNewer?: boolean;
+  newerCursor?: string | null;
 };
 
 export type ConversationResponse = {

@@ -8,6 +8,7 @@ import type { AuthUser } from '@/screens/auth/types';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { useChatStore } from '@/shared/store/chatStore';
 
+import type { ConversationWindowParams } from '../api';
 import { chatQueryKeys } from '../hooks';
 import type {
   ChatParticipant,
@@ -146,8 +147,8 @@ function seedNewConversation({
 }) {
   if (!message || !isMessage(message) || !draftParticipant || !currentUser) return;
 
-  queryClient.setQueryData<InfiniteData<ConversationResponse, string | null>>(
-    chatQueryKeys.conversation(conversationId),
+  queryClient.setQueryData<InfiniteData<ConversationResponse, ConversationWindowParams>>(
+    chatQueryKeys.conversationWindow(conversationId, null),
     {
       pages: [
         {
@@ -167,7 +168,7 @@ function seedNewConversation({
           pageInfo: { hasMore: false, olderCursor: null },
         },
       ],
-      pageParams: [null],
+      pageParams: [{}],
     },
   );
 }

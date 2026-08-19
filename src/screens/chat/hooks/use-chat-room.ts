@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { queryClient } from '@/providers/query-provider';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
@@ -12,14 +12,26 @@ import { isMessage } from '../utils/messages';
 type UseChatRoomOptions = {
   conversationId?: string;
   currentUserId?: string;
+  isHistoricalWindow: boolean;
   token: string | null;
 };
 
-export function useChatRoom({ conversationId, currentUserId, token }: UseChatRoomOptions) {
+export function useChatRoom({
+  conversationId,
+  currentUserId,
+  isHistoricalWindow,
+  token,
+}: UseChatRoomOptions) {
   const addMessage = useChatStore((state) => state.addMessage);
   const setTyping = useChatStore((state) => state.setTyping);
   const clearConversationUnread = useChatStore((state) => state.clearConversationUnread);
   const [socketError, setSocketError] = useState<string | null>(null);
+  // Read inside the socket handlers so switching windows does not resubscribe them.
+  const isHistoricalWindowRef = useRef(isHistoricalWindow);
+
+  useEffect(() => {
+    isHistoricalWindowRef.current = isHistoricalWindow;
+  }, [isHistoricalWindow]);
 
   const markConversationRead = useCallback(async () => {
     if (!token || !conversationId) return;
@@ -64,7 +76,9 @@ export function useChatRoom({ conversationId, currentUserId, token }: UseChatRoo
         isMessage(message) &&
         (!message.conversationId || message.conversationId === conversationId)
       ) {
-        addMessage(message);
+        // A message that just arrived must not be appended to a window from months ago; it would
+        // render as if it belonged there. It reaches the thread when the latest window comes back.
+        if (!isHistoricalWindowRef.current) addMessage(message);
         if (message.senderId !== currentUserId) void markConversationRead();
       }
     };
@@ -95,10 +109,8 @@ export function useChatRoom({ conversationId, currentUserId, token }: UseChatRoo
       socket.off('connect_error', handleConnectError);
       useChatStore.setState({ typingUsers: [] });
       void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
-      queryClient.removeQueries({
-        queryKey: chatQueryKeys.conversation(conversationId),
-        exact: true,
-      });
+      // Prefix match so every anchored window for this conversation is dropped, not just the newest.
+      queryClient.removeQueries({ queryKey: chatQueryKeys.conversation(conversationId) });
     };
   }, [addMessage, conversationId, currentUserId, markConversationRead, setTyping]);
 

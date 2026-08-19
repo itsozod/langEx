@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -35,8 +35,18 @@ export default function ChatScreen() {
   const setActiveMessages = useChatStore((state) => state.setActiveMessages);
   const mergeMessages = useChatStore((state) => state.mergeMessages);
   const typingUsers = useChatStore((state) => state.typingUsers);
+  const [anchorMessageId, setAnchorMessageId] = useState<string | null>(null);
   const query = useConversation(conversationId);
+  // The newest window is never torn down, so returning to it is instant and the screen keeps its
+  // loading, error and participant state while an older window is being fetched.
+  const anchorQuery = useConversation(
+    anchorMessageId ? conversationId : undefined,
+    anchorMessageId,
+  );
+  const activeQuery = anchorMessageId ? anchorQuery : query;
   const participantQuery = usePublicUser(isDraft ? participantId : undefined);
+  const windowKey = anchorMessageId ?? 'latest';
+  const loadedWindowKeyRef = useRef(windowKey);
 
   const draftParticipant = useMemo<ChatParticipant | undefined>(() => {
     const user = participantQuery.data?.user;
@@ -50,9 +60,10 @@ export default function ChatScreen() {
       : undefined;
   }, [participantQuery.data]);
   const conversationPages = query.data?.pages;
+  const activeWindowPages = activeQuery.data?.pages;
   const paginatedMessages = useMemo(
-    () => conversationPages?.flatMap((page) => page.conversation.messages) ?? [],
-    [conversationPages],
+    () => activeWindowPages?.flatMap((page) => page.conversation.messages) ?? [],
+    [activeWindowPages],
   );
   const conversation = useMemo(
     () =>
@@ -74,13 +85,26 @@ export default function ChatScreen() {
     return () => setActiveMessages([]);
   }, [routeId, setActiveMessages]);
 
+  // The previous window stays on screen until the new one has loaded, so jumping never flashes an
+  // empty thread. Optimistic messages survive the swap because they are not part of any window yet.
   useEffect(() => {
-    mergeMessages(paginatedMessages);
-  }, [mergeMessages, paginatedMessages]);
+    if (loadedWindowKeyRef.current === windowKey) {
+      mergeMessages(paginatedMessages);
+      return;
+    }
+
+    if (!paginatedMessages.length) return;
+    loadedWindowKeyRef.current = windowKey;
+    setActiveMessages([
+      ...useChatStore.getState().activeMessages.filter((message) => message.isOptimistic),
+      ...paginatedMessages,
+    ]);
+  }, [mergeMessages, paginatedMessages, setActiveMessages, windowKey]);
 
   const { socketError, setSocketError } = useChatRoom({
     conversationId,
     currentUserId: currentUser?.id,
+    isHistoricalWindow: anchorMessageId !== null,
     token,
   });
   const messaging = useChatMessaging({
@@ -106,9 +130,16 @@ export default function ChatScreen() {
     });
   }, [conversationId, otherParticipant]);
   const loadOlderMessages = useCallback(() => {
-    if (!conversationId || !query.hasNextPage || query.isFetchingNextPage) return;
-    void query.fetchNextPage();
-  }, [conversationId, query]);
+    if (!conversationId || !activeQuery.hasNextPage || activeQuery.isFetchingNextPage) return;
+    void activeQuery.fetchNextPage();
+  }, [activeQuery, conversationId]);
+  const loadNewerMessages = useCallback(() => {
+    if (!conversationId || !activeQuery.hasPreviousPage || activeQuery.isFetchingPreviousPage)
+      return;
+    void activeQuery.fetchPreviousPage();
+  }, [activeQuery, conversationId]);
+  const openMessageWindow = useCallback((messageId: string) => setAnchorMessageId(messageId), []);
+  const openLatestWindow = useCallback(() => setAnchorMessageId(null), []);
 
   const isLoading = isDraft ? participantQuery.isPending : query.isPending;
   const isError = isDraft ? participantQuery.isError : query.isError;
@@ -127,11 +158,16 @@ export default function ChatScreen() {
         <ChatThread
           currentUser={currentUser}
           giftedMessages={messaging.giftedMessages}
-          hasNextPage={Boolean(query.hasNextPage)}
-          isFetchNextPageError={query.isFetchNextPageError}
-          isFetchingNextPage={query.isFetchingNextPage}
+          hasNewerMessages={Boolean(activeQuery.hasPreviousPage)}
+          hasNextPage={Boolean(activeQuery.hasNextPage)}
+          isFetchNextPageError={activeQuery.isFetchNextPageError}
+          isFetchingNextPage={activeQuery.isFetchingNextPage}
+          isHistoricalWindow={anchorMessageId !== null}
           onInputChange={messaging.handleInputChange}
+          onJumpToLatest={openLatestWindow}
+          onLoadNewerMessages={loadNewerMessages}
           onLoadOlderMessages={loadOlderMessages}
+          onRequestMessageWindow={openMessageWindow}
           onSend={messaging.handleSend}
           replyingTo={messaging.replyingTo}
           setReplyingTo={messaging.setReplyingTo}
