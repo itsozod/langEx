@@ -10,6 +10,8 @@ import {
   CircleUserRound,
   Compass,
   Contrast,
+  Eye,
+  EyeOff,
   Globe,
   History,
   Lock,
@@ -57,6 +59,8 @@ const androidIcons: Record<string, LucideIcon> = {
   public: Globe,
   reply: Reply,
   search: Search,
+  visibility: Eye,
+  visibility_off: EyeOff,
   wifi_off: WifiOff,
 };
 

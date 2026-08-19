@@ -243,7 +243,10 @@ export const useChatStyles = () => {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 34,
-      ...Platform.select({ ios: { transform: [{ scaleY: -1 }] } }),
+      ...Platform.select({
+        ios: { transform: [{ scaleY: -1 }] },
+        android: { transform: [{ scaleY: -1 }] },
+      }),
     },
     emptyTitle: { fontSize: 17, lineHeight: 23, textAlign: 'center' },
     emptyMessage: { marginTop: 6, fontSize: 12, lineHeight: 19, textAlign: 'center' },
