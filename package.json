@@ -7,7 +7,7 @@
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "ios:release": "EXPO_NO_DOTENV=1 EXPO_PUBLIC_API_URL=https://langex-backend.onrender.com expo run:ios --configuration Release",
+    "ios:release": "node ./scripts/build-ios-release.js",
     "web": "expo start --web",
     "lint": "expo lint",
     "format": "prettier --write .",
