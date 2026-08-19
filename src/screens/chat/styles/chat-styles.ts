@@ -245,7 +245,7 @@ export const useChatStyles = () => {
       paddingHorizontal: 34,
       ...Platform.select({
         ios: { transform: [{ scaleY: -1 }] },
-        android: { transform: [{ scaleY: -1 }] },
+        android: { transform: [{ scale: -1 }] },
       }),
     },
     emptyTitle: { fontSize: 17, lineHeight: 23, textAlign: 'center' },
