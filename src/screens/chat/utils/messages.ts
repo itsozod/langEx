@@ -1,4 +1,4 @@
-import type { ChatParticipant, GiftedMessage, Message } from '../types';
+import type { ChatParticipant, GiftedMessage, Message, UnsentMessage } from '../types';
 
 export function getInitials(name?: string | null) {
   const value = name?.trim() || 'Language partner';
@@ -18,6 +18,12 @@ export function isMessage(value: unknown): value is Message {
     typeof message.senderId === 'string' &&
     typeof message.createdAt === 'string'
   );
+}
+
+export function isUnsentMessage(value: unknown): value is UnsentMessage {
+  if (!value || typeof value !== 'object') return false;
+  const message = value as Partial<UnsentMessage>;
+  return typeof message.id === 'string';
 }
 
 export function isSameSenderOnSameDay(first?: GiftedMessage, second?: GiftedMessage) {
@@ -61,6 +67,7 @@ export function toGiftedMessages(
         text: message.content,
         createdAt: new Date(message.createdAt),
         pending: message.isOptimistic,
+        editedAt: message.editedAt,
         user: {
           _id: message.senderId,
           name: sender?.displayName || (message.senderId === currentUserId ? 'You' : 'Partner'),

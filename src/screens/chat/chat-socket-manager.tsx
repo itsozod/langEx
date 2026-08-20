@@ -56,8 +56,16 @@ export function ChatSocketManager() {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
     };
 
+    // An unsend can hit any message, and only the server knows whether it was the last one, so the
+    // row's preview and unread count are refetched rather than guessed at.
+    const handleMessageChanged = () => {
+      queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
+    };
+
     socket.on('connect', joinRooms);
     socket.on('receive_message', handleMessage);
+    socket.on('message_edited', handleMessageChanged);
+    socket.on('message_unsent', handleMessageChanged);
 
     if (socket.connected) joinRooms();
     else socket.connect();
@@ -65,6 +73,8 @@ export function ChatSocketManager() {
     return () => {
       socket.off('connect', joinRooms);
       socket.off('receive_message', handleMessage);
+      socket.off('message_edited', handleMessageChanged);
+      socket.off('message_unsent', handleMessageChanged);
     };
   }, [roomKey, token, updateConversationFromMessage]);
 

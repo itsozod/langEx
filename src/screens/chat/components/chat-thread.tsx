@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from 'react';
-import { Clipboard, View } from 'react-native';
+import { Alert, Clipboard, View } from 'react-native';
 import { GiftedChat, type ReplyMessage } from 'react-native-gifted-chat';
 import { useSharedValue } from 'react-native-reanimated';
 
@@ -10,6 +10,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { CHAT_HEADER_HEIGHT } from '../constants';
 import { useChatAutoscroll } from '../hooks/use-chat-autoscroll';
+import { useChatComposer } from '../hooks/use-chat-composer';
 import { useChatJumpToMessage } from '../hooks/use-chat-jump-to-message';
 import { useChatStyles } from '../styles/chat-styles';
 import type { GiftedMessage } from '../types';
@@ -37,8 +38,10 @@ type ChatThreadProps = {
   onJumpToLatest: () => void;
   onLoadNewerMessages: () => void;
   onLoadOlderMessages: () => void;
+  onEditMessage: (messageId: string, content: string) => void;
   onRequestMessageWindow: (messageId: string) => void;
   onSend: (messages: GiftedMessage[]) => void;
+  onUnsendMessage: (messageId: string) => void;
   replyingTo: ReplyMessage | null;
   setReplyingTo: (message: ReplyMessage | null) => void;
   theme: AppTheme;
@@ -58,8 +61,10 @@ export function ChatThread({
   onJumpToLatest,
   onLoadNewerMessages,
   onLoadOlderMessages,
+  onEditMessage,
   onRequestMessageWindow,
   onSend,
+  onUnsendMessage,
   replyingTo,
   setReplyingTo,
   theme,
@@ -83,10 +88,29 @@ export function ChatThread({
     });
   const scrolledY = useSharedValue(0);
   const [menuTarget, setMenuTarget] = useState<MessageMenuTarget | null>(null);
+  const {
+    composerHeight,
+    composerText,
+    editing,
+    handleContentSizeChange,
+    handleInputChange,
+    handleSend,
+    startEditing,
+    stopEditingAndResetComposer,
+    submitEdit,
+  } = useChatComposer({
+    isHistoricalWindow,
+    onEditMessage,
+    onInputChange,
+    onJumpToLatest,
+    onSend,
+    scrollToLatestAfterSend,
+  });
 
   const startReply = useCallback(
     (message: GiftedMessage) => {
       if (message.pending) return;
+      stopEditingAndResetComposer();
       setReplyingTo({
         _id: message._id,
         text: message.text,
@@ -96,7 +120,7 @@ export function ChatThread({
       });
       void Haptics.selectionAsync().catch(() => {});
     },
-    [setReplyingTo],
+    [setReplyingTo, stopEditingAndResetComposer],
   );
 
   const openMessageMenu = useCallback(
@@ -121,6 +145,33 @@ export function ChatThread({
     setMenuTarget(null);
     Clipboard.setString(message.text);
   }, []);
+  const copyLinkFromMenu = useCallback((url: string) => {
+    setMenuTarget(null);
+    Clipboard.setString(url);
+  }, []);
+  const editFromMenu = useCallback(
+    (message: GiftedMessage) => {
+      setMenuTarget(null);
+      setReplyingTo(null);
+      startEditing(message);
+    },
+    [setReplyingTo, startEditing],
+  );
+  const unsendFromMenu = useCallback(
+    (message: GiftedMessage) => {
+      setMenuTarget(null);
+      // Unsending clears the text on the server for good, so it is worth one confirmation.
+      Alert.alert('Unsend message?', 'This removes it for everyone in the chat.', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unsend',
+          style: 'destructive',
+          onPress: () => onUnsendMessage(String(message._id)),
+        },
+      ]);
+    },
+    [onUnsendMessage],
+  );
 
   // Offset 0 is the newest end of the inverted list, so nearing it means asking for newer messages.
   const handleScroll = useCallback(
@@ -151,20 +202,11 @@ export function ChatThread({
     scrollToLatestWindow();
   }, [isHistoricalWindow, listRef, onJumpToLatest, scrollToLatestWindow]);
 
-  const handleSend = useCallback(
-    (messages: GiftedMessage[]) => {
-      // A message sent from an old window belongs at the end of the thread, so return there first.
-      if (isHistoricalWindow) onJumpToLatest();
-      onSend(messages);
-      scrollToLatestAfterSend();
-    },
-    [isHistoricalWindow, onJumpToLatest, onSend, scrollToLatestAfterSend],
-  );
-
   return (
     <View style={styles.chat}>
       <GiftedChat<GiftedMessage>
         messages={giftedMessages}
+        text={composerText}
         messagesContainerRef={messagesContainerRef}
         onSend={handleSend}
         user={{
@@ -185,8 +227,16 @@ export function ChatThread({
             onOpenMenu={openMessageMenu}
           />
         )}
-        renderInputToolbar={(props) => <ChatInputToolbar {...props} />}
-        renderSend={(props) => <ChatSend {...props} />}
+        renderInputToolbar={(props) => (
+          <ChatInputToolbar
+            {...props}
+            isEditing={editing !== null}
+            onCancelEdit={stopEditingAndResetComposer}
+          />
+        )}
+        renderSend={(props) => (
+          <ChatSend {...props} isEditing={editing !== null} onSubmitEdit={submitEdit} />
+        )}
         renderTypingIndicator={() =>
           typingUsers.length ? <ThemedText style={styles.typingText}>typing...</ThemedText> : null
         }
@@ -240,17 +290,21 @@ export function ChatThread({
           keyboardVerticalOffset: topInset + CHAT_HEADER_HEIGHT,
         }}
         textInputProps={{
-          onChangeText: onInputChange,
+          onContentSizeChange: handleContentSizeChange,
+          onChangeText: handleInputChange,
           placeholder: 'Write a message…',
           placeholderTextColor: styles.placeholder.color,
-          style: styles.composer,
+          style: [styles.composer, { height: composerHeight }],
           multiline: true,
         }}
       />
       <ChatMessageMenu
         onClose={closeMessageMenu}
         onCopy={copyFromMenu}
+        onCopyLink={copyLinkFromMenu}
+        onEdit={editFromMenu}
         onReply={replyFromMenu}
+        onUnsend={unsendFromMenu}
         target={menuTarget}
       />
     </View>

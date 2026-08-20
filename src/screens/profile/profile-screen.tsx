@@ -35,6 +35,7 @@ export default function ProfileScreen() {
   const refreshProfile = useRefreshProfileMutation();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const refreshColor = theme === 'dark' ? '#B8A9FF' : '#6654C7';
 
   if (!user) return null;
 
@@ -108,9 +109,9 @@ export default function ProfileScreen() {
           <RefreshControl
             refreshing={refreshProfile.isPending}
             onRefresh={() => void onRefresh()}
-            colors={['#6654C7']}
+            colors={[refreshColor]}
             progressBackgroundColor={theme === 'dark' ? '#251F33' : '#FFFFFF'}
-            tintColor="#6654C7"
+            tintColor={refreshColor}
           />
         }
         showsVerticalScrollIndicator={false}>

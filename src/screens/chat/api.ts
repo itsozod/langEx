@@ -2,6 +2,7 @@ import { apiRequest } from '@/shared/lib/api-client';
 
 import type {
   ConversationReadResponse,
+  Message,
   ConversationResponse,
   ConversationsResponse,
   DirectConversationResponse,
@@ -29,6 +30,22 @@ export function getConversation(conversationId: string, window: ConversationWind
 
   return apiRequest<ConversationResponse>(
     `/conversations/${encodeURIComponent(conversationId)}?${query.toString()}`,
+  );
+}
+
+/** Sender-only. Re-sending identical content is a no-op that leaves `editedAt` alone. */
+export function editMessage(conversationId: string, messageId: string, content: string) {
+  return apiRequest<{ message?: Message }>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}`,
+    { method: 'PATCH', body: { content } },
+  );
+}
+
+/** Sender-only. The server clears the stored text and keeps the row as a tombstone. */
+export function unsendMessage(conversationId: string, messageId: string) {
+  return apiRequest<{ message?: Message }>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}`,
+    { method: 'DELETE' },
   );
 }
 

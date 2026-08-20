@@ -9,7 +9,7 @@ import { LanguageFlag } from './language-flag';
 export function ProfileLanguages({ user }: { user: AuthUser }) {
   const styles = useProfileStyles();
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
       <ThemedText type="bold" style={styles.sectionTitle}>
         Languages
       </ThemedText>
@@ -52,7 +52,7 @@ export function ProfileDetails({ user }: { user: AuthUser }) {
   return (
     <>
       {user.interests?.length ? (
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
           <ThemedText type="bold" style={styles.sectionTitle}>
             Interests
           </ThemedText>

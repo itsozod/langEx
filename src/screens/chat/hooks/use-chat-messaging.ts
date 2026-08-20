@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { ReplyMessage } from 'react-native-gifted-chat';
 
 import { queryClient } from '@/providers/query-provider';
+import { ApiError } from '@/shared/lib/api-client';
 import type { AuthUser } from '@/screens/auth/types';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { useChatStore } from '@/shared/store/chatStore';
@@ -17,6 +18,8 @@ import type {
   GiftedMessage,
   Message,
 } from '../types';
+import { editMessage as editMessageRequest, unsendMessage as unsendMessageRequest } from '../api';
+import { discardMessageFromWindows, replaceMessageInWindows } from '../utils/conversation-cache';
 import { isMessage, toGiftedMessages } from '../utils/messages';
 
 type UseChatMessagingOptions = {
@@ -39,6 +42,8 @@ export function useChatMessaging({
   const activeMessages = useChatStore((state) => state.activeMessages);
   const addMessage = useChatStore((state) => state.addMessage);
   const removeMessage = useChatStore((state) => state.removeMessage);
+  const replaceMessage = useChatStore((state) => state.replaceMessage);
+  const discardMessage = useChatStore((state) => state.discardMessage);
   const [replyingTo, setReplyingTo] = useState<ReplyMessage | null>(null);
   const currentUserId = currentUser?.id;
 
@@ -125,12 +130,73 @@ export function useChatMessaging({
     ],
   );
 
+  const editMessage = useCallback(
+    async (messageId: string, content: string) => {
+      const nextContent = content.trim();
+      const existing = useChatStore
+        .getState()
+        .activeMessages.find((message) => message.id === messageId);
+      if (!conversationId || !nextContent || !existing) return;
+      if (nextContent === existing.content) return;
+
+      const optimistic = { ...existing, content: nextContent, editedAt: new Date().toISOString() };
+      replaceMessage(optimistic);
+      replaceMessageInWindows(conversationId, optimistic);
+
+      try {
+        const response = await editMessageRequest(conversationId, messageId, nextContent);
+        if (response?.message && isMessage(response.message)) {
+          replaceMessage(response.message);
+          replaceMessageInWindows(conversationId, response.message);
+        }
+        void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
+      } catch (error) {
+        replaceMessage(existing);
+        // The cached pages are put right by refetching rather than by unpicking the patch.
+        void queryClient.invalidateQueries({
+          queryKey: chatQueryKeys.conversation(conversationId),
+        });
+        setSocketError(error instanceof ApiError ? error.message : 'Message could not be edited.');
+      }
+    },
+    [conversationId, replaceMessage, setSocketError],
+  );
+
+  const unsendMessage = useCallback(
+    async (messageId: string) => {
+      const { activeMessages } = useChatStore.getState();
+      const existing = activeMessages.find((message) => message.id === messageId);
+      if (!conversationId || !existing) return;
+
+      // Kept for rollback: restoring means putting the message back and re-linking its quotes.
+      const quotingMessages = activeMessages.filter((message) => message.replyTo?.id === messageId);
+      discardMessage(messageId);
+      discardMessageFromWindows(conversationId, messageId);
+
+      try {
+        await unsendMessageRequest(conversationId, messageId);
+        void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
+      } catch (error) {
+        addMessage(existing);
+        quotingMessages.forEach(replaceMessage);
+        // The cached pages are put right by refetching rather than by unpicking the patch.
+        void queryClient.invalidateQueries({
+          queryKey: chatQueryKeys.conversation(conversationId),
+        });
+        setSocketError(error instanceof ApiError ? error.message : 'Message could not be unsent.');
+      }
+    },
+    [addMessage, conversationId, discardMessage, replaceMessage, setSocketError],
+  );
+
   return {
+    editMessage,
     giftedMessages,
     handleInputChange,
     handleSend,
     replyingTo,
     setReplyingTo,
+    unsendMessage,
   };
 }
 

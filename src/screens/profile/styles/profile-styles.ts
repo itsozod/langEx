@@ -23,14 +23,33 @@ export const useProfileStyles = () => {
       padding: 22,
       gap: 18,
       borderRadius: 26,
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(151,134,219,0.22)' : 'rgba(91,70,176,0.10)',
-      backgroundColor: isDark ? 'rgba(31,25,47,0.94)' : 'rgba(255,255,255,0.94)',
-      shadowColor: isDark ? '#000000' : '#3B309E',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: isDark ? 0.2 : 0.07,
-      shadowRadius: 24,
-      elevation: 3,
+      backgroundColor: isDark ? '#201A2E' : '#FFFFFF',
+      boxShadow: isDark
+        ? [
+            {
+              offsetX: 0,
+              offsetY: 18,
+              blurRadius: 38,
+              spreadDistance: -8,
+              color: 'rgba(0,0,0,0.46)',
+            },
+            {
+              offsetX: 0,
+              offsetY: 3,
+              blurRadius: 12,
+              spreadDistance: -6,
+              color: 'rgba(112,88,210,0.18)',
+            },
+          ]
+        : [
+            {
+              offsetX: 0,
+              offsetY: 16,
+              blurRadius: 34,
+              spreadDistance: -9,
+              color: 'rgba(54,40,113,0.16)',
+            },
+          ],
     },
     avatarArea: { alignItems: 'center', gap: 8 },
     avatarButton: { width: 124, height: 124, borderRadius: 62 },
@@ -89,6 +108,29 @@ export const useProfileStyles = () => {
       borderWidth: 1,
       borderColor: isDark ? 'rgba(151,134,219,0.18)' : 'rgba(91,70,176,0.09)',
       backgroundColor: isDark ? 'rgba(27,22,39,0.92)' : 'rgba(255,255,255,0.91)',
+    },
+    elevatedSectionCard: {
+      borderWidth: 0,
+      backgroundColor: isDark ? '#1D1828' : '#FFFFFF',
+      boxShadow: isDark
+        ? [
+            {
+              offsetX: 0,
+              offsetY: 12,
+              blurRadius: 28,
+              spreadDistance: -8,
+              color: 'rgba(0,0,0,0.38)',
+            },
+          ]
+        : [
+            {
+              offsetX: 0,
+              offsetY: 11,
+              blurRadius: 26,
+              spreadDistance: -8,
+              color: 'rgba(54,40,113,0.12)',
+            },
+          ],
     },
     sectionTitle: { fontSize: 15, lineHeight: 21 },
     languageRow: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -164,9 +206,33 @@ export const useProfileStyles = () => {
       justifyContent: 'center',
       gap: 9,
       borderRadius: 18,
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(255,138,138,0.28)' : 'rgba(180,35,24,0.18)',
-      backgroundColor: isDark ? 'rgba(122,37,46,0.16)' : 'rgba(255,243,242,0.9)',
+      backgroundColor: isDark ? '#2B1B28' : '#FFDCD8',
+      boxShadow: isDark
+        ? [
+            {
+              offsetX: 0,
+              offsetY: 9,
+              blurRadius: 22,
+              spreadDistance: -7,
+              color: 'rgba(0,0,0,0.38)',
+            },
+            {
+              offsetX: 0,
+              offsetY: 2,
+              blurRadius: 9,
+              spreadDistance: -5,
+              color: 'rgba(255,112,125,0.14)',
+            },
+          ]
+        : [
+            {
+              offsetX: 0,
+              offsetY: 9,
+              blurRadius: 21,
+              spreadDistance: -7,
+              color: 'rgba(180,35,24,0.23)',
+            },
+          ],
     },
     logoutText: {
       color: isDark ? '#FFAAAA' : '#B42318',

@@ -12,6 +12,8 @@ type ChatState = {
   addMessage: (message: Message) => void;
   mergeMessages: (messages: Message[]) => void;
   removeMessage: (messageId: string) => void;
+  replaceMessage: (message: Message) => void;
+  discardMessage: (messageId: string) => void;
   setActiveMessages: (messages: Message[]) => void;
   setTyping: (userId: string, isTyping: boolean) => void;
   reset: () => void;
@@ -97,6 +99,40 @@ export const useChatStore = create<ChatState>((set) => ({
     set((state) => ({
       activeMessages: state.activeMessages.filter((message) => message.id !== messageId),
     })),
+  // An unsent message is gone rather than tombstoned: it leaves the thread and any message that
+  // quoted it becomes an ordinary message, which is exactly what a refetch now returns.
+  discardMessage: (messageId) =>
+    set((state) => {
+      let hasChanged = false;
+      const activeMessages: Message[] = [];
+
+      for (const message of state.activeMessages) {
+        if (message.id === messageId) {
+          hasChanged = true;
+          continue;
+        }
+
+        if (message.replyTo?.id === messageId) {
+          hasChanged = true;
+          activeMessages.push({ ...message, replyTo: null });
+          continue;
+        }
+
+        activeMessages.push(message);
+      }
+
+      return hasChanged ? { activeMessages } : state;
+    }),
+  // Edits arrive as a whole message that stands in for the one already held.
+  replaceMessage: (message) =>
+    set((state) => {
+      const index = state.activeMessages.findIndex((item) => item.id === message.id);
+      if (index < 0) return state;
+
+      const activeMessages = [...state.activeMessages];
+      activeMessages[index] = message;
+      return { activeMessages };
+    }),
   setActiveMessages: (activeMessages) => set({ activeMessages }),
   setTyping: (userId, isTyping) =>
     set((state) => {

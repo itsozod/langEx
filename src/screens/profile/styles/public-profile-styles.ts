@@ -36,9 +36,33 @@ export const usePublicProfileStyles = () => {
       alignItems: 'center',
       borderRadius: 28,
       padding: 26,
-      backgroundColor: card,
-      borderWidth: 1,
-      borderColor: border,
+      backgroundColor: isDark ? '#201A2E' : '#FFFFFF',
+      boxShadow: isDark
+        ? [
+            {
+              offsetX: 0,
+              offsetY: 18,
+              blurRadius: 38,
+              spreadDistance: -8,
+              color: 'rgba(0,0,0,0.46)',
+            },
+            {
+              offsetX: 0,
+              offsetY: 3,
+              blurRadius: 12,
+              spreadDistance: -6,
+              color: 'rgba(112,88,210,0.18)',
+            },
+          ]
+        : [
+            {
+              offsetX: 0,
+              offsetY: 16,
+              blurRadius: 34,
+              spreadDistance: -9,
+              color: 'rgba(54,40,113,0.16)',
+            },
+          ],
     },
     avatar: { width: 112, height: 112, borderRadius: 56, marginBottom: 16 },
     avatarPlaceholder: {
@@ -66,6 +90,29 @@ export const usePublicProfileStyles = () => {
       backgroundColor: card,
       borderWidth: 1,
       borderColor: border,
+    },
+    elevatedSectionCard: {
+      borderWidth: 0,
+      backgroundColor: isDark ? '#1D1828' : '#FFFFFF',
+      boxShadow: isDark
+        ? [
+            {
+              offsetX: 0,
+              offsetY: 12,
+              blurRadius: 28,
+              spreadDistance: -8,
+              color: 'rgba(0,0,0,0.38)',
+            },
+          ]
+        : [
+            {
+              offsetX: 0,
+              offsetY: 11,
+              blurRadius: 26,
+              spreadDistance: -8,
+              color: 'rgba(54,40,113,0.12)',
+            },
+          ],
     },
     sectionTitle: { fontSize: 15, lineHeight: 21 },
     languageRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

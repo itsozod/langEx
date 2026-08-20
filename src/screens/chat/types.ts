@@ -1,6 +1,10 @@
 import type { IMessage } from 'react-native-gifted-chat';
 
-export type GiftedMessage = IMessage & { pending?: boolean };
+export type GiftedMessage = IMessage & {
+  pending?: boolean;
+  /** Non-null means the sender changed the text after sending. */
+  editedAt?: string | null;
+};
 
 export type ChatParticipant = {
   id: string;
@@ -23,6 +27,19 @@ export type Message = {
   createdAt: string;
   replyTo?: MessageReply | null;
   isOptimistic?: boolean;
+  editedAt?: string | null;
+  /** Only ever seen on a `message_unsent` payload; unsent messages are dropped, never rendered. */
+  deletedAt?: string | null;
+};
+
+/**
+ * `message_unsent` carries a tombstone rather than a message: the text is gone, so there is nothing
+ * to send beyond the identity of what to drop.
+ */
+export type UnsentMessage = {
+  id: string;
+  conversationId?: string;
+  deletedAt: string;
 };
 
 export type Conversation = {
@@ -33,6 +50,7 @@ export type Conversation = {
   lastMessage?: Message | null;
   lastMessagePreview?: string | null;
   lastMessageTimestamp?: string | null;
+  lastMessageEditedAt?: string | null;
   messages?: Message[];
 };
 

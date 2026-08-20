@@ -163,12 +163,14 @@ export default function ChatScreen() {
           isFetchNextPageError={activeQuery.isFetchNextPageError}
           isFetchingNextPage={activeQuery.isFetchingNextPage}
           isHistoricalWindow={anchorMessageId !== null}
+          onEditMessage={messaging.editMessage}
           onInputChange={messaging.handleInputChange}
           onJumpToLatest={openLatestWindow}
           onLoadNewerMessages={loadNewerMessages}
           onLoadOlderMessages={loadOlderMessages}
           onRequestMessageWindow={openMessageWindow}
           onSend={messaging.handleSend}
+          onUnsendMessage={messaging.unsendMessage}
           replyingTo={messaging.replyingTo}
           setReplyingTo={messaging.setReplyingTo}
           theme={theme}

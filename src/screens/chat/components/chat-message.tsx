@@ -1,6 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { createContext, useCallback, useContext, useRef } from 'react';
-import { Text, View, type StyleProp, type TextProps, type ViewStyle } from 'react-native';
+import {
+  Pressable as BubblePressable,
+  Text,
+  View,
+  type StyleProp,
+  type TextProps,
+  type ViewStyle,
+} from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { LinkParser, type BubbleProps, type MessageProps } from 'react-native-gifted-chat';
 import ReanimatedSwipeable, {
@@ -94,8 +101,12 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
   }, [currentMessage, onOpenMenu]);
 
   return (
-    <View
+    // React Native's pressable, not the gesture-handler one: it shares the responder system with
+    // the message text, so a long press anywhere on the bubble opens the menu without stealing the
+    // taps that open links.
+    <BubblePressable
       ref={bubbleRef}
+      onLongPress={openMenu}
       style={[
         styles.bubble,
         position === 'right' ? styles.bubbleRight : styles.bubbleLeft,
@@ -142,6 +153,15 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
         />
       </MessageLongPressContext.Provider>
       <View style={styles.bubbleMeta}>
+        {currentMessage.editedAt ? (
+          <ThemedText
+            style={[
+              styles.editedLabel,
+              position === 'right' ? styles.messageTimeRight : styles.messageTimeLeft,
+            ]}>
+            edited
+          </ThemedText>
+        ) : null}
         <ThemedText style={position === 'right' ? styles.messageTimeRight : styles.messageTimeLeft}>
           {formatMessageTime(currentMessage.createdAt)}
         </ThemedText>
@@ -152,7 +172,7 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
         highlightedMessageId={highlightedMessageId}
         messageId={String(currentMessage._id)}
       />
-    </View>
+    </BubblePressable>
   );
 }
 

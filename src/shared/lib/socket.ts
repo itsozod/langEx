@@ -1,12 +1,15 @@
 import { io, type Socket } from 'socket.io-client';
 
-import type { Message, SocketAcknowledgement } from '@/screens/chat/types';
+import type { Message, UnsentMessage, SocketAcknowledgement } from '@/screens/chat/types';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 import { API_URL } from './api-client';
 
 type ServerToClientEvents = {
   receive_message: (message: Message) => void;
+  message_edited: (message: Message) => void;
+  // Unsend carries only a tombstone; the message it names is dropped rather than replaced.
+  message_unsent: (message: UnsentMessage) => void;
   user_typing: (payload: { userId: string }) => void;
   user_stop_typing: (payload: { userId: string }) => void;
   chat_error: (payload: { error: string }) => void;

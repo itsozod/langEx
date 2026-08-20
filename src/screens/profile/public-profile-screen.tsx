@@ -118,7 +118,7 @@ export default function PublicProfile() {
               ) : null}
             </View>
 
-            <View style={styles.sectionCard}>
+            <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
               <ThemedText type="bold" style={styles.sectionTitle}>
                 Languages
               </ThemedText>
@@ -151,7 +151,7 @@ export default function PublicProfile() {
             </View>
 
             {user.interests.length ? (
-              <View style={styles.sectionCard}>
+              <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
                 <ThemedText type="bold" style={styles.sectionTitle}>
                   Interests
                 </ThemedText>

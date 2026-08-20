@@ -28,7 +28,7 @@ export function ProfileAppearance() {
   const styles = useProfileStyles();
   const { preference, setPreference } = useAppTheme();
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
       <View>
         <ThemedText type="bold" style={styles.sectionTitle}>
           Appearance

@@ -1,10 +1,9 @@
-import { useAppTheme } from '@/providers/theme-provider';
+import { useAppTheme, type AppTheme } from '@/providers/theme-provider';
 import { Platform, StyleSheet } from 'react-native';
 
 import { CHAT_HEADER_HEIGHT } from '../constants';
 
-export const useChatStyles = () => {
-  const { theme } = useAppTheme();
+const createChatStyles = (theme: AppTheme) => {
   const isDark = theme === 'dark';
   const border = isDark ? 'rgba(190,176,255,0.13)' : 'rgba(97,76,190,0.10)';
 
@@ -168,6 +167,8 @@ export const useChatStyles = () => {
       marginHorizontal: 16,
       backgroundColor: isDark ? 'rgba(190,176,255,0.14)' : 'rgba(97,76,190,0.10)',
     },
+    menuLabelDestructive: { color: isDark ? '#FF9AA4' : '#C0392F' },
+    menuIconDestructive: { color: isDark ? '#FF9AA4' : '#C0392F' },
     bubbleTextLeft: { color: isDark ? '#F7F3FC' : '#292432', fontSize: 15, lineHeight: 21 },
     bubbleTextRight: { color: '#FFFFFF', fontSize: 15, lineHeight: 21 },
     bubbleMeta: {
@@ -181,6 +182,35 @@ export const useChatStyles = () => {
     messageTimeLeft: { color: isDark ? '#9F97AA' : '#8A8491', fontSize: 9, lineHeight: 12 },
     messageTimeRight: { color: 'rgba(255,255,255,0.68)', fontSize: 9, lineHeight: 12 },
     pendingDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.65)' },
+    editBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 9,
+      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: border,
+    },
+    editBannerCopy: { flex: 1, minWidth: 0 },
+    editBannerTitle: {
+      color: isDark ? '#C5BAFF' : '#604DB7',
+      fontSize: 11,
+      lineHeight: 15,
+    },
+    editBannerHint: {
+      color: isDark ? '#9A93A6' : '#7A7285',
+      fontSize: 10,
+      lineHeight: 14,
+    },
+    editBannerClose: {
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    editedLabel: { fontSize: 9, lineHeight: 12, fontStyle: 'italic' },
+    inputToolbarJoined: { borderTopWidth: 0 },
     inputToolbar: {
       minHeight: 62,
       paddingHorizontal: 10,
@@ -353,4 +383,22 @@ export const useChatStyles = () => {
   });
 };
 
-export type ChatStyles = ReturnType<typeof useChatStyles>;
+/**
+ * Every message row asks for these styles through several components, so building the sheet per
+ * call meant allocating the whole thing dozens of times per render pass of a long thread. There is
+ * one sheet per theme instead, which also keeps style identity stable between renders.
+ */
+const styleSheets = new Map<AppTheme, ChatStyles>();
+
+export const useChatStyles = () => {
+  const { theme } = useAppTheme();
+
+  const cached = styleSheets.get(theme);
+  if (cached) return cached;
+
+  const styles = createChatStyles(theme);
+  styleSheets.set(theme, styles);
+  return styles;
+};
+
+export type ChatStyles = ReturnType<typeof createChatStyles>;

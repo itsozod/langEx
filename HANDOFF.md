@@ -52,6 +52,12 @@ device requirements are mandatory.
 - Long-pressing a message opens a Reply/Copy menu placed against that bubble, URLs and emails in
   message text are tappable, and replying by swipe follows the bubble's own side: incoming messages
   swipe right, own messages swipe left.
+- Edit for own messages from the long-press menu: the text loads into the composer under an
+  "Editing message" banner and sending applies the change. Edited messages show an "edited" label.
+- Unsend for own messages from the long-press menu, with a confirmation. An unsent message leaves
+  the thread entirely, and any message that quoted it becomes an ordinary message, the way
+  Instagram does it. The backend filters unsent messages out of every REST response, so
+  `message_unsent` is the only thing the client has to act on.
 - Tapping the quote inside a reply bubble scrolls to the original message and flashes it. When the
   original is outside the loaded window the thread swaps to the window centred on it in one
   request, however far back it is, and a jump-to-latest arrow returns to the live thread.
@@ -72,10 +78,21 @@ device requirements are mandatory.
 - `GET /conversations/direct/:participantId`
 - `GET /conversations/:id?limit=40&before=...` (also `after=<cursor>` and `around=<messageId>`;
   `pageInfo` carries `hasMore`/`olderCursor` plus `hasMoreNewer`/`newerCursor`)
+- `DELETE /conversations/:id/messages/:messageId` (unsend, sender-only)
 - `POST /conversations/:id/read`
 
-Socket events include `join_room`, `leave_room`, `send_message`, `receive_message`, `typing`,
-`stop_typing`, `user_typing`, `user_stop_typing`, and `chat_error`. `send_message` supports
+- `PATCH /conversations/:id/messages/:messageId` (edit, sender-only)
+
+Unsent messages are filtered out of every REST response: the list preview falls back to the newest
+surviving message, a thread whose only message was unsent drops out of `GET /conversations` and
+`direct/:participantId` reports `null`, and `around=<unsent id>` degrades to the newest page. The
+client therefore never renders a tombstone; `deletedAt` only ever appears on a `message_unsent`
+payload. `editedAt` is the edited flag.
+
+Socket events include `join_room`, `leave_room`, `send_message`, `receive_message`, `message_edited`,
+`message_unsent`, `typing`, `stop_typing`, `user_typing`, `user_stop_typing`, and `chat_error`.
+`message_edited` and `message_unsent` carry the same payload as `receive_message`, so the held copy
+is replaced by id. `send_message` supports
 `conversationId` or `participantId`, `content`, and optional `replyToId`.
 
 ## Important implementation details
@@ -103,12 +120,25 @@ Socket events include `join_room`, `leave_room`, `send_message`, `receive_messag
   anchored `around` window is open, so screen state never flickers and returning is instant. While
   an older window is open, socket messages are not appended to it; scrolling forward until no newer
   page remains rejoins the live window, which is also what makes the arrow disappear.
+- `message_unsent` carries a tombstone stub, not a message: `{ id, conversationId, deletedAt }`
+  with no `content`, `senderId` or `createdAt`. Validating it with `isMessage` silently drops the
+  event, which looks like "unsend does not reach the other device"; use `isUnsentMessage`.
+- `message_unsent` must drop the message by id and clear `replyTo` on every loaded message that
+  quoted it (`discardMessage` in the chat store). That is exactly what a refetch returns, so the
+  socket path and a reload stay consistent.
+- Edits and unsends have to correct the React Query pages as well as the store
+  (`utils/conversation-cache.ts`). The screen merges cached pages into the store whenever a page
+  loads, so a store-only correction is undone the moment the reader scrolls far enough to fetch
+  another page, and the message reappears until the chat is reopened.
 - Never wrap message text in a gesture-handler pressable. On iOS its native recognizer cancels
   touches in subviews, so `Text.onPress` never fires and links stop opening, while Android keeps
   working. Message text carries its own press handlers instead (`MessageLongPressContext`).
 - Copy uses React Native's core `Clipboard`, which logs a deprecation warning but needs no native
   module. Switch it to `expo-clipboard` at the next native rebuild, not before, or existing dev
   clients stop working.
+- Gifted Chat's composer is uncontrolled until a `text` prop is passed, and typing in it does not
+  re-render the thread. `use-chat-edit.ts` takes control only while an edit is open and hands it
+  back through one empty render, otherwise the composer keeps the text that was just submitted.
 - The chat composer input must never use `flex`. Gifted Chat only auto-grows the composer on web;
   on native the multiline input has to size itself from its content, so a flexible input fills the
   space above the keyboard and turns `maxHeight` into a fixed height.
