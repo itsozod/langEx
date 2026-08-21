@@ -9,7 +9,6 @@ import { Link } from 'expo-router';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import { Form } from 'tamagui';
 import AuthFormCard from './auth-form-card';
 import AuthFormField from './auth-form-field';
 import AuthPrimaryButton from './auth-primary-button';
@@ -46,7 +45,7 @@ const LoginForm = () => {
   return (
     <View style={styles.wrapper}>
       <AuthFormCard>
-        <Form style={styles.form}>
+        <View style={styles.form}>
           <View style={styles.fields}>
             <AuthFormField label="Email address" error={errors.email?.message}>
               <Controller
@@ -61,6 +60,7 @@ const LoginForm = () => {
                     onBlur={onBlur}
                     onChangeText={(text) => {
                       onChange(text);
+                      clearErrors('email');
                       clearErrors('root.server');
                     }}
                     placeholder="you@example.com"
@@ -87,6 +87,7 @@ const LoginForm = () => {
                     onBlur={onBlur}
                     onChangeText={(text) => {
                       onChange(text);
+                      clearErrors('password');
                       clearErrors('root.server');
                     }}
                     placeholder="Enter your password"
@@ -119,7 +120,7 @@ const LoginForm = () => {
             pending={loginMutation.isPending}
             onPress={() => void submit()}
           />
-        </Form>
+        </View>
       </AuthFormCard>
 
       <View style={styles.footer}>

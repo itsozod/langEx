@@ -7,6 +7,7 @@ import { useAppTheme } from '@/providers/theme-provider';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import { getCountryName } from '@/screens/onboarding/data';
 import { getLanguageFlag } from '@/screens/profile/language-flags';
+import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
 
 import type { DiscoverUser } from './types';
 
@@ -87,8 +88,9 @@ export function UserCard({ user }: { user: DiscoverUser }) {
           <View style={styles.interests}>
             {visibleInterests.map((interest) => (
               <View key={interest} style={styles.interestPill}>
+                <InterestIcon color={styles.interestText.color} interest={interest} size={11} />
                 <ThemedText numberOfLines={1} style={styles.interestText}>
-                  {interest}
+                  {getInterestLabel(interest)}
                 </ThemedText>
               </View>
             ))}
@@ -203,6 +205,9 @@ const useStyles = () => {
     interestPill: {
       flexShrink: 1,
       maxWidth: '31%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
       borderRadius: 999,
       paddingHorizontal: 8,
       paddingVertical: 4,

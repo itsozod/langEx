@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import GradientBackground from '@/shared/components/ui/gradient-background';
+import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { usePublicUser } from '@/screens/discover/hooks';
 import { useFindDirectConversation } from '@/screens/chat/hooks';
@@ -162,9 +163,16 @@ export default function PublicProfile() {
                       <View
                         key={interest}
                         style={[styles.interestPill, isShared && styles.sharedInterestPill]}>
+                        <InterestIcon
+                          color={
+                            isShared ? styles.sharedInterestText.color : styles.interestText.color
+                          }
+                          interest={interest}
+                          size={13}
+                        />
                         <ThemedText
                           style={[styles.interestText, isShared && styles.sharedInterestText]}>
-                          {interest}
+                          {getInterestLabel(interest)}
                         </ThemedText>
                       </View>
                     );
@@ -178,7 +186,7 @@ export default function PublicProfile() {
             ) : null}
 
             {user.bio ? (
-              <View style={styles.sectionCard}>
+              <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
                 <ThemedText type="bold" style={styles.sectionTitle}>
                   About
                 </ThemedText>

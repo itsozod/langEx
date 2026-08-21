@@ -95,6 +95,7 @@ export function ChatThread({
     handleContentSizeChange,
     handleInputChange,
     handleSend,
+    isComposerScrollable,
     startEditing,
     stopEditingAndResetComposer,
     submitEdit,
@@ -294,6 +295,10 @@ export function ChatThread({
           onChangeText: handleInputChange,
           placeholder: 'Write a message…',
           placeholderTextColor: styles.placeholder.color,
+          // Android scrolls a multiline input to the cursor before React can grow its explicit
+          // height, briefly hiding the previous line. Keep native scrolling off until the input
+          // has reached its maximum height and genuinely needs to scroll internally.
+          scrollEnabled: isComposerScrollable,
           style: [styles.composer, { height: composerHeight }],
           multiline: true,
         }}

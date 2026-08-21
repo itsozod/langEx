@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 
 import type { AuthUser } from '@/screens/auth/types';
+import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useProfileStyles } from '../styles/profile-styles';
@@ -59,14 +60,19 @@ export function ProfileDetails({ user }: { user: AuthUser }) {
           <View style={styles.interests}>
             {user.interests.map((interest) => (
               <View key={interest} style={styles.interestPill}>
-                <ThemedText style={styles.interestText}>{interest}</ThemedText>
+                <InterestIcon
+                  color={styles.interestIconColor.color}
+                  interest={interest}
+                  size={14}
+                />
+                <ThemedText style={styles.interestText}>{getInterestLabel(interest)}</ThemedText>
               </View>
             ))}
           </View>
         </View>
       ) : null}
       {user.bio ? (
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
           <ThemedText type="bold" style={styles.sectionTitle}>
             About me
           </ThemedText>

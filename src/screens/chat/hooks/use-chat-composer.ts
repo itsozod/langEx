@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { Platform } from 'react-native';
 
 import type { GiftedMessage } from '../types';
 import { useChatComposerHeight } from './use-chat-composer-height';
@@ -23,8 +24,23 @@ export function useChatComposer({
 }: UseChatComposerOptions) {
   const { composerText, editing, handleComposerTextChange, startEditing, stopEditing } =
     useChatEdit();
-  const { composerHeight, handleContentSizeChange, prepareComposerHeight, resetComposerHeight } =
-    useChatComposerHeight();
+  const {
+    composerHeight,
+    handleContentSizeChange: handleMeasuredContentSizeChange,
+    isComposerScrollable,
+    prepareComposerHeight,
+    resetComposerHeight,
+  } = useChatComposerHeight();
+
+  const handleContentSizeChange = useCallback(
+    (event: Parameters<typeof handleMeasuredContentSizeChange>[0]) => {
+      // Edit mode is pre-sized before its text mounts. Letting Android replace that estimate with
+      // a native measurement one frame later produces a visible small-to-large jump.
+      if (Platform.OS === 'android' && editing) return;
+      handleMeasuredContentSizeChange(event);
+    },
+    [editing, handleMeasuredContentSizeChange],
+  );
 
   const beginEditing = useCallback(
     (message: GiftedMessage) => {
@@ -65,10 +81,18 @@ export function useChatComposer({
 
   const handleInputChange = useCallback(
     (text: string) => {
+      // Gifted Chat does not consistently report native content-size changes once an explicit
+      // height is supplied, particularly on iOS. Keep growth responsive from the text itself;
+      // `onContentSizeChange` can still correct the estimate when the platform emits it.
+      // Android reports multiline content size reliably. Estimating here as well makes the
+      // composer alternate between the estimated and measured heights on each keystroke.
+      // iOS still needs the estimate because it can stop emitting content-size changes once an
+      // explicit height has been supplied.
+      if (Platform.OS === 'ios' || editing) prepareComposerHeight(text);
       onInputChange(text);
       handleComposerTextChange(text);
     },
-    [handleComposerTextChange, onInputChange],
+    [editing, handleComposerTextChange, onInputChange, prepareComposerHeight],
   );
 
   return {
@@ -78,6 +102,7 @@ export function useChatComposer({
     handleContentSizeChange,
     handleInputChange,
     handleSend,
+    isComposerScrollable,
     startEditing: beginEditing,
     stopEditingAndResetComposer,
     submitEdit,

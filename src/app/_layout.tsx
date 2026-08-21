@@ -26,6 +26,7 @@ import { ThemeProvider, useAppTheme } from '@/providers/theme-provider';
 import { useAuthSessionBootstrap } from '@/screens/auth/auth-session-bootstrap';
 import { AuthenticatedApiInterceptor } from '@/screens/auth/authenticated-api-interceptor';
 import { ChatSocketManager } from '@/screens/chat/chat-socket-manager';
+import { PushNotificationManager } from '@/screens/notifications/push-notification-manager';
 import { QueryProvider } from '@/providers/query-provider';
 import { useAuthHydration, useAuthStore } from '@/shared/store/auth-store';
 
@@ -63,6 +64,7 @@ function ThemedAppShell() {
         <AnimatedSplashOverlay />
         {isSignedIn ? <AuthenticatedApiInterceptor /> : null}
         {isSignedIn ? <ChatSocketManager /> : null}
+        {isSignedIn && user ? <PushNotificationManager userId={user.id} /> : null}
 
         {isVerifying ? (
           <View style={[styles.loadingScreen, theme === 'dark' && styles.loadingScreenDark]}>

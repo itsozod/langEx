@@ -137,6 +137,9 @@ export const usePublicProfileStyles = () => {
     },
     interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     interestPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
       borderRadius: 999,
       paddingHorizontal: 11,
       paddingVertical: 7,

@@ -1,9 +1,8 @@
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import React from 'react';
-import { ActivityIndicator } from 'react-native';
-import { Button, type ButtonProps } from 'tamagui';
+import { ActivityIndicator, Pressable, StyleSheet, View, type PressableProps } from 'react-native';
 
-type AuthPrimaryButtonProps = Omit<ButtonProps, 'children'> & {
+type AuthPrimaryButtonProps = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   pending?: boolean;
 };
@@ -15,23 +14,51 @@ const AuthPrimaryButton = ({
   ...props
 }: AuthPrimaryButtonProps) => {
   return (
-    <Button
-      height={54}
-      rounded={15}
-      borderWidth={0}
-      bg="#6654C7"
-      pressStyle={{ bg: '#5745B4', scale: 0.99 }}
-      hoverStyle={{ bg: '#5D4BBD' }}
-      focusStyle={{ bg: '#5745B4' }}
-      opacity={pending ? 0.72 : 1}
+    <Pressable
+      accessibilityRole="button"
       disabled={pending || disabled}
-      icon={pending ? <ActivityIndicator color="#FFFFFF" size="small" /> : undefined}
-      {...props}>
-      <ThemedText type="bold" style={{ color: '#FFFFFF', fontSize: 15 }}>
-        {label}
-      </ThemedText>
-    </Button>
+      {...props}
+      style={({ pressed }) => [
+        styles.button,
+        pressed && styles.buttonPressed,
+        (pending || disabled) && styles.buttonDisabled,
+      ]}>
+      <View style={styles.content} pointerEvents="none">
+        {pending ? <ActivityIndicator color="#FFFFFF" size="small" /> : null}
+        <ThemedText type="bold" style={styles.label}>
+          {label}
+        </ThemedText>
+      </View>
+    </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    width: '100%',
+    height: 54,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6654C7',
+  },
+  buttonPressed: {
+    backgroundColor: '#5745B4',
+    transform: [{ scale: 0.99 }],
+  },
+  buttonDisabled: {
+    opacity: 0.72,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  label: {
+    color: '#FFFFFF',
+    fontSize: 15,
+  },
+});
 
 export default AuthPrimaryButton;

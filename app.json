@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.ozod2905.langEx"
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#181220",
@@ -46,6 +47,13 @@
           "photosPermission": "Allow LangEx to access your photos so you can choose a profile picture.",
           "cameraPermission": false,
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#534AB7",
+          "defaultChannel": "default"
         }
       ],
       "expo-font",

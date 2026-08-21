@@ -3,20 +3,15 @@ import { router } from 'expo-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
+import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
 import { LanguagePicker } from '@/screens/onboarding/components/language-picker';
 import { OnboardingCard } from '@/screens/onboarding/components/onboarding-card';
 import { OnboardingScreen } from '@/screens/onboarding/components/onboarding-screen';
 import { languagesSchema, type LanguagesFormValues } from '@/screens/onboarding/schemas';
-import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
-import { type ProficiencyLevel, useOnboardingStore } from '@/shared/store/onboardingStore';
-
-const LEVELS: { label: string; value: ProficiencyLevel }[] = [
-  { label: 'Beginner', value: 'beginner' },
-  { label: 'Intermediate', value: 'intermediate' },
-  { label: 'Advanced', value: 'advanced' },
-];
+import { ThemedText } from '@/shared/components/ui/themed-text';
+import { LEVELS } from '@/shared/constants/language-levels';
+import { useOnboardingStore } from '@/shared/store/onboardingStore';
 
 export default function OnboardingStepThree() {
   const styles = useStyles();

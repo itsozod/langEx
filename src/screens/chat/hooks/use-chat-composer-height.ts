@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
+  Platform,
   useWindowDimensions,
   type NativeSyntheticEvent,
   type TextInputContentSizeChangeEventData,
@@ -16,6 +17,20 @@ const APPROXIMATE_CHARACTER_WIDTH = 7.4;
 const clampHeight = (height: number) =>
   Math.min(MAX_COMPOSER_HEIGHT, Math.max(MIN_COMPOSER_HEIGHT, height));
 
+function normalizeMeasuredHeight(measuredHeight: number) {
+  if (Platform.OS !== 'android') return clampHeight(Math.ceil(measuredHeight));
+
+  // Android can report one-pixel content-size changes while the text is still on the same line.
+  // Snapping to our known typography prevents those measurements from relaying out the entire
+  // Gifted Chat toolbar on every keystroke.
+  const measuredLineCount = Math.max(
+    1,
+    Math.round((measuredHeight - COMPOSER_VERTICAL_PADDING) / COMPOSER_LINE_HEIGHT),
+  );
+
+  return clampHeight(COMPOSER_VERTICAL_PADDING + measuredLineCount * COMPOSER_LINE_HEIGHT);
+}
+
 function estimateLineCount(text: string, availableWidth: number) {
   const charactersPerLine = Math.max(1, Math.floor(availableWidth / APPROXIMATE_CHARACTER_WIDTH));
 
@@ -31,8 +46,10 @@ export function useChatComposerHeight() {
 
   const handleContentSizeChange = useCallback(
     (event: NativeSyntheticEvent<TextInputContentSizeChangeEventData>) => {
-      const measuredHeight = Math.ceil(event.nativeEvent.contentSize.height);
-      setComposerHeight(clampHeight(measuredHeight));
+      const nextHeight = normalizeMeasuredHeight(event.nativeEvent.contentSize.height);
+      setComposerHeight((currentHeight) =>
+        currentHeight === nextHeight ? currentHeight : nextHeight,
+      );
     },
     [],
   );
@@ -56,6 +73,7 @@ export function useChatComposerHeight() {
   return {
     composerHeight,
     handleContentSizeChange,
+    isComposerScrollable: composerHeight >= MAX_COMPOSER_HEIGHT,
     prepareComposerHeight,
     resetComposerHeight,
   };
