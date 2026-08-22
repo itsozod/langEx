@@ -1,8 +1,8 @@
 import { apiRequest } from '@/shared/lib/api-client';
 
 export function savePushToken(token: string) {
-  return apiRequest<void>('/users/push-token', {
+  return apiRequest<{ success: true }>('/users/push-token', {
     method: 'POST',
-    body: { token },
+    body: { pushToken: token },
   });
 }
