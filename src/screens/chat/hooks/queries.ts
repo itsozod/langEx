@@ -20,6 +20,7 @@ export function useConversations() {
     queryKey: chatQueryKeys.conversations(),
     queryFn: getConversations,
     enabled: Boolean(token),
+    refetchOnWindowFocus: 'always',
   });
 }
 
@@ -42,6 +43,7 @@ export function useConversation(id?: string, anchorMessageId?: string | null) {
     getPreviousPageParam: (firstPage): ConversationWindowParams | undefined =>
       firstPage.pageInfo?.newerCursor ? { after: firstPage.pageInfo.newerCursor } : undefined,
     enabled: Boolean(token && id),
+    refetchOnWindowFocus: 'always',
   });
 }
 
