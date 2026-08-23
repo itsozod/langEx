@@ -14,6 +14,7 @@ import { ChatErrorBanner, ChatErrorState, ChatLoadingState } from './components/
 import { ChatThread } from './components/chat-thread';
 import { useChatMessaging } from './hooks/use-chat-messaging';
 import { useChatRoom } from './hooks/use-chat-room';
+import { useActiveConversationPresence } from './hooks/use-active-conversation-presence';
 import { useConversation } from './hooks';
 import { useChatStyles } from './styles/chat-styles';
 import type { ChatParticipant } from './types';
@@ -107,6 +108,7 @@ export default function ChatScreen() {
     isHistoricalWindow: anchorMessageId !== null,
     token,
   });
+  useActiveConversationPresence(conversationId);
   const messaging = useChatMessaging({
     conversation,
     conversationId,

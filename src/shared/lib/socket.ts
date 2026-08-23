@@ -16,6 +16,7 @@ type ServerToClientEvents = {
 };
 
 type ClientToServerEvents = {
+  active_conversation: (conversationId: string | null) => void;
   join_room: (
     conversationId: string,
     acknowledgement?: (response: SocketAcknowledgement) => void,
