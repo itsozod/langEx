@@ -5,10 +5,15 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { registerForPushNotifications } from '@/shared/lib/notifications';
+import { API_URL } from '@/shared/lib/api-client';
 
 import { savePushToken } from './api';
 
-const REGISTRATION_KEY_PREFIX = 'langex:push-token-registered';
+const REGISTRATION_KEY_PREFIX = 'langex:push-token-registration:v2';
+
+function getRegistrationKey(userId: string) {
+  return `${REGISTRATION_KEY_PREFIX}:${encodeURIComponent(API_URL)}:${userId}`;
+}
 
 function openNotificationConversation(notification: Notifications.Notification) {
   try {
@@ -28,18 +33,18 @@ export function PushNotificationManager({ userId }: { userId: string }) {
     let cancelled = false;
 
     const register = async () => {
-      const registrationKey = `${REGISTRATION_KEY_PREFIX}:${userId}`;
+      const registrationKey = getRegistrationKey(userId);
 
       try {
-        const hasRegistered = await AsyncStorage.getItem(registrationKey);
-        if (cancelled || hasRegistered === 'true') return;
+        const registeredToken = await AsyncStorage.getItem(registrationKey);
+        if (cancelled || registeredToken) return;
 
         const token = await registerForPushNotifications();
         if (cancelled || !token) return;
 
         try {
           await savePushToken(token);
-          if (!cancelled) await AsyncStorage.setItem(registrationKey, 'true');
+          if (!cancelled) await AsyncStorage.setItem(registrationKey, token);
         } catch (error) {
           console.warn('[notifications] Could not save the push token.', error);
         }
