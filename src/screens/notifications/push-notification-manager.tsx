@@ -30,6 +30,21 @@ export function PushNotificationManager({ userId }: { userId: string }) {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+
+    return () => Notifications.setNotificationHandler(null);
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
     let cancelled = false;
     let syncInFlight = false;
 
