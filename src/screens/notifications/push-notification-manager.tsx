@@ -31,16 +31,19 @@ export function PushNotificationManager({ userId }: { userId: string }) {
     if (Platform.OS !== 'android') return;
 
     let cancelled = false;
+    let syncInFlight = false;
 
-    const register = async () => {
+    const syncPushToken = async () => {
+      if (syncInFlight) return;
+      syncInFlight = true;
       const registrationKey = getRegistrationKey(userId);
 
       try {
-        const registeredToken = await AsyncStorage.getItem(registrationKey);
-        if (cancelled || registeredToken) return;
-
         const token = await registerForPushNotifications();
         if (cancelled || !token) return;
+
+        const registeredToken = await AsyncStorage.getItem(registrationKey);
+        if (cancelled || registeredToken === token) return;
 
         try {
           await savePushToken(token);
@@ -50,12 +53,19 @@ export function PushNotificationManager({ userId }: { userId: string }) {
         }
       } catch (error) {
         console.warn('[notifications] Could not check push registration state.', error);
+      } finally {
+        syncInFlight = false;
       }
     };
 
-    void register();
+    void syncPushToken();
+    const tokenSubscription = Notifications.addPushTokenListener(() => {
+      void syncPushToken();
+    });
+
     return () => {
       cancelled = true;
+      tokenSubscription.remove();
     };
   }, [userId]);
 
