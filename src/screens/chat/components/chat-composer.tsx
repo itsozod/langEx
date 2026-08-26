@@ -1,10 +1,5 @@
 import { Pressable, View } from 'react-native';
-import {
-  InputToolbar,
-  Send,
-  type InputToolbarProps,
-  type SendProps,
-} from 'react-native-gifted-chat';
+import { InputToolbar, type InputToolbarProps, type SendProps } from 'react-native-gifted-chat';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SymbolView } from '@/shared/components/ui/symbol-view';
@@ -72,7 +67,8 @@ type ChatSendProps = SendProps<GiftedMessage> & {
 export function ChatSend({ isEditing, onSubmitEdit, ...props }: ChatSendProps) {
   const styles = useChatStyles();
   const text = props.text ?? '';
-  const isDisabled = !text.trim();
+  const trimmedText = text.trim();
+  const isDisabled = !trimmedText;
   const icon = (
     <View style={[styles.sendButton, isDisabled && styles.sendButtonDisabled]}>
       <SymbolView
@@ -99,8 +95,13 @@ export function ChatSend({ isEditing, onSubmitEdit, ...props }: ChatSendProps) {
     );
 
   return (
-    <Send {...props} containerStyle={styles.sendContainer}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Send message"
+      disabled={isDisabled}
+      onPress={() => props.onSend?.({ text: trimmedText }, true)}
+      style={({ pressed }) => [styles.sendContainer, pressed && styles.pressed]}>
       {icon}
-    </Send>
+    </Pressable>
   );
 }

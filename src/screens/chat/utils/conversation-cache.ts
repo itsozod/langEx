@@ -55,3 +55,51 @@ export function replaceMessageInWindows(conversationId: string | undefined, next
     messages.map((message) => (message.id === next.id ? next : message)),
   );
 }
+
+/**
+ * Reconciles a confirmed live message into the server-backed latest window.
+ *
+ * The thread renders from Zustand while it is open, but it is rebuilt from this query after
+ * navigation. Keeping the acknowledgement only in Zustand therefore makes a sent message vanish
+ * until the query is fetched again. Anchored historical windows are intentionally left alone: a
+ * newly delivered message does not belong in a window centred on an older message.
+ */
+export function upsertMessageInLatestWindow(conversationId: string | undefined, next: Message) {
+  if (!conversationId) return;
+
+  queryClient.setQueryData<ConversationWindows>(
+    chatQueryKeys.conversationWindow(conversationId, null),
+    (windows) => {
+      if (!windows?.pages.length) return windows;
+
+      let found = false;
+      const pages = windows.pages.map((page) => ({
+        ...page,
+        conversation: {
+          ...page.conversation,
+          messages: page.conversation.messages.map((message) => {
+            const matches =
+              message.id === next.id ||
+              Boolean(next.clientMessageId && message.clientMessageId === next.clientMessageId);
+            if (!matches) return message;
+
+            found = true;
+            return next;
+          }),
+        },
+      }));
+
+      if (!found) {
+        pages[0] = {
+          ...pages[0],
+          conversation: {
+            ...pages[0].conversation,
+            messages: [...pages[0].conversation.messages, next],
+          },
+        };
+      }
+
+      return { ...windows, pages };
+    },
+  );
+}

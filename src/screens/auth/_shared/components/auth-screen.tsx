@@ -5,7 +5,10 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const AUTH_SUBMIT_CLEARANCE = 150;
+// Space below the final focused field must include the forgot/helper row, a two-line dynamic
+// server error, form gaps, the complete 54dp action, and breathing room above tall Android
+// keyboards. Keeping this on the shared auth screen protects login, registration, and reset flows.
+const AUTH_SUBMIT_CLEARANCE = 240;
 
 type AuthScreenProps = {
   title: string;

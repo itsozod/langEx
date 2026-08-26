@@ -54,6 +54,7 @@ export function toGiftedMessages(
   messages: Message[],
   participants: ChatParticipant[] = [],
   currentUserId?: string,
+  participantReadAt?: string,
 ): GiftedMessage[] {
   return messages
     .map((message) => {
@@ -66,7 +67,15 @@ export function toGiftedMessages(
         _id: message.id,
         text: message.content,
         createdAt: new Date(message.createdAt),
-        pending: message.isOptimistic,
+        pending: Boolean(message.deliveryStatus ?? message.isOptimistic),
+        deliveryStatus: message.deliveryStatus,
+        sendError: message.sendError,
+        deliveryReceipt:
+          message.senderId === currentUserId && !message.isOptimistic
+            ? participantReadAt && new Date(message.createdAt) <= new Date(participantReadAt)
+              ? 'read'
+              : 'sent'
+            : undefined,
         editedAt: message.editedAt,
         user: {
           _id: message.senderId,

@@ -1,10 +1,15 @@
 import type { IMessage } from 'react-native-gifted-chat';
 
 export type GiftedMessage = IMessage & {
+  deliveryReceipt?: 'sent' | 'read';
+  deliveryStatus?: OutgoingMessageStatus;
+  sendError?: string;
   pending?: boolean;
   /** Non-null means the sender changed the text after sending. */
   editedAt?: string | null;
 };
+
+export type OutgoingMessageStatus = 'queued' | 'sending' | 'failed';
 
 export type ChatParticipant = {
   id: string;
@@ -21,15 +26,33 @@ export type MessageReply = {
 
 export type Message = {
   id: string;
+  clientMessageId?: string | null;
   content: string;
   senderId: string;
   conversationId?: string;
   createdAt: string;
   replyTo?: MessageReply | null;
   isOptimistic?: boolean;
+  deliveryStatus?: OutgoingMessageStatus;
+  sendError?: string;
   editedAt?: string | null;
   /** Only ever seen on a `message_unsent` payload; unsent messages are dropped, never rendered. */
   deletedAt?: string | null;
+};
+
+export type OutboxMessage = {
+  clientMessageId: string;
+  userId: string;
+  conversationId?: string;
+  participantId?: string;
+  content: string;
+  replyToId?: string;
+  replyTo?: MessageReply;
+  createdAt: string;
+  status: OutgoingMessageStatus;
+  attemptCount: number;
+  nextAttemptAt: number;
+  error?: string;
 };
 
 /**
@@ -52,6 +75,12 @@ export type Conversation = {
   lastMessageTimestamp?: string | null;
   lastMessageEditedAt?: string | null;
   messages?: Message[];
+  reads?: ConversationReadState[];
+};
+
+export type ConversationReadState = {
+  userId: string;
+  lastReadAt: string;
 };
 
 export type ConversationsResponse = {
@@ -76,6 +105,7 @@ export type DirectConversationResponse = {
 
 export type ConversationReadResponse = {
   conversationId: string;
+  userId: string;
   unreadCount: number;
   lastReadAt: string;
 };

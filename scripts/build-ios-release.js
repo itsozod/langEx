@@ -51,9 +51,13 @@ function build() {
   loadProductionEnvironment();
   validateEnvironment();
 
+  const deviceArgs = process.env.IOS_DEVICE_ID
+    ? ['--device', process.env.IOS_DEVICE_ID]
+    : ['--device'];
+
   const child = spawn(
     'caffeinate',
-    ['-i', 'npx', 'expo', 'run:ios', '--device', '--configuration', 'Release'],
+    ['-i', 'npx', 'expo', 'run:ios', ...deviceArgs, '--configuration', 'Release'],
     {
       stdio: 'inherit',
       env: { ...process.env, EXPO_NO_DOTENV: '1' },

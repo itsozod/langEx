@@ -11,6 +11,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chatStore';
 import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { useOutboxStore } from '@/screens/chat/store/outbox-store';
 
 import { ProfileAppearance } from './components/profile-appearance';
 import { ProfileHeaderCard } from './components/profile-header-card';
@@ -86,9 +87,11 @@ export default function ProfileScreen() {
   };
 
   const logout = async () => {
+    const userId = user.id;
     await queryClient.cancelQueries();
     queryClient.clear();
     resetChats();
+    useOutboxStore.getState().clearUser(userId);
     resetOnboarding();
     clearSession();
   };

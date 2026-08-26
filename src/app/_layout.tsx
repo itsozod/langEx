@@ -15,8 +15,9 @@ import {
 } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { TamaguiProvider } from 'tamagui';
 
@@ -26,7 +27,11 @@ import { ThemeProvider, useAppTheme } from '@/providers/theme-provider';
 import { useAuthSessionBootstrap } from '@/screens/auth/auth-session-bootstrap';
 import { AuthenticatedApiInterceptor } from '@/screens/auth/authenticated-api-interceptor';
 import { ChatSocketManager } from '@/screens/chat/chat-socket-manager';
-import { PushNotificationManager } from '@/screens/notifications/push-notification-manager';
+import { OutboxManager } from '@/screens/chat/outbox-manager';
+import {
+  type NotificationConversationTarget,
+  PushNotificationManager,
+} from '@/screens/notifications/push-notification-manager';
 import { QueryProvider } from '@/providers/query-provider';
 import { useAuthHydration, useAuthStore } from '@/shared/store/auth-store';
 
@@ -40,11 +45,22 @@ function ThemedAppShell() {
   const { isUnauthorized, isVerifying, user } = useAuthSessionBootstrap();
   const isSignedIn = Boolean(token && user && !isUnauthorized);
   const isProfileComplete = user?.isProfileComplete === true;
+  const [notificationTarget, setNotificationTarget] =
+    useState<NotificationConversationTarget | null>(null);
+  const routedSessionRef = useRef<string | null>(null);
+  const handledNotificationIdRef = useRef<string | null>(null);
+  const handleOpenNotificationConversation = useCallback(
+    (target: NotificationConversationTarget) => {
+      setNotificationTarget(target);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (isVerifying) return;
 
     if (!isSignedIn) {
+      routedSessionRef.current = null;
       router.replace('/welcome');
       return;
     }
@@ -54,8 +70,24 @@ function ThemedAppShell() {
       return;
     }
 
-    router.replace('/(tabs)');
-  }, [isProfileComplete, isSignedIn, isVerifying]);
+    const sessionId = `${user.id}:${token}`;
+    const isNewSession = routedSessionRef.current !== sessionId;
+    if (isNewSession) routedSessionRef.current = sessionId;
+
+    const hasUnhandledNotification =
+      notificationTarget && handledNotificationIdRef.current !== notificationTarget.notificationId;
+
+    if (hasUnhandledNotification) {
+      handledNotificationIdRef.current = notificationTarget.notificationId;
+      router.replace({
+        pathname: '/chat/[id]',
+        params: { id: notificationTarget.conversationId },
+      });
+      return;
+    }
+
+    if (isNewSession) router.replace('/(tabs)');
+  }, [isProfileComplete, isSignedIn, isVerifying, notificationTarget, token, user?.id]);
 
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme={theme}>
@@ -64,7 +96,11 @@ function ThemedAppShell() {
         <AnimatedSplashOverlay />
         {isSignedIn ? <AuthenticatedApiInterceptor /> : null}
         {isSignedIn ? <ChatSocketManager /> : null}
-        {isSignedIn && user ? <PushNotificationManager userId={user.id} /> : null}
+        {isSignedIn ? <OutboxManager /> : null}
+        <PushNotificationManager
+          onOpenConversation={handleOpenNotificationConversation}
+          userId={isSignedIn ? user?.id : undefined}
+        />
 
         {isVerifying ? (
           <View style={[styles.loadingScreen, theme === 'dark' && styles.loadingScreenDark]}>
@@ -96,6 +132,7 @@ function ThemedAppShell() {
 }
 
 const styles = StyleSheet.create({
+  appRoot: { flex: 1 },
   loadingScreen: {
     flex: 1,
     alignItems: 'center',
@@ -134,12 +171,14 @@ export default function RootLayout() {
   }
 
   return (
-    <KeyboardProvider preload={false}>
-      <QueryProvider>
-        <ThemeProvider>
-          <ThemedAppShell />
-        </ThemeProvider>
-      </QueryProvider>
-    </KeyboardProvider>
+    <GestureHandlerRootView style={styles.appRoot}>
+      <KeyboardProvider preload={false}>
+        <QueryProvider>
+          <ThemeProvider>
+            <ThemedAppShell />
+          </ThemeProvider>
+        </QueryProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }

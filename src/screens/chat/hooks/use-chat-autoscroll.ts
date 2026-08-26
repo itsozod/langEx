@@ -12,6 +12,9 @@ type MessagesContainerRef = Parameters<typeof GiftedChat<GiftedMessage>>[0]['mes
  */
 const KEEP_READING_POSITION: FlatListProps<GiftedMessage>['maintainVisibleContentPosition'] = {
   minIndexForVisible: 0,
+  // Follow incoming messages only while the reader is already at the live edge. Without this,
+  // preserving the currently visible row also preserves a small gap above a newly mounted row.
+  autoscrollToTopThreshold: 80,
 };
 
 /**

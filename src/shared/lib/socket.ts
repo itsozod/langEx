@@ -1,6 +1,11 @@
 import { io, type Socket } from 'socket.io-client';
 
-import type { Message, UnsentMessage, SocketAcknowledgement } from '@/screens/chat/types';
+import type {
+  ConversationReadResponse,
+  Message,
+  UnsentMessage,
+  SocketAcknowledgement,
+} from '@/screens/chat/types';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 import { API_URL } from './api-client';
@@ -13,6 +18,7 @@ type ServerToClientEvents = {
   user_typing: (payload: { userId: string }) => void;
   user_stop_typing: (payload: { userId: string }) => void;
   chat_error: (payload: { error: string }) => void;
+  conversation_read: (payload: ConversationReadResponse) => void;
 };
 
 type ClientToServerEvents = {
@@ -26,6 +32,7 @@ type ClientToServerEvents = {
     payload: {
       conversationId?: string;
       participantId?: string;
+      clientMessageId: string;
       content: string;
       replyToId?: string;
     },

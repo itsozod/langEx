@@ -42,6 +42,7 @@ export type ChatMessageExtras = {
   highlightedMessageId?: SharedValue<string | null>;
   onJumpToMessage?: (messageId: string) => void;
   onOpenMenu?: (message: GiftedMessage, anchor: MessageAnchor) => void;
+  onRetryMessage?: (clientMessageId: string) => void;
 };
 
 type BubbleHighlightProps = {
@@ -49,6 +50,35 @@ type BubbleHighlightProps = {
   highlightedMessageId?: SharedValue<string | null>;
   messageId: string;
 };
+
+function MessageDeliveryReceipt({ status }: { status: 'sent' | 'read' }) {
+  const styles = useChatStyles();
+  const tintColor =
+    status === 'read' ? styles.messageReceiptRead.color : styles.messageReceiptSent.color;
+
+  return (
+    <View
+      accessibilityLabel={status === 'read' ? 'Read' : 'Sent'}
+      accessibilityRole="text"
+      style={styles.messageReceipt}>
+      <SymbolView
+        name={{ ios: 'checkmark', android: 'check', web: 'check' }}
+        size={11}
+        weight="bold"
+        tintColor={tintColor}
+      />
+      {status === 'read' ? (
+        <SymbolView
+          name={{ ios: 'checkmark', android: 'check', web: 'check' }}
+          size={11}
+          style={styles.messageReceiptSecond}
+          weight="bold"
+          tintColor={tintColor}
+        />
+      ) : null}
+    </View>
+  );
+}
 
 /** Flashes over the bubble that a tap on a reply quote just revealed. */
 function BubbleHighlight({ cornerStyles, highlightedMessageId, messageId }: BubbleHighlightProps) {
@@ -153,6 +183,19 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
         />
       </MessageLongPressContext.Provider>
       <View style={styles.bubbleMeta}>
+        {position === 'right' && currentMessage.deliveryStatus === 'failed' ? (
+          <BubblePressable
+            accessibilityHint={currentMessage.sendError}
+            accessibilityLabel="Message failed to send. Retry"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => props.onRetryMessage?.(String(currentMessage._id))}>
+            <ThemedText style={styles.failedMessageLabel}>Failed · Retry</ThemedText>
+          </BubblePressable>
+        ) : null}
+        {position === 'right' && currentMessage.deliveryStatus === 'queued' ? (
+          <ThemedText style={styles.pendingMessageLabel}>Waiting</ThemedText>
+        ) : null}
         {currentMessage.editedAt ? (
           <ThemedText
             style={[
@@ -165,7 +208,12 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
         <ThemedText style={position === 'right' ? styles.messageTimeRight : styles.messageTimeLeft}>
           {formatMessageTime(currentMessage.createdAt)}
         </ThemedText>
-        {position === 'right' && currentMessage.pending ? <View style={styles.pendingDot} /> : null}
+        {position === 'right' && currentMessage.deliveryReceipt ? (
+          <MessageDeliveryReceipt status={currentMessage.deliveryReceipt} />
+        ) : null}
+        {position === 'right' && currentMessage.deliveryStatus === 'sending' ? (
+          <View style={styles.pendingDot} />
+        ) : null}
       </View>
       <BubbleHighlight
         cornerStyles={cornerStyles}

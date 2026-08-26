@@ -61,9 +61,10 @@ export const useChatStore = create<ChatState>((set) => ({
       const optimisticIndex = state.activeMessages.findIndex(
         (item) =>
           item.isOptimistic &&
-          item.senderId === message.senderId &&
-          item.content === message.content &&
-          item.replyTo?.id === message.replyTo?.id,
+          ((message.clientMessageId && item.clientMessageId === message.clientMessageId) ||
+            (item.senderId === message.senderId &&
+              item.content === message.content &&
+              item.replyTo?.id === message.replyTo?.id)),
       );
 
       if (optimisticIndex >= 0 && !message.isOptimistic) {
@@ -84,11 +85,15 @@ export const useChatStore = create<ChatState>((set) => ({
       );
 
       for (const message of messages) {
-        const existingIndex = messageIndexes.get(message.id);
-        if (existingIndex === undefined) {
+        const existingIndex =
+          messageIndexes.get(message.id) ??
+          (message.clientMessageId
+            ? activeMessages.findIndex((item) => item.clientMessageId === message.clientMessageId)
+            : -1);
+        if (existingIndex === undefined || existingIndex < 0) {
           messageIndexes.set(message.id, activeMessages.length);
           activeMessages.push(message);
-        } else if (!activeMessages[existingIndex].isOptimistic) {
+        } else if (!message.isOptimistic || activeMessages[existingIndex].isOptimistic) {
           activeMessages[existingIndex] = message;
         }
       }

@@ -102,10 +102,15 @@ export default function ChatScreen() {
     ]);
   }, [mergeMessages, paginatedMessages, setActiveMessages, windowKey]);
 
-  const { socketError, setSocketError } = useChatRoom({
+  const serverParticipantReadAt = conversation?.reads?.find(
+    (readState) => readState.userId === otherParticipant?.id,
+  )?.lastReadAt;
+  const { participantReadAt, socketError, setSocketError } = useChatRoom({
     conversationId,
     currentUserId: currentUser?.id,
     isHistoricalWindow: anchorMessageId !== null,
+    participantId: otherParticipant?.id,
+    participantReadAt: serverParticipantReadAt,
     token,
   });
   useActiveConversationPresence(conversationId);
@@ -115,6 +120,7 @@ export default function ChatScreen() {
     currentUser,
     draftParticipant,
     participantId,
+    participantReadAt,
     setSocketError,
   });
 
@@ -143,12 +149,16 @@ export default function ChatScreen() {
   const openMessageWindow = useCallback((messageId: string) => setAnchorMessageId(messageId), []);
   const openLatestWindow = useCallback(() => setAnchorMessageId(null), []);
 
-  const isLoading = isDraft ? participantQuery.isPending : query.isPending;
+  const hasValidTarget = isDraft ? Boolean(participantId) : Boolean(conversationId);
+  const isLoading = hasValidTarget && (isDraft ? participantQuery.isPending : query.isPending);
   const isError = isDraft ? participantQuery.isError : query.isError;
   const loadError = isDraft ? participantQuery.error : query.error;
 
   if (isLoading) return <ChatLoadingState />;
-  if (isError || !conversation) return <ChatErrorState error={loadError} onBack={goBack} />;
+  if (isError || !conversation) {
+    const error = hasValidTarget ? loadError : new Error('The conversation link is invalid.');
+    return <ChatErrorState error={error} onBack={goBack} />;
+  }
 
   return (
     <GradientBackground>
@@ -159,6 +169,7 @@ export default function ChatScreen() {
         ) : null}
         <ChatThread
           currentUser={currentUser}
+          conversationId={conversationId}
           giftedMessages={messaging.giftedMessages}
           hasNewerMessages={Boolean(activeQuery.hasPreviousPage)}
           hasNextPage={Boolean(activeQuery.hasNextPage)}
@@ -171,6 +182,7 @@ export default function ChatScreen() {
           onLoadNewerMessages={loadNewerMessages}
           onLoadOlderMessages={loadOlderMessages}
           onRequestMessageWindow={openMessageWindow}
+          onRetryMessage={messaging.retryMessage}
           onSend={messaging.handleSend}
           onUnsendMessage={messaging.unsendMessage}
           replyingTo={messaging.replyingTo}

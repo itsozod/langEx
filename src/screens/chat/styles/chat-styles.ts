@@ -1,5 +1,5 @@
 import { useAppTheme, type AppTheme } from '@/providers/theme-provider';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { CHAT_HEADER_HEIGHT } from '../constants';
 
@@ -181,6 +181,18 @@ const createChatStyles = (theme: AppTheme) => {
     },
     messageTimeLeft: { color: isDark ? '#9F97AA' : '#8A8491', fontSize: 9, lineHeight: 12 },
     messageTimeRight: { color: 'rgba(255,255,255,0.68)', fontSize: 9, lineHeight: 12 },
+    pendingMessageLabel: { color: 'rgba(255,255,255,0.72)', fontSize: 9, lineHeight: 12 },
+    failedMessageLabel: { color: '#FFD0D4', fontSize: 9, lineHeight: 12, fontWeight: '700' },
+    messageReceipt: {
+      width: 17,
+      height: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+    },
+    messageReceiptSecond: { marginLeft: -5 },
+    messageReceiptSent: { color: 'rgba(255,255,255,0.68)' },
+    messageReceiptRead: { color: '#8CE8C3' },
     pendingDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.65)' },
     editBanner: {
       flexDirection: 'row',
@@ -298,20 +310,6 @@ const createChatStyles = (theme: AppTheme) => {
       marginRight: 4,
     },
     replyPreviewCloseColor: { color: isDark ? '#B7AFBF' : '#756D7F' },
-    jumpToLatest: { position: 'absolute', right: 14, bottom: 10 },
-    jumpToLatestButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 20,
-      backgroundColor: '#6654C7',
-      shadowColor: '#2E2168',
-      shadowOpacity: 0.28,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 4,
-    },
     olderMessagesLoader: {
       minHeight: 40,
       marginVertical: 8,
@@ -329,25 +327,6 @@ const createChatStyles = (theme: AppTheme) => {
     },
     olderMessagesAccent: { color: isDark ? '#B7A8FF' : '#6654C7' },
     olderMessagesText: { color: isDark ? '#B8B0C4' : '#6D6578', fontSize: 10, lineHeight: 15 },
-    typingText: {
-      color: isDark ? '#B9AECE' : '#756D82',
-      fontSize: 11,
-      lineHeight: 16,
-      marginLeft: 17,
-      marginBottom: 5,
-    },
-    emptyChat: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 34,
-      ...Platform.select({
-        ios: { transform: [{ scaleY: -1 }] },
-        android: { transform: [{ scale: -1 }] },
-      }),
-    },
-    emptyTitle: { fontSize: 17, lineHeight: 23, textAlign: 'center' },
-    emptyMessage: { marginTop: 6, fontSize: 12, lineHeight: 19, textAlign: 'center' },
     errorBanner: {
       flexDirection: 'row',
       alignItems: 'center',

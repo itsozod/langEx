@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
 import { registerForPushNotifications } from '@/shared/lib/notifications';
@@ -15,35 +14,52 @@ function getRegistrationKey(userId: string) {
   return `${REGISTRATION_KEY_PREFIX}:${encodeURIComponent(API_URL)}:${userId}`;
 }
 
-function openNotificationConversation(notification: Notifications.Notification) {
+export type NotificationConversationTarget = {
+  conversationId: string;
+  notificationId: string;
+};
+
+function getNotificationConversationTarget(
+  notification: Notifications.Notification,
+): NotificationConversationTarget | null {
   try {
     const conversationId = notification.request.content.data?.conversationId;
-    if (typeof conversationId !== 'string' || !conversationId) return;
+    if (typeof conversationId !== 'string' || !conversationId) return null;
 
-    router.push({ pathname: '/chat/[id]', params: { id: conversationId } });
+    return {
+      conversationId,
+      notificationId: notification.request.identifier,
+    };
   } catch (error) {
     console.warn('[notifications] Could not open the notification conversation.', error);
+    return null;
   }
 }
 
-export function PushNotificationManager({ userId }: { userId: string }) {
+type PushNotificationManagerProps = {
+  onOpenConversation: (target: NotificationConversationTarget) => void;
+  userId?: string;
+};
+
+if (Platform.OS === 'android') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
+
+export function PushNotificationManager({
+  onOpenConversation,
+  userId,
+}: PushNotificationManagerProps) {
+  const handledResponseIdsRef = useRef(new Set<string>());
+
   useEffect(() => {
-    if (Platform.OS !== 'android') return;
-
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
-
-    return () => Notifications.setNotificationHandler(null);
-  }, []);
-
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
+    if (Platform.OS !== 'android' || !userId) return;
 
     let cancelled = false;
     let syncInFlight = false;
@@ -87,6 +103,19 @@ export function PushNotificationManager({ userId }: { userId: string }) {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
+    let cancelled = false;
+
+    const openNotificationConversation = (notification: Notifications.Notification) => {
+      const notificationId = notification.request.identifier;
+      if (handledResponseIdsRef.current.has(notificationId)) return;
+
+      const target = getNotificationConversationTarget(notification);
+      if (target) {
+        handledResponseIdsRef.current.add(notificationId);
+        onOpenConversation(target);
+      }
+    };
+
     try {
       const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
         try {
@@ -97,25 +126,32 @@ export function PushNotificationManager({ userId }: { userId: string }) {
       });
 
       const responseSubscription = Notifications.addNotificationResponseReceivedListener(
-        (response) => openNotificationConversation(response.notification),
+        (response) => {
+          openNotificationConversation(response.notification);
+          void Notifications.clearLastNotificationResponseAsync().catch((error) => {
+            console.warn('[notifications] Could not clear the notification response.', error);
+          });
+        },
       );
 
-      const lastResponse = Notifications.getLastNotificationResponse();
-      if (lastResponse?.notification) {
+      void Notifications.getLastNotificationResponseAsync().then((lastResponse) => {
+        if (cancelled || !lastResponse?.notification) return;
+
         openNotificationConversation(lastResponse.notification);
-        void Notifications.clearLastNotificationResponseAsync().catch((error) => {
+        return Notifications.clearLastNotificationResponseAsync().catch((error) => {
           console.warn('[notifications] Could not clear the last notification response.', error);
         });
-      }
+      });
 
       return () => {
+        cancelled = true;
         receivedSubscription.remove();
         responseSubscription.remove();
       };
     } catch (error) {
       console.warn('[notifications] Could not attach notification listeners.', error);
     }
-  }, []);
+  }, [onOpenConversation]);
 
   return null;
 }

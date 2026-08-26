@@ -1,16 +1,17 @@
 import type { InfiniteData } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReplyMessage } from 'react-native-gifted-chat';
 
 import { queryClient } from '@/providers/query-provider';
 import { ApiError } from '@/shared/lib/api-client';
 import type { AuthUser } from '@/screens/auth/types';
-import { prepareSocketAuth, socket } from '@/shared/lib/socket';
+import { socket } from '@/shared/lib/socket';
 import { useChatStore } from '@/shared/store/chatStore';
 
 import type { ConversationWindowParams } from '../api';
 import { chatQueryKeys } from '../hooks';
+import { useOutboxStore } from '../store/outbox-store';
 import type {
   ChatParticipant,
   Conversation,
@@ -21,6 +22,8 @@ import type {
 import { editMessage as editMessageRequest, unsendMessage as unsendMessageRequest } from '../api';
 import { discardMessageFromWindows, replaceMessageInWindows } from '../utils/conversation-cache';
 import { isMessage, toGiftedMessages } from '../utils/messages';
+import { belongsToChat, outboxMessageToOptimisticMessage } from '../utils/outbox';
+import { subscribeToOutboxDelivery } from '../utils/outbox-events';
 
 type UseChatMessagingOptions = {
   conversation?: Conversation;
@@ -28,6 +31,7 @@ type UseChatMessagingOptions = {
   currentUser: AuthUser | null;
   draftParticipant?: ChatParticipant;
   participantId?: string;
+  participantReadAt?: string;
   setSocketError: (error: string | null) => void;
 };
 
@@ -37,19 +41,54 @@ export function useChatMessaging({
   currentUser,
   draftParticipant,
   participantId,
+  participantReadAt,
   setSocketError,
 }: UseChatMessagingOptions) {
   const activeMessages = useChatStore((state) => state.activeMessages);
   const addMessage = useChatStore((state) => state.addMessage);
-  const removeMessage = useChatStore((state) => state.removeMessage);
+  const updateConversationFromMessage = useChatStore(
+    (state) => state.updateConversationFromMessage,
+  );
+  const mergeMessages = useChatStore((state) => state.mergeMessages);
   const replaceMessage = useChatStore((state) => state.replaceMessage);
   const discardMessage = useChatStore((state) => state.discardMessage);
   const [replyingTo, setReplyingTo] = useState<ReplyMessage | null>(null);
   const currentUserId = currentUser?.id;
+  const outboxMessages = useOutboxStore((state) => state.messages);
+  const deliverySubscriptions = useRef(new Set<() => void>());
+  const messagesForThisChat = useMemo(
+    () =>
+      outboxMessages
+        .filter(
+          (message) =>
+            message.userId === currentUserId &&
+            belongsToChat(message, conversationId, participantId),
+        )
+        .map(outboxMessageToOptimisticMessage),
+    [conversationId, currentUserId, outboxMessages, participantId],
+  );
+
+  useEffect(() => {
+    mergeMessages(messagesForThisChat);
+  }, [mergeMessages, messagesForThisChat]);
+
+  useEffect(
+    () => () => {
+      deliverySubscriptions.current.forEach((unsubscribe) => unsubscribe());
+      deliverySubscriptions.current.clear();
+    },
+    [],
+  );
 
   const giftedMessages = useMemo(
-    () => toGiftedMessages(activeMessages, conversation?.participants, currentUserId),
-    [activeMessages, conversation?.participants, currentUserId],
+    () =>
+      toGiftedMessages(
+        activeMessages,
+        conversation?.participants,
+        currentUserId,
+        participantReadAt,
+      ),
+    [activeMessages, conversation?.participants, currentUserId, participantReadAt],
   );
 
   const handleInputChange = useCallback(
@@ -75,48 +114,37 @@ export function useChatMessaging({
         : undefined;
 
       if (conversationId) socket.emit('stop_typing', conversationId);
-      const optimisticId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const optimisticMessage: Message = {
-        id: optimisticId,
+      const outboxMessage = useOutboxStore.getState().enqueue({
+        userId: currentUserId,
         content,
-        senderId: currentUserId,
         conversationId,
+        participantId,
         createdAt: new Date().toISOString(),
+        replyToId: replyTo?.id,
         replyTo,
-        isOptimistic: true,
-      };
+      });
 
+      const optimisticMessage = outboxMessageToOptimisticMessage(outboxMessage);
       addMessage(optimisticMessage);
+      updateConversationFromMessage(optimisticMessage);
 
-      prepareSocketAuth();
-      if (!socket.connected) socket.connect();
-      socket.emit(
-        'send_message',
-        conversationId
-          ? { conversationId, content, replyToId: replyTo?.id }
-          : { participantId, content },
-        (response) => {
-          if (!response.ok) {
-            removeMessage(optimisticId);
-            if (replyMessage) setReplyingTo(replyMessage);
-            setSocketError(response.error ?? 'Message could not be sent.');
-            return;
-          }
-
-          if (response.message && isMessage(response.message)) addMessage(response.message);
-          void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
-
-          if (!conversationId && response.conversationId) {
+      if (!conversationId) {
+        const unsubscribe = subscribeToOutboxDelivery(
+          outboxMessage.clientMessageId,
+          ({ conversationId: deliveredConversationId, message }) => {
             seedNewConversation({
-              conversationId: response.conversationId,
+              conversationId: deliveredConversationId,
               currentUser,
               draftParticipant,
-              message: response.message,
+              message,
             });
-            router.setParams({ id: response.conversationId });
-          }
-        },
-      );
+            router.setParams({ id: deliveredConversationId });
+            unsubscribe();
+            deliverySubscriptions.current.delete(unsubscribe);
+          },
+        );
+        deliverySubscriptions.current.add(unsubscribe);
+      }
     },
     [
       addMessage,
@@ -125,10 +153,13 @@ export function useChatMessaging({
       currentUserId,
       draftParticipant,
       participantId,
-      removeMessage,
-      setSocketError,
+      updateConversationFromMessage,
     ],
   );
+
+  const retryMessage = useCallback((clientMessageId: string) => {
+    useOutboxStore.getState().retry(clientMessageId);
+  }, []);
 
   const editMessage = useCallback(
     async (messageId: string, content: string) => {
@@ -194,6 +225,7 @@ export function useChatMessaging({
     giftedMessages,
     handleInputChange,
     handleSend,
+    retryMessage,
     replyingTo,
     setReplyingTo,
     unsendMessage,

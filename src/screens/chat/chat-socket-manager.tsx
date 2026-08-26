@@ -7,6 +7,10 @@ import { queryClient } from '@/providers/query-provider';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chatStore';
 
+import { useOutboxStore } from './store/outbox-store';
+import { outboxMessageToOptimisticMessage } from './utils/outbox';
+import { upsertMessageInLatestWindow } from './utils/conversation-cache';
+
 function isMessage(value: unknown): value is Message {
   if (!value || typeof value !== 'object') return false;
   const message = value as Partial<Message>;
@@ -22,14 +26,23 @@ export function ChatSocketManager() {
   const token = useAuthStore((state) => state.token);
   const query = useConversations();
   const conversations = useChatStore((state) => state.conversations);
+  const outboxMessages = useOutboxStore((state) => state.messages);
   const setConversations = useChatStore((state) => state.setConversations);
   const updateConversationFromMessage = useChatStore(
     (state) => state.updateConversationFromMessage,
   );
 
   useEffect(() => {
-    if (query.data?.conversations) setConversations(query.data.conversations);
-  }, [query.data, setConversations]);
+    if (!query.data?.conversations) return;
+
+    setConversations(query.data.conversations);
+    outboxMessages
+      .filter((message) => message.userId === useAuthStore.getState().user?.id)
+      .sort((first, second) => first.createdAt.localeCompare(second.createdAt))
+      .forEach((message) =>
+        updateConversationFromMessage(outboxMessageToOptimisticMessage(message)),
+      );
+  }, [outboxMessages, query.data, setConversations, updateConversationFromMessage]);
 
   const roomKey = conversations
     .map((conversation) => conversation.id)
@@ -52,6 +65,7 @@ export function ChatSocketManager() {
       if (!isMessage(message)) return;
 
       updateConversationFromMessage(message);
+      upsertMessageInLatestWindow(message.conversationId, message);
       // The server owns unread state. Refresh it after the immediate local preview update.
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
     };

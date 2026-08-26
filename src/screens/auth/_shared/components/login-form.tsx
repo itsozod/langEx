@@ -6,41 +6,42 @@ import { loginSchema, type LoginFormValues } from '@/screens/auth/schemas';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import AuthFormCard from './auth-form-card';
 import AuthFormField from './auth-form-field';
-import AuthPrimaryButton from './auth-primary-button';
+import { LoginPrimaryButton } from './login-primary-button';
 import PasswordInput from './password-input';
 
 const LoginForm = () => {
   const theme = useTheme();
   const styles = useStyles();
   const loginMutation = useLoginMutation();
+  const [serverError, setServerError] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
-    setError,
     clearErrors,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = async (values: LoginFormValues) => {
+    setServerError(null);
+    loginMutation.reset();
+
     try {
       await loginMutation.mutateAsync(values);
     } catch (error) {
-      setError('root.server', {
-        type: 'server',
-        message: error instanceof Error ? error.message : 'Unable to log in.',
-      });
+      setServerError(error instanceof Error ? error.message : 'Unable to log in.');
     }
   };
 
   const submit = handleSubmit(onSubmit);
+  const isPending = loginMutation.isPending || isSubmitting;
 
   return (
     <View style={styles.wrapper}>
@@ -61,7 +62,7 @@ const LoginForm = () => {
                     onChangeText={(text) => {
                       onChange(text);
                       clearErrors('email');
-                      clearErrors('root.server');
+                      setServerError(null);
                     }}
                     placeholder="you@example.com"
                     keyboardType="email-address"
@@ -69,7 +70,7 @@ const LoginForm = () => {
                     autoCorrect={false}
                     autoComplete="email"
                     textContentType="emailAddress"
-                    disabled={loginMutation.isPending}
+                    disabled={isPending}
                     returnKeyType="next"
                   />
                 )}
@@ -88,13 +89,13 @@ const LoginForm = () => {
                     onChangeText={(text) => {
                       onChange(text);
                       clearErrors('password');
-                      clearErrors('root.server');
+                      setServerError(null);
                     }}
                     placeholder="Enter your password"
                     autoCapitalize="none"
                     autoComplete="current-password"
                     textContentType="password"
-                    disabled={loginMutation.isPending}
+                    disabled={isPending}
                     returnKeyType="done"
                     onSubmitEditing={() => void submit()}
                   />
@@ -109,16 +110,16 @@ const LoginForm = () => {
             </View>
           </View>
 
-          {errors.root?.server?.message ? (
+          {serverError ? (
             <View style={styles.serverError}>
-              <ThemedText style={styles.serverErrorText}>{errors.root.server.message}</ThemedText>
+              <ThemedText style={styles.serverErrorText}>{serverError}</ThemedText>
             </View>
           ) : null}
 
-          <AuthPrimaryButton
-            label={loginMutation.isPending ? 'Signing in…' : 'Sign in'}
-            pending={loginMutation.isPending}
-            onPress={() => void submit()}
+          <LoginPrimaryButton
+            label={isPending ? 'Signing in…' : 'Sign in'}
+            pending={isPending}
+            onPress={submit}
           />
         </View>
       </AuthFormCard>

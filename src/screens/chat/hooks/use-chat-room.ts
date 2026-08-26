@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { queryClient } from '@/providers/query-provider';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
@@ -6,14 +7,25 @@ import { useChatStore } from '@/shared/store/chatStore';
 
 import { markConversationRead as markConversationReadRequest } from '../api';
 import { chatQueryKeys } from '../hooks';
-import type { ConversationsResponse, Message, UnsentMessage } from '../types';
-import { discardMessageFromWindows, replaceMessageInWindows } from '../utils/conversation-cache';
+import type {
+  ConversationReadResponse,
+  ConversationsResponse,
+  Message,
+  UnsentMessage,
+} from '../types';
+import {
+  discardMessageFromWindows,
+  replaceMessageInWindows,
+  upsertMessageInLatestWindow,
+} from '../utils/conversation-cache';
 import { isMessage, isUnsentMessage } from '../utils/messages';
 
 type UseChatRoomOptions = {
   conversationId?: string;
   currentUserId?: string;
   isHistoricalWindow: boolean;
+  participantId?: string;
+  participantReadAt?: string;
   token: string | null;
 };
 
@@ -21,6 +33,8 @@ export function useChatRoom({
   conversationId,
   currentUserId,
   isHistoricalWindow,
+  participantId,
+  participantReadAt: serverParticipantReadAt,
   token,
 }: UseChatRoomOptions) {
   const addMessage = useChatStore((state) => state.addMessage);
@@ -29,6 +43,7 @@ export function useChatRoom({
   const setTyping = useChatStore((state) => state.setTyping);
   const clearConversationUnread = useChatStore((state) => state.clearConversationUnread);
   const [socketError, setSocketError] = useState<string | null>(null);
+  const [liveReadReceipt, setLiveReadReceipt] = useState<ConversationReadResponse | null>(null);
   // Read inside the socket handlers so switching windows does not resubscribe them.
   const isHistoricalWindowRef = useRef(isHistoricalWindow);
 
@@ -67,6 +82,27 @@ export function useChatRoom({
   useEffect(() => {
     if (!conversationId) return;
 
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') return;
+
+      // iOS can suspend the socket while the phone is locked. Refresh the latest window first,
+      // then acknowledge every recovered message so the conversations badge is cleared as well.
+      void queryClient
+        .refetchQueries({
+          exact: true,
+          queryKey: chatQueryKeys.conversationWindow(conversationId, null),
+        })
+        .finally(() => {
+          void markConversationRead();
+        });
+    });
+
+    return () => subscription.remove();
+  }, [conversationId, markConversationRead]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+
     prepareSocketAuth();
 
     const joinRoom = () => {
@@ -81,7 +117,9 @@ export function useChatRoom({
       ) {
         // A message that just arrived must not be appended to a window from months ago; it would
         // render as if it belonged there. It reaches the thread when the latest window comes back.
-        if (!isHistoricalWindowRef.current) addMessage(message);
+        const confirmedMessage = { ...message, conversationId };
+        upsertMessageInLatestWindow(conversationId, confirmedMessage);
+        if (!isHistoricalWindowRef.current) addMessage(confirmedMessage);
         if (message.senderId !== currentUserId) void markConversationRead();
       }
     };
@@ -105,6 +143,11 @@ export function useChatRoom({
       if (userId !== currentUserId) setTyping(userId, true);
     };
     const handleStopTyping = ({ userId }: { userId: string }) => setTyping(userId, false);
+    const handleConversationRead = (receipt: ConversationReadResponse) => {
+      if (receipt.conversationId === conversationId && receipt.userId === participantId) {
+        setLiveReadReceipt(receipt);
+      }
+    };
     const handleChatError = ({ error }: { error: string }) => setSocketError(error);
     const handleConnectError = (error: Error) => setSocketError(error.message);
 
@@ -114,6 +157,7 @@ export function useChatRoom({
     socket.on('message_unsent', handleMessageUnsent);
     socket.on('user_typing', handleTyping);
     socket.on('user_stop_typing', handleStopTyping);
+    socket.on('conversation_read', handleConversationRead);
     socket.on('chat_error', handleChatError);
     socket.on('connect_error', handleConnectError);
 
@@ -128,12 +172,14 @@ export function useChatRoom({
       socket.off('message_unsent', handleMessageUnsent);
       socket.off('user_typing', handleTyping);
       socket.off('user_stop_typing', handleStopTyping);
+      socket.off('conversation_read', handleConversationRead);
       socket.off('chat_error', handleChatError);
       socket.off('connect_error', handleConnectError);
       useChatStore.setState({ typingUsers: [] });
       void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
-      // Prefix match so every anchored window for this conversation is dropped, not just the newest.
-      queryClient.removeQueries({ queryKey: chatQueryKeys.conversation(conversationId) });
+      // Keep message windows cached when the room effect is cleaned up. React can replay effects
+      // while the screen is still mounted; removing the active query here cancels its initial
+      // request and can leave the chat stuck in the pending state.
     };
   }, [
     addMessage,
@@ -141,9 +187,22 @@ export function useChatRoom({
     currentUserId,
     discardMessage,
     markConversationRead,
+    participantId,
     replaceMessage,
     setTyping,
   ]);
 
-  return { socketError, setSocketError };
+  const liveParticipantReadAt =
+    liveReadReceipt?.conversationId === conversationId && liveReadReceipt?.userId === participantId
+      ? liveReadReceipt?.lastReadAt
+      : undefined;
+  const participantReadAt = getLatestTimestamp(serverParticipantReadAt, liveParticipantReadAt);
+
+  return { participantReadAt, socketError, setSocketError };
+}
+
+function getLatestTimestamp(first?: string, second?: string) {
+  if (!first) return second;
+  if (!second) return first;
+  return new Date(first) >= new Date(second) ? first : second;
 }

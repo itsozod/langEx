@@ -30,6 +30,7 @@ export function getConversation(conversationId: string, window: ConversationWind
 
   return apiRequest<ConversationResponse>(
     `/conversations/${encodeURIComponent(conversationId)}?${query.toString()}`,
+    { timeout: 30_000 },
   );
 }
 
