@@ -12,7 +12,7 @@ import type {
   ConversationsResponse,
   Message,
   UnsentMessage,
-} from '../types';
+} from '../types/message.types';
 import {
   discardMessageFromWindows,
   replaceMessageInWindows,

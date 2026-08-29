@@ -65,3 +65,35 @@ Record durable decisions here. Add the date, decision, rationale, and consequenc
 **Rationale:** Messages composed offline or during connection loss must survive app restarts and preserve user order.
 
 **Consequences:** Persistence must finish before socket transmission. The backend must treat `clientMessageId` idempotently. This decision remains subject to verification while the implementation is uncommitted.
+
+## 2026-08-27 — Every request must be able to fail, and a persisted session must never be blocked
+
+**Decision:** Both Axios instances in `src/shared/lib/api-client.ts` carry an explicit 15s default timeout, `useAuthSessionBootstrap` blocks on `GET /me` only when no persisted user exists, and unreachable-API failures (`ApiError.status === 0`) stay retryable.
+
+**Rationale:** React Native's Android networking stack applies no default socket timeout, so a request reusing a stale keep-alive connection — routine after Android backgrounds or cold-starts the process — never settled and never errored. iOS gets a 60s NSURLSession default, which is why only Android stranded on the "Checking your session…" gate indefinitely.
+
+**Consequences:** Session verification is now a background revalidation over the hydrated session rather than a startup gate; a 401 still clears auth through the unauthorized handler. Long-running requests must opt into a larger per-request timeout, as `getConversation` already does. Do not reintroduce a startup state that a single unsettled request can hold open.
+
+## 2026-08-27 — Bound OkHttp's TCP connect phase on Android
+
+**Decision:** `plugins/with-android-okhttp-connect-timeout.js` installs a React Native `OkHttpClientFactory` with an 8s `connectTimeout` and `retryOnConnectionFailure`. Read and write timeouts stay at React Native's `0`.
+
+**Rationale:** `langex-backend.onrender.com` resolves to two A records and one of them (216.24.57.15) blackholes SYN packets while the other (216.24.57.7) answers in ~70ms. React Native 0.86 bundles OkHttp 4.9.2, which predates Happy Eyeballs "fast fallback" (4.12) and therefore tries resolved addresses strictly in sequence, with `connectTimeout(0)` meaning it waits on a dead address forever. iOS never reproduced this because NSURLSession implements RFC 8305 and races the addresses. A finite connect timeout is what lets OkHttp fall through to the next address.
+
+**Consequences:** Only the TCP connect phase is bounded, so Socket.IO long-polling and large uploads are unaffected. This is defence against any multi-address host with a bad endpoint, not a fix for the DNS record itself — that must be raised with the hosting provider. The plugin must stay registered in `app.json` so it survives `expo prebuild`; verify `setOkHttpClientFactory` is present in the generated `MainApplication.kt` after any prebuild or SDK upgrade.
+
+## 2026-08-29 — Keep multi-account identity local and transitions atomic
+
+**Decision:** Persist independent authenticated sessions on the device and select one active account. Do not introduce backend account linking. All login, registration, switching, invalidation, and logout paths use one account-transition boundary.
+
+**Rationale:** LangEx accounts already have complete independent authentication and profile lifecycles. A server-side parent-account model would add authorization and migration risk without being required for Telegram-style device switching.
+
+**Consequences:** Account transitions cancel and clear React Query state, disconnect the socket, and reset chat/onboarding state before exposing the next token. Outbox entries remain keyed by user. Push payloads identify the recipient account, and late responses from a previous bearer token cannot invalidate the newly active account.
+
+## 2026-08-29 — Tombstone deleted accounts and close their conversations
+
+**Decision:** Account deletion scrubs authentication and profile data but retains a tombstoned user row. Every conversation containing that user is permanently marked read-only; conversation membership and message rows remain intact.
+
+**Rationale:** Hard-deleting the user would either destroy message history or break the sender and participant relationships needed to render retained conversations. A tombstone preserves referential integrity without exposing the former identity.
+
+**Consequences:** Deleted sessions are rejected and disconnected, their email can be registered as a new identity, discovery/search exclude tombstones, profiles project only “Deleted user,” and chat creation/send/edit/unsend operations reject closed conversations. Backend and app releases must include the migration and new API fields together.

@@ -19,3 +19,7 @@ export function removeAvatar() {
     method: 'DELETE',
   });
 }
+
+export function deleteCurrentAccount() {
+  return apiRequest<{ success: true }>('/me', { method: 'DELETE' });
+}

@@ -2,11 +2,11 @@ import { apiRequest } from '@/shared/lib/api-client';
 
 import type {
   ConversationReadResponse,
-  Message,
   ConversationResponse,
   ConversationsResponse,
   DirectConversationResponse,
-} from './types';
+  Message,
+} from './types/message.types';
 
 export function getConversations() {
   return apiRequest<ConversationsResponse>('/conversations');

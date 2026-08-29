@@ -14,7 +14,7 @@ import AuthFormField from './auth-form-field';
 import { LoginPrimaryButton } from './login-primary-button';
 import PasswordInput from './password-input';
 
-const LoginForm = () => {
+const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
   const theme = useTheme();
   const styles = useStyles();
   const loginMutation = useLoginMutation();
@@ -104,7 +104,9 @@ const LoginForm = () => {
             </AuthFormField>
 
             <View style={styles.forgotRow}>
-              <Link href="/reset-password" style={styles.forgotPassword}>
+              <Link
+                href={isAddingAccount ? '/account-auth/reset-password' : '/reset-password'}
+                style={styles.forgotPassword}>
                 Forgot password?
               </Link>
             </View>
@@ -128,7 +130,10 @@ const LoginForm = () => {
         <ThemedText themeColor="textSecondary" style={styles.footerText}>
           New to LangEx?
         </ThemedText>
-        <Link href="/register" replace style={styles.footerLink}>
+        <Link
+          href={isAddingAccount ? '/account-auth/register' : '/register'}
+          replace
+          style={styles.footerLink}>
           Create an account
         </Link>
       </View>

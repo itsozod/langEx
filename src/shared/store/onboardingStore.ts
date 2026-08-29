@@ -16,7 +16,9 @@ export type OnboardingData = {
 };
 
 type OnboardingState = OnboardingData & {
+  returnAccountId: string | null;
   update: (values: Partial<OnboardingData>) => void;
+  setReturnAccountId: (userId: string | null) => void;
   toggleInterest: (interest: string) => void;
   reset: () => void;
 };
@@ -36,14 +38,16 @@ export const useOnboardingStore = create<OnboardingState>()(
   persist(
     (set) => ({
       ...initialOnboardingData,
+      returnAccountId: null,
       update: (values) => set(values),
+      setReturnAccountId: (returnAccountId) => set({ returnAccountId }),
       toggleInterest: (interest) =>
         set((state) => ({
           interests: state.interests.includes(interest)
             ? state.interests.filter((item) => item !== interest)
             : [...state.interests, interest],
         })),
-      reset: () => set(initialOnboardingData),
+      reset: () => set({ ...initialOnboardingData, returnAccountId: null }),
     }),
     {
       name: 'langex-onboarding',
@@ -57,6 +61,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         proficiencyLevel,
         interests,
         bio,
+        returnAccountId,
       }) => ({
         displayName,
         avatarUrl,
@@ -66,6 +71,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         proficiencyLevel,
         interests,
         bio,
+        returnAccountId,
       }),
     },
   ),

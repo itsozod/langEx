@@ -31,7 +31,7 @@ export function ProfileAppearance() {
     <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
       <View>
         <ThemedText type="bold" style={styles.sectionTitle}>
-          Appearance
+          Theme
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.appearanceSubtitle}>
           Choose how LangEx looks on this device.

@@ -1,26 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { GiftedChat, type ReplyMessage } from 'react-native-gifted-chat';
+import { GiftedChat } from 'react-native-gifted-chat';
 import { useSharedValue } from 'react-native-reanimated';
 
-import type { AppTheme } from '@/providers/theme-provider';
-import type { AuthUser } from '@/screens/auth/types';
-import { ThemedText } from '@/shared/components/ui/themed-text';
-
+import { useChatStore } from '@/shared/store/chatStore';
 import { CHAT_HEADER_HEIGHT } from '../constants';
 import { useChatAutoscroll } from '../hooks/use-chat-autoscroll';
 import { useChatComposer } from '../hooks/use-chat-composer';
 import { useChatJumpToMessage } from '../hooks/use-chat-jump-to-message';
 import { useChatMessageActions } from '../hooks/use-chat-message-actions';
+import { useChatReadOnly } from '../hooks/use-chat-read-only';
 import { useChatStyles } from '../styles/chat-styles';
-import { useChatThreadStyles } from '../styles/chat-thread-styles';
-import type { GiftedMessage } from '../types';
-import { useChatStore } from '@/shared/store/chatStore';
+import type { ChatThreadProps } from '../types/chat-thread-types';
+import type { GiftedMessage } from '../types/message.types';
 import { ChatInputToolbar, ChatSend } from './chat-composer';
 import { ChatJumpToLatest } from './chat-jump-to-latest';
 import { ChatMessage, ReplySwipeAction } from './chat-message';
 import { ChatMessageMenu } from './chat-message-menu';
 import { ChatReplyPreview } from './chat-reply-preview';
+import { ChatEmptyState, DeletedUserNotice } from './chat-thread-states';
 import { ChatTypingIndicator } from './chat-typing-indicator';
 import { OlderMessagesLoader } from './older-messages-loader';
 
@@ -28,31 +26,6 @@ import { OlderMessagesLoader } from './older-messages-loader';
 const LOAD_NEWER_OFFSET = 600;
 /** Distance from the newest end that counts as having reached the end of the thread. */
 const AT_LATEST_OFFSET = 80;
-
-type ChatThreadProps = {
-  conversationId?: string;
-  currentUser: AuthUser | null;
-  giftedMessages: GiftedMessage[];
-  hasNewerMessages: boolean;
-  hasNextPage: boolean;
-  isFetchNextPageError: boolean;
-  isFetchingNextPage: boolean;
-  isHistoricalWindow: boolean;
-  onInputChange: (text: string) => void;
-  onJumpToLatest: () => void;
-  onLoadNewerMessages: () => void;
-  onLoadOlderMessages: () => void;
-  onEditMessage: (messageId: string, content: string) => void;
-  onRequestMessageWindow: (messageId: string) => void;
-  onRetryMessage: (clientMessageId: string) => void;
-  onSend: (messages: GiftedMessage[]) => void;
-  onUnsendMessage: (messageId: string) => void;
-  replyingTo: ReplyMessage | null;
-  setReplyingTo: (message: ReplyMessage | null) => void;
-  theme: AppTheme;
-  topInset: number;
-  typingUsers: string[];
-};
 
 export function ChatThread({
   conversationId,
@@ -63,6 +36,7 @@ export function ChatThread({
   isFetchNextPageError,
   isFetchingNextPage,
   isHistoricalWindow,
+  isReadOnly,
   onInputChange,
   onJumpToLatest,
   onLoadNewerMessages,
@@ -79,7 +53,6 @@ export function ChatThread({
   typingUsers,
 }: ChatThreadProps) {
   const styles = useChatStyles();
-  const threadStyles = useChatThreadStyles();
   const currentUserId = currentUser?.id;
   const {
     listRef,
@@ -155,6 +128,13 @@ export function ChatThread({
     stopEditingAndResetComposer,
   });
 
+  useChatReadOnly({
+    closeMessageMenu,
+    isReadOnly,
+    setReplyingTo,
+    stopEditing: stopEditingAndResetComposer,
+  });
+
   // Offset 0 is the newest end of the inverted list, so nearing it means asking for newer messages.
   const handleScroll = useCallback(
     (event: { contentOffset: { y: number } }) => {
@@ -210,17 +190,21 @@ export function ChatThread({
             {...props}
             highlightedMessageId={highlightedMessageId}
             onJumpToMessage={jumpToMessage}
-            onOpenMenu={openMessageMenu}
+            onOpenMenu={isReadOnly ? () => {} : openMessageMenu}
             onRetryMessage={onRetryMessage}
           />
         )}
-        renderInputToolbar={(props) => (
-          <ChatInputToolbar
-            {...props}
-            isEditing={editing !== null}
-            onCancelEdit={stopEditingAndResetComposer}
-          />
-        )}
+        renderInputToolbar={
+          isReadOnly
+            ? () => null
+            : (props) => (
+                <ChatInputToolbar
+                  {...props}
+                  isEditing={editing !== null}
+                  onCancelEdit={stopEditingAndResetComposer}
+                />
+              )
+        }
         renderSend={(props) => (
           <ChatSend {...props} isEditing={editing !== null} onSubmitEdit={submitEdit} />
         )}
@@ -233,16 +217,7 @@ export function ChatThread({
             scrolledY={scrolledY}
           />
         )}
-        renderChatEmpty={() => (
-          <View style={threadStyles.emptyChat}>
-            <ThemedText type="bold" style={threadStyles.emptyTitle}>
-              Say hello 👋
-            </ThemedText>
-            <ThemedText themeColor="textSecondary" style={threadStyles.emptyMessage}>
-              Send the first message to start your conversation.
-            </ThemedText>
-          </View>
-        )}
+        renderChatEmpty={() => <ChatEmptyState />}
         loadEarlierMessagesProps={{
           isAvailable: hasNextPage,
           isLoading: isFetchingNextPage,
@@ -257,7 +232,7 @@ export function ChatThread({
           onClear: () => setReplyingTo(null),
           renderPreview: (props) => <ChatReplyPreview {...props} currentUserId={currentUserId} />,
           swipe: {
-            isEnabled: true,
+            isEnabled: !isReadOnly,
             direction: 'right',
             onSwipe: startReply,
             renderAction: () => <ReplySwipeAction />,
@@ -288,6 +263,7 @@ export function ChatThread({
           multiline: true,
         }}
       />
+      {isReadOnly ? <DeletedUserNotice /> : null}
       <ChatMessageMenu
         onClose={closeMessageMenu}
         onCopy={copyFromMenu}

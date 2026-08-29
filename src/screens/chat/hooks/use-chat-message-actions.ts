@@ -5,7 +5,7 @@ import type { ReplyMessage } from 'react-native-gifted-chat';
 
 import type { MessageAnchor } from '../components/chat-message';
 import type { MessageMenuTarget } from '../components/chat-message-menu';
-import type { GiftedMessage } from '../types';
+import type { GiftedMessage } from '../types/message.types';
 
 type UseChatMessageActionsOptions = {
   currentUserId?: string;

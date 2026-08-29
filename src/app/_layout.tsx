@@ -12,6 +12,7 @@ import {
   ThemeProvider as NavigationThemeProvider,
   router,
   Stack,
+  useRootNavigationState,
 } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -21,19 +22,22 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { TamaguiProvider } from 'tamagui';
 
-import { AnimatedSplashOverlay } from '@/shared/components/ui/animated-icon';
-import { ThemedText } from '@/shared/components/ui/themed-text';
+import { QueryProvider } from '@/providers/query-provider';
 import { ThemeProvider, useAppTheme } from '@/providers/theme-provider';
+import { switchToSavedAccount } from '@/screens/auth/_shared/utils/session-transition';
 import { useAuthSessionBootstrap } from '@/screens/auth/auth-session-bootstrap';
 import { AuthenticatedApiInterceptor } from '@/screens/auth/authenticated-api-interceptor';
 import { ChatSocketManager } from '@/screens/chat/chat-socket-manager';
 import { OutboxManager } from '@/screens/chat/outbox-manager';
 import {
   type NotificationConversationTarget,
+  clearLastNotificationResponse,
   PushNotificationManager,
 } from '@/screens/notifications/push-notification-manager';
-import { QueryProvider } from '@/providers/query-provider';
+import { AnimatedSplashOverlay } from '@/shared/components/ui/animated-icon';
+import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAuthHydration, useAuthStore } from '@/shared/store/auth-store';
+import { useUserHydration } from '@/shared/store/user.store';
 
 import tamaguiConfig from '../../tamagui.config';
 
@@ -41,23 +45,39 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function ThemedAppShell() {
   const { theme } = useAppTheme();
+  const rootNavigationState = useRootNavigationState();
   const token = useAuthStore((state) => state.token);
+  const [notificationTarget, setNotificationTarget] =
+    useState<NotificationConversationTarget | null>(null);
   const { isUnauthorized, isVerifying, user } = useAuthSessionBootstrap();
   const isSignedIn = Boolean(token && user && !isUnauthorized);
   const isProfileComplete = user?.isProfileComplete === true;
-  const [notificationTarget, setNotificationTarget] =
-    useState<NotificationConversationTarget | null>(null);
   const routedSessionRef = useRef<string | null>(null);
   const handledNotificationIdRef = useRef<string | null>(null);
+
   const handleOpenNotificationConversation = useCallback(
     (target: NotificationConversationTarget) => {
+      const auth = useAuthStore.getState();
+      if (target.recipientUserId && target.recipientUserId !== auth.activeAccountId) {
+        const hasRecipientAccount = auth.accounts.some(
+          (account) => account.userId === target.recipientUserId,
+        );
+        if (!hasRecipientAccount) return;
+
+        void switchToSavedAccount(target.recipientUserId).then((didSwitch) => {
+          if (!didSwitch) return;
+          setNotificationTarget(target);
+        });
+        return;
+      }
+
       setNotificationTarget(target);
     },
     [],
   );
 
   useEffect(() => {
-    if (isVerifying) return;
+    if (isVerifying || !rootNavigationState?.key) return;
 
     if (!isSignedIn) {
       routedSessionRef.current = null;
@@ -78,16 +98,25 @@ function ThemedAppShell() {
       notificationTarget && handledNotificationIdRef.current !== notificationTarget.notificationId;
 
     if (hasUnhandledNotification) {
-      handledNotificationIdRef.current = notificationTarget.notificationId;
       router.replace({
         pathname: '/chat/[id]',
         params: { id: notificationTarget.conversationId },
       });
+      handledNotificationIdRef.current = notificationTarget.notificationId;
+      clearLastNotificationResponse();
       return;
     }
 
     if (isNewSession) router.replace('/(tabs)');
-  }, [isProfileComplete, isSignedIn, isVerifying, notificationTarget, token, user?.id]);
+  }, [
+    isProfileComplete,
+    isSignedIn,
+    isVerifying,
+    notificationTarget,
+    rootNavigationState?.key,
+    token,
+    user?.id,
+  ]);
 
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme={theme}>
@@ -117,6 +146,7 @@ function ThemedAppShell() {
 
             <Stack.Protected guard={isSignedIn && isProfileComplete}>
               <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="account-auth" />
               <Stack.Screen name="profile" />
               <Stack.Screen name="chat/[id]" />
             </Stack.Protected>
@@ -151,6 +181,7 @@ const styles = StyleSheet.create({
 
 export default function RootLayout() {
   const authHydrated = useAuthHydration();
+  const usersHydrated = useUserHydration();
   const [fontsLoaded] = useFonts({
     Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
@@ -161,12 +192,12 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded && authHydrated) {
+    if (fontsLoaded && authHydrated && usersHydrated) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [authHydrated, fontsLoaded]);
+  }, [authHydrated, fontsLoaded, usersHydrated]);
 
-  if (!fontsLoaded || !authHydrated) {
+  if (!fontsLoaded || !authHydrated || !usersHydrated) {
     return null;
   }
 

@@ -20,12 +20,27 @@ export type DiscoverResponse = {
 };
 
 export type PublicUser = Omit<DiscoverUser, 'sharedInterests'> & {
-  email: string;
   isProfileComplete: boolean;
+  isDeleted: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
 
 export type PublicUserResponse = {
   user: PublicUser;
+};
+
+export type UserSearchResult = Pick<
+  DiscoverUser,
+  | 'id'
+  | 'displayName'
+  | 'avatarUrl'
+  | 'country'
+  | 'nativeLanguage'
+  | 'learningLanguage'
+  | 'proficiencyLevel'
+>;
+
+export type UserSearchResponse = {
+  users: UserSearchResult[];
 };

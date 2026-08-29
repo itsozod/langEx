@@ -4,12 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReplyMessage } from 'react-native-gifted-chat';
 
 import { queryClient } from '@/providers/query-provider';
-import { ApiError } from '@/shared/lib/api-client';
 import type { AuthUser } from '@/screens/auth/types';
+import { ApiError } from '@/shared/lib/api-client';
 import { socket } from '@/shared/lib/socket';
 import { useChatStore } from '@/shared/store/chatStore';
 
 import type { ConversationWindowParams } from '../api';
+import { editMessage as editMessageRequest, unsendMessage as unsendMessageRequest } from '../api';
 import { chatQueryKeys } from '../hooks';
 import { useOutboxStore } from '../store/outbox-store';
 import type {
@@ -18,8 +19,7 @@ import type {
   ConversationResponse,
   GiftedMessage,
   Message,
-} from '../types';
-import { editMessage as editMessageRequest, unsendMessage as unsendMessageRequest } from '../api';
+} from '../types/message.types';
 import { discardMessageFromWindows, replaceMessageInWindows } from '../utils/conversation-cache';
 import { isMessage, toGiftedMessages } from '../utils/messages';
 import { belongsToChat, outboxMessageToOptimisticMessage } from '../utils/outbox';
@@ -258,9 +258,11 @@ function seedNewConversation({
                 displayName: currentUser.displayName ?? null,
                 avatarUrl: currentUser.avatarUrl ?? null,
                 country: currentUser.country ?? null,
+                isDeleted: false,
               },
               draftParticipant,
             ],
+            isReadOnly: false,
             messages: [message],
           },
           pageInfo: { hasMore: false, olderCursor: null },

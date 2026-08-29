@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 
-import { getLanguageCountryCode } from '../language-country-codes';
 import { useProfileStyles } from '../styles/profile-styles';
+import { getLanguageCountryCode } from '../utils/language-country-codes';
 
 export function LanguageFlag({ language }: { language?: string | null }) {
   const styles = useProfileStyles();

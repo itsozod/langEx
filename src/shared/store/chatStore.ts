@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { Conversation, Message } from '@/screens/chat/types';
+import type { Conversation, Message } from '@/screens/chat/types/message.types';
 
 type ChatState = {
   conversations: Conversation[];

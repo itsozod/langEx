@@ -10,7 +10,7 @@ import AuthFormCard from './auth-form-card';
 import AuthFormField from './auth-form-field';
 import AuthPrimaryButton from './auth-primary-button';
 
-const ResetPasswordForm = () => {
+const ResetPasswordForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
   const theme = useTheme();
   const styles = useStyles();
 
@@ -39,7 +39,10 @@ const ResetPasswordForm = () => {
       </AuthFormCard>
 
       <View style={styles.footer}>
-        <Link href="/login" replace style={styles.footerLink}>
+        <Link
+          href={isAddingAccount ? '/account-auth/login' : '/login'}
+          replace
+          style={styles.footerLink}>
           Back to sign in
         </Link>
       </View>

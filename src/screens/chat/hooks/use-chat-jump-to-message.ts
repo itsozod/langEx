@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { FlatList } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
-import type { GiftedMessage } from '../types';
+import type { GiftedMessage } from '../types/message.types';
 
 const HIGHLIGHT_MS = 1400;
 const SCROLL_RETRY_MS = 240;

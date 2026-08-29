@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.ozod2905.langEx"
     },
     "android": {
+      "allowBackup": false,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
@@ -59,7 +60,8 @@
       "expo-font",
       "expo-image",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/with-android-okhttp-connect-timeout"
     ],
     "experiments": {
       "typedRoutes": true

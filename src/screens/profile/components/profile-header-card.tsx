@@ -2,15 +2,15 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
-import type { AuthUser } from '@/screens/auth/types';
 import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
+import type { AuthUser } from '@/screens/auth/types';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import { getCountryName } from '@/screens/onboarding/data';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
-import { getInitials } from '../language-flags';
 import { useProfileStyles } from '../styles/profile-styles';
+import { getInitials } from '../utils/language-flags';
 
 type Props = {
   user: AuthUser;

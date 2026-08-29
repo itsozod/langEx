@@ -11,6 +11,10 @@
     "ios": "expo run:ios",
     "ios:release": "node ./scripts/build-ios-release.js",
     "web": "expo start --web",
+    "version": "node scripts/bump-version.js",
+    "version:patch": "npm version patch -m \"chore(release): v%s\"",
+    "version:minor": "npm version minor -m \"chore(release): v%s\"",
+    "version:major": "npm version major -m \"chore(release): v%s\"",
     "lint": "expo lint",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -25,6 +29,7 @@
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.19.0",
     "expo": "~57.0.13",
+    "expo-application": "~57.0.2",
     "expo-constants": "~57.0.11",
     "expo-device": "~57.0.1",
     "expo-font": "~57.0.1",

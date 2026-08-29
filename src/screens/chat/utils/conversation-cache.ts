@@ -4,7 +4,12 @@ import { queryClient } from '@/providers/query-provider';
 
 import type { ConversationWindowParams } from '../api';
 import { chatQueryKeys } from '../hooks';
-import type { ConversationResponse, Message } from '../types';
+import type {
+  Conversation,
+  ConversationResponse,
+  ConversationsResponse,
+  Message,
+} from '../types/message.types';
 
 type ConversationWindows = InfiniteData<ConversationResponse, ConversationWindowParams>;
 
@@ -101,5 +106,51 @@ export function upsertMessageInLatestWindow(conversationId: string | undefined, 
 
       return { ...windows, pages };
     },
+  );
+}
+
+function markDeletedParticipant<T extends Conversation>(conversation: T, userId: string) {
+  return {
+    ...conversation,
+    isReadOnly: true,
+    participants: conversation.participants.map((participant) =>
+      participant.id === userId
+        ? {
+            ...participant,
+            displayName: 'Deleted user',
+            avatarUrl: null,
+            country: null,
+            isDeleted: true,
+          }
+        : participant,
+    ),
+  };
+}
+
+export function markParticipantDeletedInCaches(conversationId: string, userId: string) {
+  queryClient.setQueryData<ConversationsResponse>(chatQueryKeys.conversations(), (data) =>
+    data
+      ? {
+          conversations: data.conversations.map((conversation) =>
+            conversation.id === conversationId
+              ? markDeletedParticipant(conversation, userId)
+              : conversation,
+          ),
+        }
+      : data,
+  );
+
+  queryClient.setQueriesData<ConversationWindows>(
+    { queryKey: chatQueryKeys.conversation(conversationId) },
+    (windows) =>
+      windows
+        ? {
+            ...windows,
+            pages: windows.pages.map((page) => ({
+              ...page,
+              conversation: markDeletedParticipant(page.conversation, userId),
+            })),
+          }
+        : windows,
   );
 }

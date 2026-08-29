@@ -16,7 +16,9 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error instanceof ApiError && error.status < 500) {
+        // Status 0 is an unreachable API or a timed-out socket, not a rejected request, so it must
+        // stay retryable. Only a real 4xx answer from the server is worth giving up on.
+        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
           return false;
         }
 

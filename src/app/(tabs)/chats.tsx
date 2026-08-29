@@ -1,6 +1,6 @@
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { useCallback, useState } from 'react';
 import {
   FlatList,
@@ -12,14 +12,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import GradientBackground from '@/shared/components/ui/gradient-background';
-import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import { useConversations } from '@/screens/chat/hooks';
-import type { ChatParticipant, Conversation } from '@/screens/chat/types';
+import type { ChatParticipant, Conversation } from '@/screens/chat/types/message.types';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { useAuthStore } from '@/shared/store/auth-store';
+import GradientBackground from '@/shared/components/ui/gradient-background';
+import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useChatStore } from '@/shared/store/chatStore';
+import { useUserStore } from '@/shared/store/user.store';
 
 function initials(name?: string | null) {
   const value = name?.trim() || 'Language partner';
@@ -60,7 +60,7 @@ function getOtherParticipant(conversation: Conversation, currentUserId?: string)
 export default function Chats() {
   const styles = useStyles();
   const { theme } = useAppTheme();
-  const userId = useAuthStore((state) => state.user?.id);
+  const userId = useUserStore((state) => state.user?.id);
   const conversations = useChatStore((state) => state.conversations);
   const query = useConversations();
   const [isRefreshing, setIsRefreshing] = useState(false);

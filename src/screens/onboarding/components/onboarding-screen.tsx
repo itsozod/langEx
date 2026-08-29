@@ -1,9 +1,13 @@
-import GradientBackground from '@/shared/components/ui/gradient-background';
-import { ThemedText } from '@/shared/components/ui/themed-text';
-import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { useAppTheme } from '@/providers/theme-provider';
-import React, { type ReactNode } from 'react';
+import { switchToSavedAccount } from '@/screens/auth/_shared/utils/session-transition';
+import GradientBackground from '@/shared/components/ui/gradient-background';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
+import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { router } from 'expo-router';
+import { type ReactNode, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -31,6 +35,46 @@ export function OnboardingScreen({
   headerAction,
 }: OnboardingScreenProps) {
   const styles = useStyles();
+  const returnAccountId = useOnboardingStore((state) => state.returnAccountId);
+  const [isExiting, setIsExiting] = useState(false);
+
+  const exitAddedAccountOnboarding = async () => {
+    if (!returnAccountId || isExiting) return;
+
+    setIsExiting(true);
+    try {
+      const didSwitch = await switchToSavedAccount(returnAccountId);
+      if (didSwitch) {
+        router.replace('/(tabs)/profile');
+        return;
+      }
+      Alert.alert('Could not close setup', 'The previous account is no longer available.');
+    } catch {
+      Alert.alert('Could not close setup', 'Please try again.');
+    } finally {
+      setIsExiting(false);
+    }
+  };
+
+  const exitAction = returnAccountId ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Close account setup"
+      accessibilityState={{ disabled: isExiting }}
+      disabled={isExiting}
+      hitSlop={10}
+      onPress={() => void exitAddedAccountOnboarding()}
+      style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}>
+      <SymbolView
+        name={{ ios: 'xmark', android: 'close', web: 'close' }}
+        size={20}
+        weight="semibold"
+        tintColor={styles.icon.color}
+      />
+    </Pressable>
+  ) : (
+    headerAction
+  );
 
   return (
     <GradientBackground>
@@ -65,7 +109,7 @@ export function OnboardingScreen({
                 <ThemedText themeColor="textSecondary" style={styles.stepLabel}>
                   Step {step} of 5
                 </ThemedText>
-                <View style={styles.actionSlot}>{headerAction}</View>
+                <View style={styles.actionSlot}>{exitAction}</View>
               </View>
 
               <View style={styles.progressTrack}>
@@ -122,6 +166,16 @@ const useStyles = () => {
       justifyContent: 'space-between',
     },
     backButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 20,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.76)',
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(91,70,176,0.10)',
+    },
+    closeButton: {
       width: 40,
       height: 40,
       alignItems: 'center',

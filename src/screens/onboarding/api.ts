@@ -2,7 +2,7 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import { Platform } from 'react-native';
 
 import type { AuthUser } from '@/screens/auth/types';
-import { apiClient, apiRequest } from '@/shared/lib/api-client';
+import { apiClient, apiRequest, UPLOAD_TIMEOUT_MS } from '@/shared/lib/api-client';
 import type { OnboardingData } from '@/shared/store/onboardingStore';
 
 type AvatarResponse = {
@@ -36,7 +36,9 @@ export async function uploadAvatar(asset: ImagePickerAsset) {
     } as unknown as Blob);
   }
 
-  const response = await apiClient.post<AvatarResponse>('/users/avatar', formData);
+  const response = await apiClient.post<AvatarResponse>('/users/avatar', formData, {
+    timeout: UPLOAD_TIMEOUT_MS,
+  });
   return response.data;
 }
 

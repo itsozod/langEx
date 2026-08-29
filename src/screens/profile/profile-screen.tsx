@@ -1,19 +1,21 @@
-import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/providers/theme-provider';
-import { SymbolView } from '@/shared/components/ui/symbol-view';
+import {
+  removeActiveAccount,
+  switchToSavedAccount,
+} from '@/screens/auth/_shared/utils/session-transition';
 import GradientBackground from '@/shared/components/ui/gradient-background';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAuthStore } from '@/shared/store/auth-store';
-import { useChatStore } from '@/shared/store/chatStore';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
-import { useOutboxStore } from '@/screens/chat/store/outbox-store';
+import { useUserStore } from '@/shared/store/user.store';
 
-import { ProfileAppearance } from './components/profile-appearance';
+import { ProfileAccounts } from './components/profile-accounts';
 import { ProfileHeaderCard } from './components/profile-header-card';
 import { ProfileDetails, ProfileLanguages } from './components/profile-sections';
 import {
@@ -26,16 +28,15 @@ import { useProfileStyles } from './styles/profile-styles';
 export default function ProfileScreen() {
   const styles = useProfileStyles();
   const { theme } = useAppTheme();
-  const user = useAuthStore((state) => state.user);
-  const clearSession = useAuthStore((state) => state.clearSession);
-  const resetChats = useChatStore((state) => state.reset);
-  const resetOnboarding = useOnboardingStore((state) => state.reset);
-  const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
+  const users = useUserStore((state) => state.users);
+  const activeAccountId = useAuthStore((state) => state.activeAccountId);
   const changeAvatar = useChangeAvatarMutation();
   const removeAvatar = useRemoveAvatarMutation();
   const refreshProfile = useRefreshProfileMutation();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [switchingAccountId, setSwitchingAccountId] = useState<string | null>(null);
   const refreshColor = theme === 'dark' ? '#B8A9FF' : '#6654C7';
 
   if (!user) return null;
@@ -87,20 +88,27 @@ export default function ProfileScreen() {
   };
 
   const logout = async () => {
-    const userId = user.id;
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    resetChats();
-    useOutboxStore.getState().clearUser(userId);
-    resetOnboarding();
-    clearSession();
+    await removeActiveAccount();
+  };
+
+  const switchAccount = async (userId: string) => {
+    setSwitchingAccountId(userId);
+    try {
+      await switchToSavedAccount(userId);
+    } finally {
+      setSwitchingAccountId(null);
+    }
   };
 
   const confirmLogout = () => {
-    Alert.alert('Log out?', 'You will need to sign in again to access your profile and chats.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => void logout() },
-    ]);
+    Alert.alert(
+      'Log out of this account?',
+      'Other saved accounts will stay signed in on this device.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log out', style: 'destructive', onPress: () => void logout() },
+      ],
+    );
   };
 
   return (
@@ -121,12 +129,27 @@ export default function ProfileScreen() {
         <SafeAreaView style={styles.safeArea} edges={['top']}>
           <View style={styles.content}>
             <View style={styles.titleRow}>
-              <ThemedText type="title" style={styles.screenTitle}>
-                My profile
-              </ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.screenSubtitle}>
-                Your language exchange identity
-              </ThemedText>
+              <View style={styles.titleCopy}>
+                <ThemedText type="title" style={styles.screenTitle}>
+                  My profile
+                </ThemedText>
+                <ThemedText themeColor="textSecondary" style={styles.screenSubtitle}>
+                  Your language exchange identity
+                </ThemedText>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open profile settings"
+                hitSlop={8}
+                onPress={() => router.push('/profile/settings')}
+                style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}>
+                <SymbolView
+                  name={{ ios: 'gearshape', android: 'settings', web: 'settings' }}
+                  size={21}
+                  weight="semibold"
+                  tintColor={styles.settingsIcon.color}
+                />
+              </Pressable>
             </View>
 
             <ProfileHeaderCard
@@ -137,10 +160,14 @@ export default function ProfileScreen() {
               onChooseAvatar={() => void chooseAvatar()}
               onRemovePhoto={() => void removePhoto()}
             />
+            <ProfileAccounts
+              users={users}
+              activeAccountId={activeAccountId ?? user.id}
+              switchingAccountId={switchingAccountId}
+              onSwitchAccount={(userId) => void switchAccount(userId)}
+            />
             <ProfileLanguages user={user} />
             <ProfileDetails user={user} />
-            <ProfileAppearance />
-
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Log out"

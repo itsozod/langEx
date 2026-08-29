@@ -2,14 +2,14 @@ import { useEffect } from 'react';
 
 import { ApiError } from '@/shared/lib/api-client';
 import { useAuthStore } from '@/shared/store/auth-store';
+import { useUserStore } from '@/shared/store/user.store';
 
 import { useMeQuery } from './hooks';
 
 export function useAuthSessionBootstrap() {
   const token = useAuthStore((state) => state.token);
-  const storedUser = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
-  const clearSession = useAuthStore((state) => state.clearSession);
+  const storedUser = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
   const { data, error, isPending } = useMeQuery();
   const isUnauthorized = error instanceof ApiError && error.status === 401;
 
@@ -19,15 +19,13 @@ export function useAuthSessionBootstrap() {
     }
   }, [data, setUser]);
 
-  useEffect(() => {
-    if (isUnauthorized) {
-      clearSession();
-    }
-  }, [clearSession, isUnauthorized]);
-
   return {
     isUnauthorized,
-    isVerifying: Boolean(token) && isPending && !data,
+    // Only block on `/me` when there is nothing to render yet. A persisted user is enough to enter
+    // the app; verification keeps running in the background and a 401 still clears the session.
+    // Blocking on a hydrated session meant one slow or dead `/me` stranded the app on the loading
+    // gate - reachable on Android, where a backgrounded process cold-starts on reopen.
+    isVerifying: Boolean(token) && !storedUser && isPending,
     user: data?.user ?? storedUser,
   };
 }

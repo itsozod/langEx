@@ -1,15 +1,21 @@
 import { useEffect } from 'react';
 
-import { chatQueryKeys, useConversations } from '@/screens/chat/hooks';
-import type { Message } from '@/screens/chat/types';
-import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { queryClient } from '@/providers/query-provider';
+import { removeInvalidActiveAccount } from '@/screens/auth/_shared/utils/session-transition';
+import { chatQueryKeys, useConversations } from '@/screens/chat/hooks';
+import type { Message } from '@/screens/chat/types/message.types';
+import { discoverQueryKeys } from '@/screens/discover/hooks';
+import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chatStore';
+import { useUserStore } from '@/shared/store/user.store';
 
 import { useOutboxStore } from './store/outbox-store';
+import {
+  markParticipantDeletedInCaches,
+  upsertMessageInLatestWindow,
+} from './utils/conversation-cache';
 import { outboxMessageToOptimisticMessage } from './utils/outbox';
-import { upsertMessageInLatestWindow } from './utils/conversation-cache';
 
 function isMessage(value: unknown): value is Message {
   if (!value || typeof value !== 'object') return false;
@@ -37,7 +43,7 @@ export function ChatSocketManager() {
 
     setConversations(query.data.conversations);
     outboxMessages
-      .filter((message) => message.userId === useAuthStore.getState().user?.id)
+      .filter((message) => message.userId === useUserStore.getState().user?.id)
       .sort((first, second) => first.createdAt.localeCompare(second.createdAt))
       .forEach((message) =>
         updateConversationFromMessage(outboxMessageToOptimisticMessage(message)),
@@ -75,11 +81,22 @@ export function ChatSocketManager() {
     const handleMessageChanged = () => {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
     };
+    const handleParticipantDeleted = (payload: { conversationId: string; userId: string }) => {
+      if (!payload.conversationId || !payload.userId) return;
+      markParticipantDeletedInCaches(payload.conversationId, payload.userId);
+      queryClient.invalidateQueries({ queryKey: discoverQueryKeys.user(payload.userId) });
+    };
+    const handleAccountDeleted = (payload: { userId: string }) => {
+      if (payload.userId !== useAuthStore.getState().activeAccountId) return;
+      void removeInvalidActiveAccount();
+    };
 
     socket.on('connect', joinRooms);
     socket.on('receive_message', handleMessage);
     socket.on('message_edited', handleMessageChanged);
     socket.on('message_unsent', handleMessageChanged);
+    socket.on('participant_deleted', handleParticipantDeleted);
+    socket.on('account_deleted', handleAccountDeleted);
 
     if (socket.connected) joinRooms();
     else socket.connect();
@@ -89,6 +106,8 @@ export function ChatSocketManager() {
       socket.off('receive_message', handleMessage);
       socket.off('message_edited', handleMessageChanged);
       socket.off('message_unsent', handleMessageChanged);
+      socket.off('participant_deleted', handleParticipantDeleted);
+      socket.off('account_deleted', handleAccountDeleted);
     };
   }, [roomKey, token, updateConversationFromMessage]);
 

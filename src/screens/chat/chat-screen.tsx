@@ -3,21 +3,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import GradientBackground from '@/shared/components/ui/gradient-background';
 import { useAppTheme } from '@/providers/theme-provider';
 import { usePublicUser } from '@/screens/discover/hooks';
+import GradientBackground from '@/shared/components/ui/gradient-background';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chatStore';
+import { useUserStore } from '@/shared/store/user.store';
 
 import { ChatHeader } from './components/chat-header';
 import { ChatErrorBanner, ChatErrorState, ChatLoadingState } from './components/chat-status';
 import { ChatThread } from './components/chat-thread';
+import { useConversation } from './hooks';
+import { useActiveConversationPresence } from './hooks/use-active-conversation-presence';
 import { useChatMessaging } from './hooks/use-chat-messaging';
 import { useChatRoom } from './hooks/use-chat-room';
-import { useActiveConversationPresence } from './hooks/use-active-conversation-presence';
-import { useConversation } from './hooks';
 import { useChatStyles } from './styles/chat-styles';
-import type { ChatParticipant } from './types';
+import type { ChatParticipant } from './types/message.types';
 
 export default function ChatScreen() {
   const params = useLocalSearchParams<{
@@ -31,7 +32,7 @@ export default function ChatScreen() {
   const styles = useChatStyles();
   const insets = useSafeAreaInsets();
   const { theme } = useAppTheme();
-  const currentUser = useAuthStore((state) => state.user);
+  const currentUser = useUserStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const setActiveMessages = useChatStore((state) => state.setActiveMessages);
   const mergeMessages = useChatStore((state) => state.mergeMessages);
@@ -57,6 +58,7 @@ export default function ChatScreen() {
           displayName: user.displayName,
           avatarUrl: user.avatarUrl,
           country: user.country,
+          isDeleted: user.isDeleted,
         }
       : undefined;
   }, [participantQuery.data]);
@@ -70,7 +72,7 @@ export default function ChatScreen() {
     () =>
       conversationPages?.[0]?.conversation ??
       (isDraft && draftParticipant
-        ? { id: 'new', participants: [draftParticipant], messages: [] }
+        ? { id: 'new', participants: [draftParticipant], messages: [], isReadOnly: false }
         : undefined),
     [conversationPages, draftParticipant, isDraft],
   );
@@ -176,6 +178,7 @@ export default function ChatScreen() {
           isFetchNextPageError={activeQuery.isFetchNextPageError}
           isFetchingNextPage={activeQuery.isFetchingNextPage}
           isHistoricalWindow={anchorMessageId !== null}
+          isReadOnly={conversation.isReadOnly}
           onEditMessage={messaging.editMessage}
           onInputChange={messaging.handleInputChange}
           onJumpToLatest={openLatestWindow}

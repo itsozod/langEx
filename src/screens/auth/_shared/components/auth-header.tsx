@@ -16,6 +16,8 @@ const AuthHeader = ({ back }: NativeStackHeaderProps) => {
       <View style={styles.row}>
         {back ? (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
             onPress={() => router.back()}
             hitSlop={12}
             style={({ pressed }) => [styles.side, pressed && styles.pressed]}>

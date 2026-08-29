@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, type FlatList, type FlatListProps } from 'react-native';
 import type { GiftedChat } from 'react-native-gifted-chat';
 
-import type { GiftedMessage } from '../types';
+import type { GiftedMessage } from '../types/message.types';
 
 type MessagesContainerRef = Parameters<typeof GiftedChat<GiftedMessage>>[0]['messagesContainerRef'];
 

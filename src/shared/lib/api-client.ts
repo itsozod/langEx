@@ -67,13 +67,27 @@ function installErrorInterceptor(client: AxiosInstance, handleUnauthorized: bool
     (response) => response,
     (error: unknown) => {
       const apiError = normalizeAxiosError(error);
-      if (handleUnauthorized && apiError instanceof ApiError && apiError.status === 401) {
+      const requestAuthorization = isAxiosError(error)
+        ? error.config?.headers?.get?.('Authorization')
+        : undefined;
+      const activeToken = useAuthStore.getState().token;
+      const belongsToActiveSession =
+        typeof requestAuthorization !== 'string' ||
+        requestAuthorization === `Bearer ${activeToken}`;
+      if (
+        handleUnauthorized &&
+        belongsToActiveSession &&
+        apiError instanceof ApiError &&
+        apiError.status === 401
+      ) {
         unauthorizedHandler?.();
       }
       return Promise.reject(apiError);
     },
   );
 }
+
+export const UPLOAD_TIMEOUT_MS = 120_000;
 
 export const authApiClient = create({
   baseURL: API_URL,

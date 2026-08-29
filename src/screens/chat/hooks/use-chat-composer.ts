@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
 
-import type { GiftedMessage } from '../types';
+import type { GiftedMessage } from '../types/message.types';
 import { useChatComposerHeight } from './use-chat-composer-height';
 import { useChatEdit } from './use-chat-edit';
 

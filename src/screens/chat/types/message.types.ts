@@ -16,6 +16,7 @@ export type ChatParticipant = {
   displayName: string | null;
   avatarUrl: string | null;
   country: string | null;
+  isDeleted: boolean;
 };
 
 export type MessageReply = {
@@ -69,6 +70,7 @@ export type Conversation = {
   id: string;
   createdAt?: string;
   participants: ChatParticipant[];
+  isReadOnly: boolean;
   unreadCount?: number;
   lastMessage?: Message | null;
   lastMessagePreview?: string | null;
@@ -108,6 +110,11 @@ export type ConversationReadResponse = {
   userId: string;
   unreadCount: number;
   lastReadAt: string;
+};
+
+export type ParticipantDeleted = {
+  conversationId: string;
+  userId: string;
 };
 
 export type SocketAcknowledgement = {

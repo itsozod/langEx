@@ -15,7 +15,7 @@ import AuthFormField from './auth-form-field';
 import AuthPrimaryButton from './auth-primary-button';
 import PasswordInput from './password-input';
 
-const RegisterForm = () => {
+const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
   const theme = useTheme();
   const styles = useStyles();
   const registerMutation = useRegisterMutation();
@@ -149,7 +149,10 @@ const RegisterForm = () => {
         <ThemedText themeColor="textSecondary" style={styles.footerText}>
           Already have an account?
         </ThemedText>
-        <Link href="/login" replace style={styles.footerLink}>
+        <Link
+          href={isAddingAccount ? '/account-auth/login' : '/login'}
+          replace
+          style={styles.footerLink}>
           Sign in
         </Link>
       </View>

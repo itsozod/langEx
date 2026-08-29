@@ -1,4 +1,4 @@
-const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
+export const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
   Arabic: 'SA',
   Armenian: 'AM',
   Azerbaijani: 'AZ',
@@ -40,6 +40,3 @@ const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
   Uzbek: 'UZ',
   Vietnamese: 'VN',
 };
-
-export const getLanguageCountryCode = (language?: string | null) =>
-  language ? LANGUAGE_COUNTRY_CODES[language] : undefined;

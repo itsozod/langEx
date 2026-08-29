@@ -5,13 +5,14 @@ import { queryClient } from '@/providers/query-provider';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chatStore';
+import { useUserStore } from '@/shared/store/user.store';
 
 import { chatQueryKeys } from './hooks';
 import { useOutboxStore, waitForOutboxPersistence } from './store/outbox-store';
-import type { OutboxMessage, SocketAcknowledgement } from './types';
+import type { OutboxMessage, SocketAcknowledgement } from './types/message.types';
+import { upsertMessageInLatestWindow } from './utils/conversation-cache';
 import { isMessage } from './utils/messages';
 import { publishOutboxDelivery } from './utils/outbox-events';
-import { upsertMessageInLatestWindow } from './utils/conversation-cache';
 
 const ACK_TIMEOUT_MS = 15_000;
 const MAX_AUTOMATIC_ATTEMPTS = 5;
@@ -22,7 +23,7 @@ function retryDelay(attemptCount: number) {
 }
 
 function isPermanentSendError(message: string) {
-  return /required|non-empty|not found|not a participant|cannot message|already been used/i.test(
+  return /required|non-empty|not found|not a participant|cannot message|already been used|deleted their account|read-only/i.test(
     message,
   );
 }
@@ -56,7 +57,7 @@ function emitOutboxMessage(message: OutboxMessage) {
 
 export function OutboxManager() {
   const token = useAuthStore((state) => state.token);
-  const userId = useAuthStore((state) => state.user?.id);
+  const userId = useUserStore((state) => state.user?.id);
   const messages = useOutboxStore((state) => state.messages);
   const [wakeVersion, setWakeVersion] = useState(0);
   const inFlightIds = useRef(new Set<string>());
@@ -121,7 +122,7 @@ export function OutboxManager() {
           .then(() => emitOutboxMessage(message))
           .then((response) => {
             const currentSession = useAuthStore.getState();
-            if (currentSession.token !== token || currentSession.user?.id !== userId) return;
+            if (currentSession.token !== token || currentSession.activeAccountId !== userId) return;
 
             if (!response.ok || !response.message || !isMessage(response.message)) {
               const error = response.error ?? 'Message could not be sent.';

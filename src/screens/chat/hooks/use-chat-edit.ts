@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { GiftedMessage } from '../types';
+import type { GiftedMessage } from '../types/message.types';
 
 type EditingMessage = { id: string; originalText: string };
 

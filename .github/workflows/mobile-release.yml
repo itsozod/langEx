@@ -2,9 +2,8 @@ name: Android release build
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    tags:
+      - 'v*.*.*'
 
 concurrency:
   group: mobile-release-${{ github.ref }}
@@ -45,14 +44,14 @@ jobs:
         id: apk
         run: |
           apk_url="$(jq -er 'if type == "array" then .[0] else . end | .artifacts.buildUrl // .artifacts.applicationArchiveUrl' eas-build.json)"
-          apk_name="LangEx-android-${GITHUB_RUN_NUMBER}.apk"
+          apk_name="LangEx-android-${GITHUB_REF_NAME}.apk"
           curl --fail --location "$apk_url" --output "$apk_name"
           echo "name=$apk_name" >> "$GITHUB_OUTPUT"
 
       - name: Attach APK to workflow run
         uses: actions/upload-artifact@v4
         with:
-          name: LangEx-android-${{ github.run_number }}
+          name: LangEx-android-${{ github.ref_name }}
           path: ${{ steps.apk.outputs.name }}
           retention-days: 30
           if-no-files-found: error
@@ -61,9 +60,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "android-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
+          gh release create "$GITHUB_REF_NAME" \
             "${{ steps.apk.outputs.name }}#Installable Android APK" \
-            --target "$GITHUB_SHA" \
-            --title "LangEx Android build ${GITHUB_RUN_NUMBER}" \
-            --notes "Standalone Android build from main using the production LangEx backend." \
+            --verify-tag \
+            --title "LangEx $GITHUB_REF_NAME" \
+            --generate-notes \
             --prerelease

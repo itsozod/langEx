@@ -6,7 +6,7 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
-import type { ChatParticipant } from '../types';
+import type { ChatParticipant } from '../types/message.types';
 import { getInitials } from '../utils/messages';
 
 type ChatHeaderProps = {
@@ -17,7 +17,9 @@ type ChatHeaderProps = {
 
 export function ChatHeader({ participant, onBack, onOpenProfile }: ChatHeaderProps) {
   const styles = useChatStyles();
-  const name = participant?.displayName?.trim() || 'Language partner';
+  const name = participant?.isDeleted
+    ? 'Deleted user'
+    : participant?.displayName?.trim() || 'Language partner';
 
   return (
     <View style={styles.header}>
@@ -66,7 +68,9 @@ export function ChatHeader({ participant, onBack, onOpenProfile }: ChatHeaderPro
           <ThemedText type="bold" numberOfLines={1} style={styles.headerName}>
             {name}
           </ThemedText>
-          <ThemedText style={styles.onlineText}>Conversation</ThemedText>
+          <ThemedText style={styles.onlineText}>
+            {participant?.isDeleted ? 'Account deleted' : 'Conversation'}
+          </ThemedText>
         </View>
       </Pressable>
     </View>

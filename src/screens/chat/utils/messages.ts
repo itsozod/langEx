@@ -1,4 +1,9 @@
-import type { ChatParticipant, GiftedMessage, Message, UnsentMessage } from '../types';
+import type {
+  ChatParticipant,
+  GiftedMessage,
+  Message,
+  UnsentMessage,
+} from '../types/message.types';
 
 export function getInitials(name?: string | null) {
   const value = name?.trim() || 'Language partner';

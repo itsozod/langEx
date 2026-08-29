@@ -73,6 +73,18 @@ const createChatThreadStyles = (theme: AppTheme) => {
     },
     emptyTitle: { fontSize: 17, lineHeight: 23, textAlign: 'center' },
     emptyMessage: { marginTop: 6, fontSize: 12, lineHeight: 19, textAlign: 'center' },
+    deletedUserNotice: {
+      minHeight: 70,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: border,
+      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+    },
+    deletedUserTitle: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
+    deletedUserMessage: { marginTop: 3, fontSize: 11, lineHeight: 16, textAlign: 'center' },
   });
 };
 

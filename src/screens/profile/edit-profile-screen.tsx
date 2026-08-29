@@ -23,13 +23,13 @@ import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { LEVELS } from '@/shared/constants/language-levels';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useUserStore } from '@/shared/store/user.store';
 import { useEditProfileStyles } from './styles/edit-profile-styles';
 
 export default function EditProfile() {
   const themeColors = useTheme();
   const styles = useEditProfileStyles();
-  const user = useAuthStore((state) => state.user);
+  const user = useUserStore((state) => state.user);
   const updateMutation = useUpdateProfileMutation();
   const {
     control,

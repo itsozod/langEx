@@ -1,20 +1,20 @@
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import GradientBackground from '@/shared/components/ui/gradient-background';
-import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
-import { ThemedText } from '@/shared/components/ui/themed-text';
-import { usePublicUser } from '@/screens/discover/hooks';
+import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
 import { useFindDirectConversation } from '@/screens/chat/hooks';
+import { usePublicUser } from '@/screens/discover/hooks';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import { getCountryName } from '@/screens/onboarding/data';
 import { LanguageFlag } from '@/screens/profile/components/language-flag';
-import { getInitials } from '@/screens/profile/language-flags';
-import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
-import { useAuthStore } from '@/shared/store/auth-store';
+import { getInitials } from '@/screens/profile/utils/language-flags';
+import GradientBackground from '@/shared/components/ui/gradient-background';
+import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
+import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useUserStore } from '@/shared/store/user.store';
 
 import { usePublicProfileStyles } from './styles/public-profile-styles';
 
@@ -30,13 +30,14 @@ export default function PublicProfile() {
     ? params.returnToConversationId[0]
     : params.returnToConversationId;
   const styles = usePublicProfileStyles();
-  const currentUser = useAuthStore((state) => state.user);
+  const currentUser = useUserStore((state) => state.user);
   const query = usePublicUser(id);
   const findConversation = useFindDirectConversation();
 
   const goBack = () => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/(tabs)/discover');
+    if (router.canGoBack()) {
+      router.back();
+    } else router.replace('/(tabs)/discover');
   };
 
   if (query.isPending) {
@@ -71,6 +72,24 @@ export default function PublicProfile() {
   }
 
   const user = query.data.user;
+  if (user.isDeleted) {
+    return (
+      <GradientBackground>
+        <SafeAreaView style={styles.centered}>
+          <ThemedText type="bold" style={styles.errorTitle}>
+            User deleted
+          </ThemedText>
+          <ThemedText themeColor="textSecondary" style={styles.errorMessage}>
+            This account no longer exists. Previous conversations and messages remain available.
+          </ThemedText>
+          <Pressable accessibilityRole="button" onPress={goBack} style={styles.errorButton}>
+            <ThemedText style={styles.errorButtonText}>Go back</ThemedText>
+          </Pressable>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
+
   const shared = new Set(currentUser?.interests ?? []);
 
   return (
@@ -81,7 +100,7 @@ export default function PublicProfile() {
             <View style={styles.header}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Back to discover"
+                accessibilityLabel="Back"
                 hitSlop={10}
                 onPress={goBack}
                 style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
@@ -104,12 +123,12 @@ export default function PublicProfile() {
               ) : (
                 <View style={styles.avatarPlaceholder}>
                   <ThemedText style={styles.initials}>
-                    {getInitials(user.displayName, user.email)}
+                    {getInitials(user.displayName, '')}
                   </ThemedText>
                 </View>
               )}
               <ThemedText type="title" style={styles.displayName}>
-                {user.displayName || user.email.split('@')[0]}
+                {user.displayName || 'Language partner'}
               </ThemedText>
               {user.country ? (
                 <View style={styles.countryRow}>

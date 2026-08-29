@@ -1,4 +1,4 @@
-import type { Message, OutboxMessage } from '../types';
+import type { Message, OutboxMessage } from '../types/message.types';
 
 export type OutboxDelivery = {
   outboxMessage: OutboxMessage;

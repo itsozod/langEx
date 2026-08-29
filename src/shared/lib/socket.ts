@@ -3,9 +3,10 @@ import { io, type Socket } from 'socket.io-client';
 import type {
   ConversationReadResponse,
   Message,
-  UnsentMessage,
+  ParticipantDeleted,
   SocketAcknowledgement,
-} from '@/screens/chat/types';
+  UnsentMessage,
+} from '@/screens/chat/types/message.types';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 import { API_URL } from './api-client';
@@ -19,6 +20,8 @@ type ServerToClientEvents = {
   user_stop_typing: (payload: { userId: string }) => void;
   chat_error: (payload: { error: string }) => void;
   conversation_read: (payload: ConversationReadResponse) => void;
+  participant_deleted: (payload: ParticipantDeleted) => void;
+  account_deleted: (payload: { userId: string }) => void;
 };
 
 type ClientToServerEvents = {

@@ -17,6 +17,7 @@ function getRegistrationKey(userId: string) {
 export type NotificationConversationTarget = {
   conversationId: string;
   notificationId: string;
+  recipientUserId?: string;
 };
 
 function getNotificationConversationTarget(
@@ -29,6 +30,10 @@ function getNotificationConversationTarget(
     return {
       conversationId,
       notificationId: notification.request.identifier,
+      recipientUserId:
+        typeof notification.request.content.data?.recipientUserId === 'string'
+          ? notification.request.content.data.recipientUserId
+          : undefined,
     };
   } catch (error) {
     console.warn('[notifications] Could not open the notification conversation.', error);
@@ -56,8 +61,8 @@ export function PushNotificationManager({
   onOpenConversation,
   userId,
 }: PushNotificationManagerProps) {
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
   const handledResponseIdsRef = useRef(new Set<string>());
-
   useEffect(() => {
     if (Platform.OS !== 'android' || !userId) return;
 
@@ -103,9 +108,10 @@ export function PushNotificationManager({
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
-    let cancelled = false;
+    const openNotificationConversation = (response: Notifications.NotificationResponse) => {
+      if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
 
-    const openNotificationConversation = (notification: Notifications.Notification) => {
+      const notification = response.notification;
       const notificationId = notification.request.identifier;
       if (handledResponseIdsRef.current.has(notificationId)) return;
 
@@ -116,42 +122,51 @@ export function PushNotificationManager({
       }
     };
 
-    try {
-      const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
-        try {
-          console.info('[notifications] Foreground notification received.', notification);
-        } catch (error) {
-          console.warn('[notifications] Could not process a foreground notification.', error);
-        }
-      });
+    // Attach the live listener before reading the persisted response so a tap cannot fall into the
+    // gap between those two operations. The hook below is authoritative for cold starts.
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) =>
+      openNotificationConversation(response),
+    );
 
-      const responseSubscription = Notifications.addNotificationResponseReceivedListener(
-        (response) => {
-          openNotificationConversation(response.notification);
-          void Notifications.clearLastNotificationResponseAsync().catch((error) => {
-            console.warn('[notifications] Could not clear the notification response.', error);
-          });
-        },
-      );
-
-      void Notifications.getLastNotificationResponseAsync().then((lastResponse) => {
-        if (cancelled || !lastResponse?.notification) return;
-
-        openNotificationConversation(lastResponse.notification);
-        return Notifications.clearLastNotificationResponseAsync().catch((error) => {
-          console.warn('[notifications] Could not clear the last notification response.', error);
-        });
-      });
-
-      return () => {
-        cancelled = true;
-        receivedSubscription.remove();
-        responseSubscription.remove();
-      };
-    } catch (error) {
-      console.warn('[notifications] Could not attach notification listeners.', error);
-    }
+    return () => {
+      responseSubscription.remove();
+    };
   }, [onOpenConversation]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !lastNotificationResponse) return;
+    if (lastNotificationResponse.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) {
+      return;
+    }
+
+    const notification = lastNotificationResponse.notification;
+    const notificationId = notification.request.identifier;
+    if (handledResponseIdsRef.current.has(notificationId)) return;
+
+    const target = getNotificationConversationTarget(notification);
+    if (!target) return;
+
+    handledResponseIdsRef.current.add(notificationId);
+    onOpenConversation(target);
+  }, [lastNotificationResponse, onOpenConversation]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
+      console.info('[notifications] Foreground notification received.', notification);
+    });
+
+    return () => receivedSubscription.remove();
+  }, []);
+
   return null;
+}
+
+export function clearLastNotificationResponse() {
+  if (Platform.OS !== 'android') return;
+
+  void Notifications.clearLastNotificationResponseAsync().catch((error: unknown) => {
+    console.warn('[notifications] Could not clear the notification response.', error);
+  });
 }

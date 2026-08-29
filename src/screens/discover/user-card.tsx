@@ -2,12 +2,12 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import { getCountryName } from '@/screens/onboarding/data';
-import { getLanguageFlag } from '@/screens/profile/language-flags';
+import { getLanguageFlag } from '@/screens/profile/utils/language-flags';
 import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
+import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import type { DiscoverUser } from './types';
 

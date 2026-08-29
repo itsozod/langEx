@@ -21,7 +21,7 @@ export const usePublicProfileStyles = () => {
     backButton: {
       width: 42,
       height: 42,
-      borderRadius: 15,
+      borderRadius: 21,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: card,

@@ -110,7 +110,15 @@ function buildRelease() {
 
   // Do not restrict reactNativeArchitectures here. The resulting APK must contain every ABI
   // configured by the project so it can be shared instead of targeting one connected phone.
-  const gradleArgs = [':app:assembleRelease', '--no-daemon', '--no-parallel', '--max-workers=4'];
+  // `--stacktrace` only prints on failure. Without it, an AGP worker crash such as
+  // PackageAndroidArtifact$IncrementalSplitterRunnable reports no nested cause and is undebuggable.
+  const gradleArgs = [
+    ':app:assembleRelease',
+    '--no-daemon',
+    '--no-parallel',
+    '--max-workers=4',
+    '--stacktrace',
+  ];
   const command = process.platform === 'darwin' ? 'caffeinate' : gradlew;
   const args = process.platform === 'darwin' ? ['-i', gradlew, ...gradleArgs] : gradleArgs;
   const result = run(command, args, { cwd: ANDROID_DIR });

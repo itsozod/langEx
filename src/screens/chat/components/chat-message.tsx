@@ -9,17 +9,17 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { LinkParser, type BubbleProps, type MessageProps } from 'react-native-gifted-chat';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { LinkParser, type BubbleProps, type MessageProps } from 'react-native-gifted-chat';
 import Animated, { useAnimatedStyle, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
-import type { GiftedMessage } from '../types';
+import type { GiftedMessage } from '../types/message.types';
 import { formatMessageTime, isSameSenderOnSameDay } from '../utils/messages';
 
 /**

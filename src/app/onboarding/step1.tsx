@@ -5,18 +5,19 @@ import { router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, View } from 'react-native';
 
-import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
-import { SymbolView } from '@/shared/components/ui/symbol-view';
-import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
+import AuthFormField from '@/screens/auth/_shared/components/auth-form-field';
+import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
+import { removeActiveAccount } from '@/screens/auth/_shared/utils/session-transition';
 import { OnboardingCard } from '@/screens/onboarding/components/onboarding-card';
 import { OnboardingScreen } from '@/screens/onboarding/components/onboarding-screen';
 import { useUploadAvatarMutation } from '@/screens/onboarding/hooks';
 import { basicInfoSchema, type BasicInfoFormValues } from '@/screens/onboarding/schemas';
-import AuthFormField from '@/screens/auth/_shared/components/auth-form-field';
-import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
+import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useTheme } from '@/shared/hooks/use-theme';
+import { useOnboardingStore } from '@/shared/store/onboardingStore';
 import { useState } from 'react';
 
 export default function OnboardingStepOne() {
@@ -67,6 +68,10 @@ export default function OnboardingStepOne() {
     }
   };
 
+  const onBack = async () => {
+    await removeActiveAccount();
+  };
+
   const onNext = ({ displayName: nextDisplayName }: BasicInfoFormValues) => {
     Keyboard.dismiss();
     update({ displayName: nextDisplayName });
@@ -85,7 +90,8 @@ export default function OnboardingStepOne() {
     <OnboardingScreen
       step={1}
       title="Let’s start with you"
-      subtitle="Add the name people will see and an optional profile photo.">
+      subtitle="Add the name people will see and an optional profile photo."
+      onBack={onBack}>
       <OnboardingCard>
         <View style={styles.avatarSection}>
           <Pressable
