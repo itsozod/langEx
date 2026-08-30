@@ -17,7 +17,7 @@ import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { useOnboardingStore } from '@/shared/store/onboarding-store';
 import { useState } from 'react';
 
 export default function OnboardingStepOne() {

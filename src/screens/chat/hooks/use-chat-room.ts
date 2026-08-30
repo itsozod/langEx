@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 
 import { queryClient } from '@/providers/query-provider';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
-import { useChatStore } from '@/shared/store/chatStore';
+import { useChatStore } from '@/shared/store/chat-store';
 
 import { markConversationRead as markConversationReadRequest } from '../api';
 import { chatQueryKeys } from '../hooks';

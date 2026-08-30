@@ -7,7 +7,7 @@ import { useAppTheme } from '@/providers/theme-provider';
 import { usePublicUser } from '@/screens/discover/hooks';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { useAuthStore } from '@/shared/store/auth-store';
-import { useChatStore } from '@/shared/store/chatStore';
+import { useChatStore } from '@/shared/store/chat-store';
 import { useUserStore } from '@/shared/store/user.store';
 
 import { ChatHeader } from './components/chat-header';

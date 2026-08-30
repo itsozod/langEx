@@ -7,7 +7,7 @@ import type { Message } from '@/screens/chat/types/message.types';
 import { discoverQueryKeys } from '@/screens/discover/hooks';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { useAuthStore } from '@/shared/store/auth-store';
-import { useChatStore } from '@/shared/store/chatStore';
+import { useChatStore } from '@/shared/store/chat-store';
 import { useUserStore } from '@/shared/store/user.store';
 
 import { useOutboxStore } from './store/outbox-store';

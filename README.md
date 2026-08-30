@@ -1,56 +1,132 @@
-# Welcome to your Expo app 👋
+# LangEx mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+LangEx is a language-exchange app for discovering language partners and communicating through realtime direct messages. This repository contains the Expo/React Native client for Android and iOS.
 
-## Get started
+Current app version: **1.1.0**
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Email authentication and profile onboarding
+- Language-partner discovery and display-name search
+- Realtime direct messaging with replies, edits, unsend, typing, and read state
+- Push notifications with active-conversation suppression
+- Multiple saved accounts with isolated sessions
+- Profile and avatar management
+- Light and dark themes
+- Account deletion with retained, read-only conversation history
 
-2. Start the app
+## Technology
 
-   ```bash
-   npx expo start
-   ```
+- Expo SDK 57, React Native 0.86, React 19, and TypeScript
+- Expo Router for file-based navigation
+- TanStack React Query for server state
+- Zustand and AsyncStorage for persistent client state
+- Axios for HTTP and Socket.IO for realtime communication
+- React Hook Form and Zod for forms and validation
+- Tamagui for the UI system
 
-In the output, you'll find options to open the app in a
+The API, PostgreSQL database, push delivery, and realtime server live in the separate `langEx-backend` repository.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Requirements
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Node.js and npm
+- Android Studio and the Android SDK for Android development
+- macOS and Xcode for iOS development
+- A running LangEx backend or access to its deployed API
 
-## Get a fresh project
+This project contains native configuration and a custom Android networking plugin. Use a development build for full functionality; Expo Go is not the primary development environment.
 
-When you're ready, run:
+## Setup
+
+Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Optionally configure the API URL in an ignored `.env.local` file:
 
-### Other setup steps
+```env
+EXPO_PUBLIC_API_URL=http://localhost:3000
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+API URL defaults when the variable is absent:
 
-## Learn more
+- Android emulator: `http://10.0.2.2:3000`
+- iOS simulator and web: `http://localhost:3000`
+- Physical device: set `EXPO_PUBLIC_API_URL` to a backend address reachable from the device, normally the development computer's LAN IP or an HTTPS deployment.
 
-To learn more about developing your project with Expo, look at the following resources:
+Values prefixed with `EXPO_PUBLIC_` are embedded in the app bundle. Never place secrets in them.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Development
 
-## Join the community
+Start the Expo development server:
 
-Join our community of developers creating universal apps.
+```bash
+npm start
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Build and run the native apps:
+
+```bash
+npm run android
+npm run ios
+```
+
+Run quality checks:
+
+```bash
+npm run lint
+npm run format:check
+npx tsc --noEmit
+```
+
+Final keyboard, safe-area, notification, icon, and chat behavior must be checked on physical Android and iOS devices. Simulator and emulator output alone is not acceptance evidence for those areas.
+
+## Release builds
+
+Local release scripts read `EXPO_PUBLIC_API_URL` from the ignored `.env.production.local` file and require an HTTPS URL.
+
+```bash
+npm run android:release
+npm run android:release:install
+npm run ios:release
+```
+
+- `android:release` creates a shareable release APK.
+- `android:release:install` builds, installs, and launches it on one connected Android device.
+- `ios:release` requires macOS and Xcode and creates a release build for a selected physical device.
+
+## Versioning
+
+LangEx uses semantic versioning. The npm lifecycle synchronizes the version from `package.json` into `app.json` before creating the release commit and Git tag.
+
+```bash
+npm run version:patch
+npm run version:minor
+npm run version:major
+```
+
+Use a patch release for compatible fixes, a minor release for compatible features, and a major release for intentionally breaking product or compatibility changes.
+
+## Project structure
+
+```text
+src/app/       Thin Expo Router entries and layouts
+src/screens/   Feature screens, components, hooks, APIs, and state
+src/shared/    Shared UI, networking, stores, constants, and utilities
+src/providers/ Application-wide providers
+plugins/       Expo config plugins and native build customization
+scripts/       Versioning and local release automation
+docs/          Architecture, decisions, current context, and handoff state
+```
+
+Store modules use kebab-case names ending in `-store.ts`, such as `chat-store.ts`. Detailed development conventions live in [`AGENTS.md`](./AGENTS.md).
+
+## Documentation
+
+- [`docs/project-context.md`](./docs/project-context.md) — concise entry point for a fresh development context
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — application boundaries and data flow
+- [`docs/DECISIONS.md`](./docs/DECISIONS.md) — durable architectural decisions
+- [`docs/CONTEXT.md`](./docs/CONTEXT.md) — current behavior, constraints, verification, and next steps
+- [`AGENTS.md`](./AGENTS.md) — mandatory repository and physical-device development rules

@@ -4,7 +4,7 @@ import { AppState } from 'react-native';
 import { queryClient } from '@/providers/query-provider';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { useAuthStore } from '@/shared/store/auth-store';
-import { useChatStore } from '@/shared/store/chatStore';
+import { useChatStore } from '@/shared/store/chat-store';
 import { useUserStore } from '@/shared/store/user.store';
 
 import { chatQueryKeys } from './hooks';

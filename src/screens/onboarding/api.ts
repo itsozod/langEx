@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 import type { AuthUser } from '@/screens/auth/types';
 import { apiClient, apiRequest, UPLOAD_TIMEOUT_MS } from '@/shared/lib/api-client';
-import type { OnboardingData } from '@/shared/store/onboardingStore';
+import type { OnboardingData } from '@/shared/store/onboarding-store';
 
 type AvatarResponse = {
   avatarUrl: string;

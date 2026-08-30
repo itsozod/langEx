@@ -3,14 +3,14 @@ import { router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
+import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
 import { OnboardingCard } from '@/screens/onboarding/components/onboarding-card';
 import { OnboardingScreen } from '@/screens/onboarding/components/onboarding-screen';
 import { useCompleteProfileMutation } from '@/screens/onboarding/hooks';
 import { bioSchema, type BioFormValues } from '@/screens/onboarding/schemas';
-import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useOnboardingStore } from '@/shared/store/onboarding-store';
 
 export default function OnboardingStepFive() {
   const styles = useStyles();

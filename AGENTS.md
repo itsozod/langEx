@@ -2,6 +2,12 @@
 
 Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
 
+## File naming
+
+- Use kebab-case for handwritten TypeScript and TSX filenames. Store modules must use the
+  `<domain>-store.ts` form, such as `chat-store.ts`; never create camelCase filenames such as
+  `chatStore.ts`.
+
 ## Screen architecture and file-size limits
 
 - Keep files under `src/app` as thin Expo Router entries. They may read route parameters and compose

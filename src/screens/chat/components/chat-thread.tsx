@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
 import { useSharedValue } from 'react-native-reanimated';
 
-import { useChatStore } from '@/shared/store/chatStore';
+import { useChatStore } from '@/shared/store/chat-store';
 import { CHAT_HEADER_HEIGHT } from '../constants';
 import { useChatAutoscroll } from '../hooks/use-chat-autoscroll';
 import { useChatComposer } from '../hooks/use-chat-composer';

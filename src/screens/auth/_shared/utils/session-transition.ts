@@ -3,8 +3,8 @@ import type { AuthUser } from '@/screens/auth/types';
 import { useOutboxStore } from '@/screens/chat/store/outbox-store';
 import { socket } from '@/shared/lib/socket';
 import { useAuthStore } from '@/shared/store/auth-store';
-import { useChatStore } from '@/shared/store/chatStore';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { useChatStore } from '@/shared/store/chat-store';
+import { useOnboardingStore } from '@/shared/store/onboarding-store';
 import { useUserStore } from '@/shared/store/user.store';
 import { unstable_batchedUpdates } from 'react-native';
 

@@ -11,7 +11,7 @@ import { OnboardingScreen } from '@/screens/onboarding/components/onboarding-scr
 import { languagesSchema, type LanguagesFormValues } from '@/screens/onboarding/schemas';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { LEVELS } from '@/shared/constants/language-levels';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { useOnboardingStore } from '@/shared/store/onboarding-store';
 
 export default function OnboardingStepThree() {
   const styles = useStyles();

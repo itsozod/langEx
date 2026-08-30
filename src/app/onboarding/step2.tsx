@@ -2,12 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 
+import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
 import { CountryPicker } from '@/screens/onboarding/components/country-picker';
 import { OnboardingCard } from '@/screens/onboarding/components/onboarding-card';
 import { OnboardingScreen } from '@/screens/onboarding/components/onboarding-screen';
 import { countrySchema, type CountryFormValues } from '@/screens/onboarding/schemas';
-import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { useOnboardingStore } from '@/shared/store/onboarding-store';
 
 export default function OnboardingStepTwo() {
   const country = useOnboardingStore((state) => state.country);

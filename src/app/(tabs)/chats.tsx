@@ -18,7 +18,7 @@ import type { ChatParticipant, Conversation } from '@/screens/chat/types/message
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { useChatStore } from '@/shared/store/chatStore';
+import { useChatStore } from '@/shared/store/chat-store';
 import { useUserStore } from '@/shared/store/user.store';
 
 function initials(name?: string | null) {

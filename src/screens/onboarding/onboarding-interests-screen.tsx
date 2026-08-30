@@ -6,7 +6,7 @@ import { useAppTheme } from '@/providers/theme-provider';
 import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
 import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { useOnboardingStore } from '@/shared/store/onboarding-store';
 
 import { OnboardingCard } from './components/onboarding-card';
 import { OnboardingScreen } from './components/onboarding-screen';

@@ -7,7 +7,7 @@ import { queryClient } from '@/providers/query-provider';
 import type { AuthUser } from '@/screens/auth/types';
 import { ApiError } from '@/shared/lib/api-client';
 import { socket } from '@/shared/lib/socket';
-import { useChatStore } from '@/shared/store/chatStore';
+import { useChatStore } from '@/shared/store/chat-store';
 
 import type { ConversationWindowParams } from '../api';
 import { editMessage as editMessageRequest, unsendMessage as unsendMessageRequest } from '../api';

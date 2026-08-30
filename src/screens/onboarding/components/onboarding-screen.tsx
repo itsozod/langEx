@@ -3,7 +3,7 @@ import { switchToSavedAccount } from '@/screens/auth/_shared/utils/session-trans
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { useOnboardingStore } from '@/shared/store/onboardingStore';
+import { useOnboardingStore } from '@/shared/store/onboarding-store';
 import { router } from 'expo-router';
 import { type ReactNode, useState } from 'react';
 import {
