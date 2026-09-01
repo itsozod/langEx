@@ -61,7 +61,7 @@
       "expo-image",
       "expo-status-bar",
       "expo-web-browser",
-      "./plugins/with-android-okhttp-connect-timeout"
+      "./plugins/with-android-okhttp-fast-fallback"
     ],
     "experiments": {
       "typedRoutes": true
