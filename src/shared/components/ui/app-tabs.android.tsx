@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { StyleSheet, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useConversationsUnreadCount } from '@/screens/chat/hooks';
 import { Colors } from '@/shared/constants/theme';
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
 
@@ -35,6 +36,9 @@ export default function AppTabs() {
   const insets = useSafeAreaInsets();
   const bottom = Math.max(insets.bottom, 10);
   const isDark = scheme === 'dark';
+  const { data } = useConversationsUnreadCount();
+  const unreadCount = data?.unreadCount ?? 0;
+  const unreadBadge = unreadCount > 99 ? '99+' : unreadCount;
 
   const screenOptions = useMemo(
     () => ({
@@ -67,6 +71,10 @@ export default function AppTabs() {
         name="chats"
         options={{
           title: 'Chats',
+          tabBarAccessibilityLabel:
+            unreadCount > 0 ? `Chats, ${unreadCount} unread messages` : 'Chats',
+          tabBarBadge: unreadCount > 0 ? unreadBadge : undefined,
+          tabBarBadgeStyle: styles.badge,
           tabBarIcon: ({ color, focused }) => (
             <TabIcon
               color={color}
@@ -127,6 +135,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     marginTop: 1,
+  },
+  badge: {
+    backgroundColor: '#D83A52',
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   iconPill: {
     width: 48,

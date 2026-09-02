@@ -1,66 +1,13 @@
 import { useAppTheme, type AppTheme } from '@/providers/theme-provider';
 import { StyleSheet } from 'react-native';
 
-import { CHAT_HEADER_HEIGHT } from '../constants';
-
 const createChatStyles = (theme: AppTheme) => {
   const isDark = theme === 'dark';
   const border = isDark ? 'rgba(190,176,255,0.13)' : 'rgba(97,76,190,0.10)';
 
   return StyleSheet.create({
     safeArea: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' },
-    header: {
-      height: CHAT_HEADER_HEIGHT,
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: border,
-      backgroundColor: isDark ? 'rgba(25,21,35,0.94)' : 'rgba(250,249,253,0.96)',
-    },
-    backButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: 7,
-    },
     pressed: { opacity: 0.65 },
-    headerIcon: { color: isDark ? '#F5F1FF' : '#312C3C' },
-    headerProfileButton: {
-      flex: 1,
-      minWidth: 0,
-      height: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    headerAvatarWrap: { width: 42, height: 42 },
-    avatar: { width: 42, height: 42, borderRadius: 21 },
-    avatarPlaceholder: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: isDark ? '#55488A' : '#E8E2FF',
-    },
-    headerCountryBadge: {
-      position: 'absolute',
-      right: -3,
-      bottom: -2,
-      width: 20,
-      height: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 10,
-      borderWidth: 2,
-      borderColor: isDark ? '#191523' : '#FAF9FD',
-      backgroundColor: isDark ? '#302A3E' : '#FFFFFF',
-    },
-    initials: { color: isDark ? '#F2EEFF' : '#5846AA', fontSize: 12, lineHeight: 17 },
-    headerCopy: { flex: 1, minWidth: 0, marginLeft: 11 },
-    headerName: { fontSize: 15, lineHeight: 20 },
-    onlineText: { color: isDark ? '#9F96AD' : '#7A7285', fontSize: 10, lineHeight: 15 },
     chat: { flex: 1, backgroundColor: isDark ? '#181420' : '#F8F6FC' },
     messagesContainer: { backgroundColor: isDark ? '#181420' : '#F8F6FC' },
     messageList: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10 },

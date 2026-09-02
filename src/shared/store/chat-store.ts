@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 
-import type { Conversation, Message } from '@/screens/chat/types/message.types';
+import type { Conversation, Message, UserPresence } from '@/screens/chat/types/message.types';
+import { useAuthStore } from '@/shared/store/auth-store';
 
 type ChatState = {
   conversations: Conversation[];
   activeMessages: Message[];
   typingUsers: string[];
-  setConversations: (conversations: Conversation[]) => void;
+  setConversations: (accountId: string, conversations: Conversation[]) => void;
+  removeConversation: (conversationId: string) => void;
+  updateParticipantPresence: (presence: UserPresence) => void;
   updateConversationFromMessage: (message: Message) => void;
   clearConversationUnread: (conversationId: string) => void;
   addMessage: (message: Message) => void;
@@ -23,7 +26,43 @@ export const useChatStore = create<ChatState>((set) => ({
   conversations: [],
   activeMessages: [],
   typingUsers: [],
-  setConversations: (conversations) => set({ conversations }),
+  setConversations: (accountId, conversations) =>
+    set((state) =>
+      useAuthStore.getState().activeAccountId === accountId ? { conversations } : state,
+    ),
+  removeConversation: (conversationId) =>
+    set((state) => ({
+      conversations: state.conversations.filter(
+        (conversation) => conversation.id !== conversationId,
+      ),
+      activeMessages: [],
+      typingUsers: [],
+    })),
+  updateParticipantPresence: (presence) =>
+    set((state) => {
+      let hasChanged = false;
+      const conversations = state.conversations.map((conversation) => {
+        if (!conversation.participants.some((participant) => participant.id === presence.userId)) {
+          return conversation;
+        }
+
+        hasChanged = true;
+        return {
+          ...conversation,
+          participants: conversation.participants.map((participant) =>
+            participant.id === presence.userId
+              ? {
+                  ...participant,
+                  isOnline: presence.isOnline,
+                  lastSeenAt: presence.lastSeenAt,
+                }
+              : participant,
+          ),
+        };
+      });
+
+      return hasChanged ? { conversations } : state;
+    }),
   updateConversationFromMessage: (message) =>
     set((state) => {
       if (!message.conversationId) return state;

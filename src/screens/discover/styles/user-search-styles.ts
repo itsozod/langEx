@@ -153,7 +153,7 @@ export function useUserSearchStyles() {
     initials: { color: isDark ? '#F2EEFF' : '#5948A9', fontSize: 18, fontWeight: '700' },
     flagBadge: {
       position: 'absolute',
-      right: -5,
+      left: -5,
       bottom: -4,
       width: 25,
       height: 25,

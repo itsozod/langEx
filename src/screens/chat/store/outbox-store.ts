@@ -39,6 +39,7 @@ type OutboxState = {
   retry: (clientMessageId: string) => void;
   remove: (clientMessageId: string) => void;
   clearUser: (userId: string) => void;
+  clearConversation: (userId: string, conversationId: string) => void;
 };
 
 function createClientMessageId() {
@@ -111,6 +112,12 @@ export const useOutboxStore = create<OutboxState>()(
       clearUser: (userId) =>
         set((state) => ({
           messages: state.messages.filter((message) => message.userId !== userId),
+        })),
+      clearConversation: (userId, conversationId) =>
+        set((state) => ({
+          messages: state.messages.filter(
+            (message) => message.userId !== userId || message.conversationId !== conversationId,
+          ),
         })),
     }),
     {

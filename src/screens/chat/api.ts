@@ -4,12 +4,30 @@ import type {
   ConversationReadResponse,
   ConversationResponse,
   ConversationsResponse,
+  ConversationsUnreadCountResponse,
+  DeleteConversationResponse,
   DirectConversationResponse,
   Message,
+  UserPresenceResponse,
 } from './types/message.types';
 
 export function getConversations() {
   return apiRequest<ConversationsResponse>('/conversations');
+}
+
+export function getConversationsUnreadCount() {
+  return apiRequest<ConversationsUnreadCountResponse>('/conversations/unread-count');
+}
+
+export function deleteConversation(conversationId: string) {
+  return apiRequest<DeleteConversationResponse>(
+    `/conversations/${encodeURIComponent(conversationId)}`,
+    { method: 'DELETE' },
+  );
+}
+
+export function getUserPresence(userId: string) {
+  return apiRequest<UserPresenceResponse>(`/users/${encodeURIComponent(userId)}/presence`);
 }
 
 /**

@@ -35,6 +35,7 @@ import {
   PushNotificationManager,
 } from '@/screens/notifications/push-notification-manager';
 import { AnimatedSplashOverlay } from '@/shared/components/ui/animated-icon';
+import { AccountTransitionOverlay } from '@/shared/components/ui/account-transition-overlay';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAuthHydration, useAuthStore } from '@/shared/store/auth-store';
 import { useUserHydration } from '@/shared/store/user.store';
@@ -156,6 +157,7 @@ function ThemedAppShell() {
             </Stack.Protected>
           </Stack>
         )}
+        <AccountTransitionOverlay />
       </NavigationThemeProvider>
     </TamaguiProvider>
   );

@@ -22,6 +22,11 @@ type ServerToClientEvents = {
   conversation_read: (payload: ConversationReadResponse) => void;
   participant_deleted: (payload: ParticipantDeleted) => void;
   account_deleted: (payload: { userId: string }) => void;
+  user_presence_changed: (presence: {
+    userId: string;
+    isOnline: boolean;
+    lastSeenAt: string | null;
+  }) => void;
 };
 
 type ClientToServerEvents = {
@@ -49,7 +54,31 @@ export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(API
   autoConnect: false,
 });
 
+let connectedToken: string | null = null;
+
+function configuredToken() {
+  const auth = socket.auth as { token?: unknown } | undefined;
+  return typeof auth?.token === 'string' ? auth.token : null;
+}
+
+socket.on('connect', () => {
+  connectedToken = configuredToken();
+});
+
+socket.on('disconnect', () => {
+  connectedToken = null;
+});
+
 export function prepareSocketAuth() {
-  const token = useAuthStore.getState().token;
-  socket.auth = token ? { token, authorization: `Bearer ${token}` } : {};
+  const nextToken = useAuthStore.getState().token;
+  const isConnectedAsAnotherAccount = socket.connected && connectedToken !== nextToken;
+  const isConnectingAsAnotherAccount =
+    !socket.connected && socket.active && configuredToken() !== nextToken;
+
+  // Socket.IO only reads auth during the handshake. Updating `socket.auth` on an existing
+  // connection does not change `socket.data.user` on the server, so account changes must force a
+  // fresh connection before any room is joined.
+  if (isConnectedAsAnotherAccount || isConnectingAsAnotherAccount) socket.disconnect();
+
+  socket.auth = nextToken ? { token: nextToken, authorization: `Bearer ${nextToken}` } : {};
 }

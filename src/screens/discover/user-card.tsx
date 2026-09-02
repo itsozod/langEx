@@ -154,7 +154,7 @@ const useStyles = () => {
     },
     countryBadge: {
       position: 'absolute',
-      right: -4,
+      left: -4,
       bottom: -3,
       width: 27,
       height: 27,

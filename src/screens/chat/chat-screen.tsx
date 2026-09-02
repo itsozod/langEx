@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/providers/theme-provider';
@@ -17,8 +18,13 @@ import { useConversation } from './hooks';
 import { useActiveConversationPresence } from './hooks/use-active-conversation-presence';
 import { useChatMessaging } from './hooks/use-chat-messaging';
 import { useChatRoom } from './hooks/use-chat-room';
+import { useUserPresence } from './hooks/use-user-presence';
+import {
+  getActiveDeleteConversationVariables,
+  useDeleteConversation,
+} from './hooks/use-delete-conversation';
 import { useChatStyles } from './styles/chat-styles';
-import type { ChatParticipant } from './types/message.types';
+import type { ChatParticipant, UserPresence } from './types/message.types';
 
 export default function ChatScreen() {
   const params = useLocalSearchParams<{
@@ -37,6 +43,11 @@ export default function ChatScreen() {
   const setActiveMessages = useChatStore((state) => state.setActiveMessages);
   const mergeMessages = useChatStore((state) => state.mergeMessages);
   const typingUsers = useChatStore((state) => state.typingUsers);
+  const listParticipant = useChatStore((state) =>
+    state.conversations
+      .find((item) => item.id === conversationId)
+      ?.participants.find((participant) => participant.id !== currentUser?.id),
+  );
   const [anchorMessageId, setAnchorMessageId] = useState<string | null>(null);
   const query = useConversation(conversationId);
   // The newest window is never torn down, so returning to it is instant and the screen keeps its
@@ -47,6 +58,7 @@ export default function ChatScreen() {
   );
   const activeQuery = anchorMessageId ? anchorQuery : query;
   const participantQuery = usePublicUser(isDraft ? participantId : undefined);
+  const deleteConversation = useDeleteConversation();
   const windowKey = anchorMessageId ?? 'latest';
   const loadedWindowKeyRef = useRef(windowKey);
 
@@ -82,6 +94,18 @@ export default function ChatScreen() {
       conversation?.participants[0],
     [conversation?.participants, currentUser?.id],
   );
+  const initialPresence = useMemo<UserPresence | undefined>(
+    () =>
+      listParticipant && typeof listParticipant.isOnline === 'boolean'
+        ? {
+            userId: listParticipant.id,
+            isOnline: listParticipant.isOnline,
+            lastSeenAt: listParticipant.lastSeenAt ?? null,
+          }
+        : undefined,
+    [listParticipant],
+  );
+  const presenceQuery = useUserPresence(otherParticipant?.id, initialPresence);
 
   useEffect(() => {
     setActiveMessages([]);
@@ -139,6 +163,48 @@ export default function ChatScreen() {
         : { id: otherParticipant.id },
     });
   }, [conversationId, otherParticipant]);
+  const confirmDeleteConversation = useCallback(() => {
+    if (!conversationId || deleteConversation.isPending) return;
+    const name = otherParticipant?.displayName?.trim() || 'this language partner';
+
+    Alert.alert(
+      `Delete conversation with ${name}?`,
+      `This removes the conversation from your account and can’t be undone. It does not unsend messages from ${name}’s account.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete conversation',
+          style: 'destructive',
+          onPress: () => {
+            const variables = getActiveDeleteConversationVariables(conversationId);
+            if (!variables) {
+              setSocketError('Your account session changed. Open the conversation and try again.');
+              return;
+            }
+
+            deleteConversation.mutate(variables, {
+              onSuccess: () => {
+                if (process.env.EXPO_OS === 'ios') {
+                  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                }
+                router.replace('/(tabs)/chats');
+              },
+              onError: (error) => {
+                if (process.env.EXPO_OS === 'ios') {
+                  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                }
+                setSocketError(
+                  error instanceof Error
+                    ? error.message
+                    : 'Conversation could not be deleted. Try again.',
+                );
+              },
+            });
+          },
+        },
+      ],
+    );
+  }, [conversationId, deleteConversation, otherParticipant?.displayName, setSocketError]);
   const loadOlderMessages = useCallback(() => {
     if (!conversationId || !activeQuery.hasNextPage || activeQuery.isFetchingNextPage) return;
     void activeQuery.fetchNextPage();
@@ -165,7 +231,16 @@ export default function ChatScreen() {
   return (
     <GradientBackground>
       <View style={[styles.safeArea, { paddingTop: insets.top }]}>
-        <ChatHeader participant={otherParticipant} onBack={goBack} onOpenProfile={openProfile} />
+        <ChatHeader
+          deletePending={deleteConversation.isPending}
+          participant={otherParticipant}
+          presence={presenceQuery.data?.presence}
+          presencePending={presenceQuery.isPending}
+          presenceUnavailable={presenceQuery.isError}
+          onBack={goBack}
+          onDelete={confirmDeleteConversation}
+          onOpenProfile={openProfile}
+        />
         {socketError ? (
           <ChatErrorBanner message={socketError} onDismiss={() => setSocketError(null)} />
         ) : null}

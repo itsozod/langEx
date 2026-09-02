@@ -5,6 +5,7 @@ import { socket } from '@/shared/lib/socket';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chat-store';
 import { useOnboardingStore } from '@/shared/store/onboarding-store';
+import { useAccountTransitionStore } from '@/shared/store/account-transition-store';
 import { useUserStore } from '@/shared/store/user.store';
 import { unstable_batchedUpdates } from 'react-native';
 
@@ -53,20 +54,37 @@ export async function switchToSavedAccount(userId: string) {
   const targetUser = useUserStore.getState().users.find((user) => user.id === userId);
   if (!targetUser) return false;
 
-  await resetAccountScopedState();
-  unstable_batchedUpdates(() => {
-    useOnboardingStore
-      .getState()
-      .setReturnAccountId(
-        onboardingReturnAccountId(state.activeAccountId, targetUser.isProfileComplete),
-      );
-    useUserStore.getState().activateUser(userId);
-    useAuthStore.getState().switchAccount(userId);
-  });
-  return (
-    useAuthStore.getState().activeAccountId === userId &&
-    useUserStore.getState().activeUserId === userId
-  );
+  const transition = useAccountTransitionStore.getState();
+  transition.begin(userId);
+
+  try {
+    await Promise.all([
+      resetAccountScopedState(),
+      new Promise<void>((resolve) => setTimeout(resolve, 520)),
+    ]);
+    unstable_batchedUpdates(() => {
+      useOnboardingStore
+        .getState()
+        .setReturnAccountId(
+          onboardingReturnAccountId(state.activeAccountId, targetUser.isProfileComplete),
+        );
+      // Clearing queries wakes mounted observers. While the transition overlay is showing, the
+      // previous account's conversations request can finish and repopulate the live Zustand list.
+      // Reset again in the same commit as account activation so no previous-account row can render
+      // under the new session while its account-keyed query is loading.
+      useChatStore.getState().reset();
+      useUserStore.getState().activateUser(userId);
+      useAuthStore.getState().switchAccount(userId);
+    });
+
+    await new Promise<void>((resolve) => setTimeout(resolve, 180));
+    return (
+      useAuthStore.getState().activeAccountId === userId &&
+      useUserStore.getState().activeUserId === userId
+    );
+  } finally {
+    useAccountTransitionStore.getState().finish();
+  }
 }
 
 export async function removeActiveAccount() {

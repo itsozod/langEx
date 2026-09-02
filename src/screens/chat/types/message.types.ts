@@ -17,6 +17,8 @@ export type ChatParticipant = {
   avatarUrl: string | null;
   country: string | null;
   isDeleted: boolean;
+  isOnline?: boolean;
+  lastSeenAt?: string | null;
 };
 
 export type MessageReply = {
@@ -87,6 +89,26 @@ export type ConversationReadState = {
 
 export type ConversationsResponse = {
   conversations: Conversation[];
+};
+
+export type ConversationsUnreadCountResponse = {
+  unreadCount: number;
+};
+
+export type DeleteConversationResponse = {
+  success: true;
+  conversationId: string;
+  clearedAt: string;
+};
+
+export type UserPresence = {
+  userId: string;
+  isOnline: boolean;
+  lastSeenAt: string | null;
+};
+
+export type UserPresenceResponse = {
+  presence: UserPresence;
 };
 
 export type ConversationPageInfo = {

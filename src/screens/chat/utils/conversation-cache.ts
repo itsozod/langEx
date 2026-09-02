@@ -9,9 +9,46 @@ import type {
   ConversationResponse,
   ConversationsResponse,
   Message,
+  UserPresence,
+  UserPresenceResponse,
 } from '../types/message.types';
 
 type ConversationWindows = InfiniteData<ConversationResponse, ConversationWindowParams>;
+
+export function applyPresenceToConversation(conversation: Conversation, presence: UserPresence) {
+  if (!conversation.participants.some((participant) => participant.id === presence.userId)) {
+    return conversation;
+  }
+
+  return {
+    ...conversation,
+    participants: conversation.participants.map((participant) =>
+      participant.id === presence.userId
+        ? { ...participant, isOnline: presence.isOnline, lastSeenAt: presence.lastSeenAt }
+        : participant,
+    ),
+  };
+}
+
+export function updateParticipantPresenceInCache(accountId: string, presence: UserPresence) {
+  queryClient.setQueryData<ConversationsResponse>(chatQueryKeys.conversations(accountId), (data) =>
+    data
+      ? {
+          ...data,
+          conversations: data.conversations.map((conversation) =>
+            applyPresenceToConversation(conversation, presence),
+          ),
+        }
+      : data,
+  );
+
+  const presenceQueryKey = chatQueryKeys.presence(accountId, presence.userId);
+  // A global presence transition can arrive before the user opens the thread. Persist it in the
+  // detail cache too, and cancel an older REST snapshot so it cannot overwrite the socket state.
+  void queryClient.cancelQueries({ exact: true, queryKey: presenceQueryKey }).then(() => {
+    queryClient.setQueryData<UserPresenceResponse>(presenceQueryKey, { presence });
+  });
+}
 
 /**
  * Messages live in two places: the store the thread renders from, and the query pages they were

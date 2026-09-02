@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 
 import { queryClient } from '@/providers/query-provider';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
+import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chat-store';
 
 import { markConversationRead as markConversationReadRequest } from '../api';
@@ -70,8 +71,16 @@ export function useChatRoom({
             }
           : current,
       );
+      const accountId = useAuthStore.getState().activeAccountId;
+      if (accountId) {
+        void queryClient.invalidateQueries({ queryKey: chatQueryKeys.unreadCount(accountId) });
+      }
     } catch {
       void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
+      const accountId = useAuthStore.getState().activeAccountId;
+      if (accountId) {
+        void queryClient.invalidateQueries({ queryKey: chatQueryKeys.unreadCount(accountId) });
+      }
     }
   }, [clearConversationUnread, conversationId, token]);
 

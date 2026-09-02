@@ -23,9 +23,11 @@
 - `src/screens/chat/hooks/use-active-conversation-presence.ts` reports the focused, foreground conversation and renews that presence every 20 seconds.
 - The sibling backend's `src/sockets/presence.ts` validates conversation membership and treats active-conversation presence as a 60-second lease.
 - Account deletion is a backend-owned tombstone transaction: it scrubs the user, closes every conversation, deletes read-state metadata, emits participant/account deletion events, and disconnects all sockets for that identity. See `docs/DECISIONS.md`.
+- Chats presence uses the participant fields returned by `GET /conversations` as its initial snapshot. `src/screens/chat/chat-socket-manager.tsx` applies `user_presence_changed` to every matching row in both the account-scoped React Query cache and `useChatStore`; individual chat rows never fetch presence.
 
 ## Decisions
 
+- 2026-09-02: Conversation-list presence is a collection concern, not a row concern. Hydrate from `GET /conversations` and fan out one shared socket event by participant ID; reserve `GET /users/:userId/presence` for the opened-chat snapshot.
 - 2026-08-29: Authentication state and user domain state have separate stores. Auth owns tokens and account selection; the user store owns profile snapshots and the current user. Cross-store login, switching, and logout updates remain centralized and React-batched in the session-transition boundary.
 - 2026-08-29: Refreshing an existing user updates its stored profile in place. Account switching must not reorder the account picker; only adding a new account prepends a row.
 - 2026-08-29: Incomplete secondary-account onboarding persists its previous-account return target. This prevents protected-route redirection from trapping an existing user while keeping first-account onboarding required.
@@ -50,6 +52,7 @@
 - The Socket.IO client emits `active_conversation` with a conversation ID only while that route is focused and the app is active; it emits `null` otherwise.
 - The backend suppresses a recipient push only when at least one authenticated socket has a fresh lease for that same conversation.
 - `DELETE /me` tombstones the authenticated account and returns `{ success: true }`. Deleted sessions receive `401`; `GET /users/:id` returns an `isDeleted: true` tombstone; conversation participants expose `isDeleted`, and conversations expose `isReadOnly`.
+- `GET /conversations` participants may include `isOnline` and nullable `lastSeenAt`. `user_presence_changed` carries `{ userId, isOnline, lastSeenAt }` and updates every conversation whose participant ID matches.
 
 ## Next steps
 
@@ -59,6 +62,7 @@
 
 ## Verification
 
+- 2026-09-02: Conversation-list presence passed TypeScript, targeted ESLint/Prettier, and production Expo exports for Android and iOS. The Chats route is a one-line re-export; the largest affected handwritten file is `src/shared/store/chat-store.ts` at 189 lines. Physical Android/iOS indicator verification remains outstanding.
 - 2026-08-29: Account deletion passed backend Prisma formatting/generation/validation, TypeScript, and `git diff --check`; frontend TypeScript, targeted ESLint/Prettier, `git diff --check`, and Android production export also passed. Database migration and physical multi-device deletion/read-only-chat verification remain outstanding.
 - 2026-08-29: Completed-only logout fallback and dormant incomplete-session persistence passed TypeScript, targeted ESLint/Prettier, `git diff --check`, and Android production export. Physical logout with only an incomplete saved account remaining is still outstanding.
 - 2026-08-29: Discover-owned search-sheet navigation passed TypeScript, targeted ESLint/Prettier, `git diff --check`, and Android production export. Physical iOS verification of Profile edge-swipe → open search sheet remains outstanding.
