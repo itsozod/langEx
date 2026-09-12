@@ -254,12 +254,17 @@ export default function ChatScreen() {
           isFetchingNextPage={activeQuery.isFetchingNextPage}
           isHistoricalWindow={anchorMessageId !== null}
           isReadOnly={conversation.isReadOnly}
+          imageSelection={messaging.selectedImages}
+          onCancelImages={messaging.cancelImages}
+          onConfirmImages={messaging.confirmImages}
           onEditMessage={messaging.editMessage}
+          onChooseImages={messaging.handleChooseImages}
           onInputChange={messaging.handleInputChange}
           onJumpToLatest={openLatestWindow}
           onLoadNewerMessages={loadNewerMessages}
           onLoadOlderMessages={loadOlderMessages}
           onRequestMessageWindow={openMessageWindow}
+          onRemoveSelectedImage={messaging.removeSelectedImage}
           onRetryMessage={messaging.retryMessage}
           onSend={messaging.handleSend}
           onUnsendMessage={messaging.unsendMessage}

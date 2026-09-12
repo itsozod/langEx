@@ -11,9 +11,15 @@ import type { GiftedMessage } from '../types/message.types';
 type ChatInputToolbarProps = InputToolbarProps<GiftedMessage> & {
   isEditing?: boolean;
   onCancelEdit?: () => void;
+  onChooseImages?: () => void;
 };
 
-export function ChatInputToolbar({ isEditing, onCancelEdit, ...props }: ChatInputToolbarProps) {
+export function ChatInputToolbar({
+  isEditing,
+  onCancelEdit,
+  onChooseImages,
+  ...props
+}: ChatInputToolbarProps) {
   const styles = useChatStyles();
   const insets = useSafeAreaInsets();
 
@@ -54,8 +60,32 @@ export function ChatInputToolbar({ isEditing, onCancelEdit, ...props }: ChatInpu
           { paddingBottom: Math.max(insets.bottom, 8) },
         ]}
         primaryStyle={styles.inputPrimary}
+        renderActions={
+          !isEditing && onChooseImages
+            ? () => <ChatImageAction onPress={onChooseImages} />
+            : undefined
+        }
       />
     </View>
+  );
+}
+
+function ChatImageAction({ onPress }: { onPress: () => void }) {
+  const styles = useChatStyles();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Choose up to four photos"
+      hitSlop={4}
+      onPress={onPress}
+      style={({ pressed }) => [styles.imageAction, pressed && styles.pressed]}>
+      <SymbolView
+        name={{ ios: 'photo', android: 'image', web: 'image' }}
+        size={21}
+        tintColor={styles.imageActionIcon.color}
+      />
+    </Pressable>
   );
 }
 

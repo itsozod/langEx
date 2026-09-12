@@ -1,4 +1,7 @@
-import { apiRequest } from '@/shared/lib/api-client';
+import type { ImagePickerAsset } from 'expo-image-picker';
+import { Platform } from 'react-native';
+
+import { apiClient, apiRequest, UPLOAD_TIMEOUT_MS } from '@/shared/lib/api-client';
 
 import type {
   ConversationReadResponse,
@@ -8,8 +11,66 @@ import type {
   DeleteConversationResponse,
   DirectConversationResponse,
   Message,
+  SendImageResponse,
   UserPresenceResponse,
 } from './types/message.types';
+
+type SendChatImagesInput = {
+  assets: ImagePickerAsset[];
+  clientMessageId: string;
+  conversationId?: string;
+  participantId?: string;
+  replyToId?: string;
+};
+
+function imageFileName(asset: ImagePickerAsset, index: number) {
+  if (asset.fileName) return asset.fileName;
+  const extension = asset.mimeType?.split('/')[1] ?? 'jpg';
+  return `chat-photo-${index + 1}.${extension}`;
+}
+
+export async function sendChatImages({
+  assets,
+  clientMessageId,
+  conversationId,
+  participantId,
+  replyToId,
+}: SendChatImagesInput) {
+  if (assets.length < 1 || assets.length > 4) {
+    throw new Error('Choose between one and four photos.');
+  }
+  const formData = new FormData();
+
+  if (Platform.OS === 'web') {
+    const blobs = await Promise.all(
+      assets.map(async (asset) => {
+        const fileResponse = await fetch(asset.uri);
+        return fileResponse.blob();
+      }),
+    );
+    blobs.forEach((blob, index) => {
+      formData.append('images', blob, imageFileName(assets[index], index));
+    });
+  } else {
+    assets.forEach((asset, index) => {
+      formData.append('images', {
+        uri: asset.uri,
+        name: imageFileName(asset, index),
+        type: asset.mimeType ?? 'image/jpeg',
+      } as unknown as Blob);
+    });
+  }
+
+  formData.append('clientMessageId', clientMessageId);
+  if (conversationId) formData.append('conversationId', conversationId);
+  if (participantId) formData.append('participantId', participantId);
+  if (replyToId) formData.append('replyToId', replyToId);
+
+  const response = await apiClient.post<SendImageResponse>('/conversations/images', formData, {
+    timeout: UPLOAD_TIMEOUT_MS,
+  });
+  return response.data;
+}
 
 export function getConversations() {
   return apiRequest<ConversationsResponse>('/conversations');

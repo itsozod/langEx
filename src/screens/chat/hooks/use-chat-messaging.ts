@@ -1,7 +1,5 @@
-import type { InfiniteData } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ReplyMessage } from 'react-native-gifted-chat';
 
 import { queryClient } from '@/providers/query-provider';
 import type { AuthUser } from '@/screens/auth/types';
@@ -9,21 +7,22 @@ import { ApiError } from '@/shared/lib/api-client';
 import { socket } from '@/shared/lib/socket';
 import { useChatStore } from '@/shared/store/chat-store';
 
-import type { ConversationWindowParams } from '../api';
 import { editMessage as editMessageRequest, unsendMessage as unsendMessageRequest } from '../api';
 import { chatQueryKeys } from '../hooks';
 import { useOutboxStore } from '../store/outbox-store';
 import type {
   ChatParticipant,
   Conversation,
-  ConversationResponse,
   GiftedMessage,
+  GiftedReplyMessage,
   Message,
 } from '../types/message.types';
 import { discardMessageFromWindows, replaceMessageInWindows } from '../utils/conversation-cache';
 import { isMessage, toGiftedMessages } from '../utils/messages';
 import { belongsToChat, outboxMessageToOptimisticMessage } from '../utils/outbox';
 import { subscribeToOutboxDelivery } from '../utils/outbox-events';
+import { seedNewConversation } from '../utils/seed-new-conversation';
+import { useChatImageMessaging } from './use-chat-image-messaging';
 
 type UseChatMessagingOptions = {
   conversation?: Conversation;
@@ -52,7 +51,7 @@ export function useChatMessaging({
   const mergeMessages = useChatStore((state) => state.mergeMessages);
   const replaceMessage = useChatStore((state) => state.replaceMessage);
   const discardMessage = useChatStore((state) => state.discardMessage);
-  const [replyingTo, setReplyingTo] = useState<ReplyMessage | null>(null);
+  const [replyingTo, setReplyingTo] = useState<GiftedReplyMessage | null>(null);
   const currentUserId = currentUser?.id;
   const outboxMessages = useOutboxStore((state) => state.messages);
   const deliverySubscriptions = useRef(new Set<() => void>());
@@ -105,11 +104,27 @@ export function useChatMessaging({
       if (!content || !currentUserId || (!conversationId && !participantId)) return;
 
       const replyMessage = messages[0]?.replyMessage;
+      const replyImages =
+        replyMessage?.chatImages ??
+        (replyMessage?.image
+          ? [
+              {
+                url: replyMessage.image,
+                thumbnailUrl: replyMessage.image,
+                width: 1,
+                height: 1,
+                bytes: 0,
+                mimeType: 'image/jpeg',
+              },
+            ]
+          : []);
       const replyTo = replyMessage
         ? {
             id: String(replyMessage._id),
             content: replyMessage.text,
             senderId: String(replyMessage.user._id),
+            images: replyImages,
+            image: replyImages[0] ?? null,
           }
         : undefined;
 
@@ -157,9 +172,49 @@ export function useChatMessaging({
     ],
   );
 
-  const retryMessage = useCallback((clientMessageId: string) => {
-    useOutboxStore.getState().retry(clientMessageId);
-  }, []);
+  const handleImageConversationCreated = useCallback(
+    ({
+      conversationId: deliveredConversationId,
+      message,
+    }: {
+      conversationId: string;
+      message: Message;
+    }) => {
+      seedNewConversation({
+        conversationId: deliveredConversationId,
+        currentUser,
+        draftParticipant,
+        message,
+      });
+      router.setParams({ id: deliveredConversationId });
+    },
+    [currentUser, draftParticipant],
+  );
+  const {
+    cancelImages,
+    chooseImages,
+    confirmImages,
+    removeSelectedImage,
+    retryImages,
+    selectedImages,
+  } = useChatImageMessaging({
+    conversationId,
+    currentUserId,
+    onConversationCreated: handleImageConversationCreated,
+    onError: setSocketError,
+    participantId,
+    replyingTo,
+    setReplyingTo,
+  });
+
+  const retryMessage = useCallback(
+    (clientMessageId: string) => {
+      if (!retryImages(clientMessageId)) {
+        useOutboxStore.getState().retry(clientMessageId);
+      }
+    },
+    [retryImages],
+  );
 
   const editMessage = useCallback(
     async (messageId: string, content: string) => {
@@ -221,54 +276,18 @@ export function useChatMessaging({
   );
 
   return {
+    cancelImages,
+    confirmImages,
     editMessage,
     giftedMessages,
+    handleChooseImages: chooseImages,
     handleInputChange,
     handleSend,
+    removeSelectedImage,
     retryMessage,
     replyingTo,
     setReplyingTo,
+    selectedImages,
     unsendMessage,
   };
-}
-
-function seedNewConversation({
-  conversationId,
-  currentUser,
-  draftParticipant,
-  message,
-}: {
-  conversationId: string;
-  currentUser: AuthUser | null;
-  draftParticipant?: ChatParticipant;
-  message?: Message;
-}) {
-  if (!message || !isMessage(message) || !draftParticipant || !currentUser) return;
-
-  queryClient.setQueryData<InfiniteData<ConversationResponse, ConversationWindowParams>>(
-    chatQueryKeys.conversationWindow(conversationId, null),
-    {
-      pages: [
-        {
-          conversation: {
-            id: conversationId,
-            participants: [
-              {
-                id: currentUser.id,
-                displayName: currentUser.displayName ?? null,
-                avatarUrl: currentUser.avatarUrl ?? null,
-                country: currentUser.country ?? null,
-                isDeleted: false,
-              },
-              draftParticipant,
-            ],
-            isReadOnly: false,
-            messages: [message],
-          },
-          pageInfo: { hasMore: false, olderCursor: null },
-        },
-      ],
-      pageParams: [{}],
-    },
-  );
 }

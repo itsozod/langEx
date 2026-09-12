@@ -58,7 +58,10 @@ export function ChatMessageMenu({
     .slice(0, MAX_LINK_ROWS);
   // Only the sender can edit or unsend, and the server enforces it regardless of what is offered.
   const canChange = isOwnMessage;
-  const menuHeight = (2 + links.length + (canChange ? 2 : 0)) * MENU_ITEM_HEIGHT;
+  const canCopy = Boolean(messageText);
+  const canEdit = canChange && canCopy;
+  const menuHeight =
+    (1 + Number(canCopy) + links.length + Number(canEdit) + Number(canChange)) * MENU_ITEM_HEIGHT;
   const belowTop = anchor.y + anchor.height + ANCHOR_GAP;
   const fitsBelow = belowTop + menuHeight <= screenHeight - SCREEN_MARGIN;
   const top = fitsBelow ? belowTop : Math.max(anchor.y - menuHeight - ANCHOR_GAP, SCREEN_MARGIN);
@@ -80,18 +83,22 @@ export function ChatMessageMenu({
           />
           <ThemedText style={styles.menuLabel}>Reply</ThemedText>
         </Pressable>
-        <View style={styles.menuDivider} />
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => onCopy(message)}
-          style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
-          <SymbolView
-            name={{ ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' }}
-            size={18}
-            tintColor={styles.menuIcon.color}
-          />
-          <ThemedText style={styles.menuLabel}>Copy</ThemedText>
-        </Pressable>
+        {canCopy ? (
+          <View>
+            <View style={styles.menuDivider} />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => onCopy(message)}
+              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
+              <SymbolView
+                name={{ ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' }}
+                size={18}
+                tintColor={styles.menuIcon.color}
+              />
+              <ThemedText style={styles.menuLabel}>Copy</ThemedText>
+            </Pressable>
+          </View>
+        ) : null}
         {links.map((link) => (
           <View key={link.url}>
             <View style={styles.menuDivider} />
@@ -114,18 +121,22 @@ export function ChatMessageMenu({
         {canChange ? (
           <View>
             <View style={styles.menuDivider} />
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => onEdit(message)}
-              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
-              <SymbolView
-                name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-                size={18}
-                tintColor={styles.menuIcon.color}
-              />
-              <ThemedText style={styles.menuLabel}>Edit</ThemedText>
-            </Pressable>
-            <View style={styles.menuDivider} />
+            {canEdit ? (
+              <View>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => onEdit(message)}
+                  style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
+                  <SymbolView
+                    name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                    size={18}
+                    tintColor={styles.menuIcon.color}
+                  />
+                  <ThemedText style={styles.menuLabel}>Edit</ThemedText>
+                </Pressable>
+                <View style={styles.menuDivider} />
+              </View>
+            ) : null}
             <Pressable
               accessibilityRole="button"
               onPress={() => onUnsend(message)}

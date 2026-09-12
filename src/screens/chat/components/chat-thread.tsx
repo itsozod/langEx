@@ -14,6 +14,7 @@ import { useChatStyles } from '../styles/chat-styles';
 import type { ChatThreadProps } from '../types/chat-thread-types';
 import type { GiftedMessage } from '../types/message.types';
 import { ChatInputToolbar, ChatSend } from './chat-composer';
+import { ChatImageConfirmation } from './chat-image-confirmation';
 import { ChatJumpToLatest } from './chat-jump-to-latest';
 import { ChatMessage, ReplySwipeAction } from './chat-message';
 import { ChatMessageMenu } from './chat-message-menu';
@@ -37,12 +38,17 @@ export function ChatThread({
   isFetchingNextPage,
   isHistoricalWindow,
   isReadOnly,
+  imageSelection,
+  onCancelImages,
+  onConfirmImages,
   onInputChange,
+  onChooseImages,
   onJumpToLatest,
   onLoadNewerMessages,
   onLoadOlderMessages,
   onEditMessage,
   onRequestMessageWindow,
+  onRemoveSelectedImage,
   onRetryMessage,
   onSend,
   onUnsendMessage,
@@ -202,6 +208,7 @@ export function ChatThread({
                   {...props}
                   isEditing={editing !== null}
                   onCancelEdit={stopEditingAndResetComposer}
+                  onChooseImages={onChooseImages}
                 />
               )
         }
@@ -272,6 +279,12 @@ export function ChatThread({
         onReply={replyFromMenu}
         onUnsend={unsendFromMenu}
         target={menuTarget}
+      />
+      <ChatImageConfirmation
+        images={imageSelection}
+        onCancel={onCancelImages}
+        onConfirm={onConfirmImages}
+        onRemove={onRemoveSelectedImage}
       />
     </View>
   );

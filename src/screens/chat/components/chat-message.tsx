@@ -8,7 +8,6 @@ import {
   type TextProps,
   type ViewStyle,
 } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -21,12 +20,10 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useChatStyles } from '../styles/chat-styles';
 import type { GiftedMessage } from '../types/message.types';
 import { formatMessageTime, isSameSenderOnSameDay } from '../utils/messages';
+import { ChatMessageImage } from './chat-message-image';
+import { ChatMessageReply } from './chat-message-reply';
 
-/**
- * Long-pressing message text has to be handled by the text itself. A gesture-handler pressable
- * wrapped around it cancels touches in its subviews on iOS, which stops links from ever opening,
- * so the long press is carried down to every text node instead of sitting above them.
- */
+/** Carries long presses to text nodes without stealing iOS link taps. */
 const MessageLongPressContext = createContext<(() => void) | undefined>(undefined);
 
 function MessageText(props: TextProps) {
@@ -105,10 +102,6 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
   const joinsAbove = isSameSenderOnSameDay(currentMessage, previousMessage);
   const joinsBelow = isSameSenderOnSameDay(currentMessage, nextMessage);
   const replyMessage = currentMessage.replyMessage;
-  const replyAuthor =
-    String(replyMessage?.user._id) === String(props.user?._id)
-      ? 'You'
-      : replyMessage?.user.name || 'Language partner';
   const cornerStyles = [
     joinsAbove && (position === 'right' ? styles.bubbleJoinAboveRight : styles.bubbleJoinAboveLeft),
     joinsBelow && (position === 'right' ? styles.bubbleJoinBelowRight : styles.bubbleJoinBelowLeft),
@@ -143,44 +136,32 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
         cornerStyles,
       ]}>
       {replyMessage ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Go to the message from ${replyAuthor}`}
-          disabled={!props.onJumpToMessage}
+        <ChatMessageReply
+          currentUserId={props.user?._id}
           onPress={jumpToRepliedMessage}
           onLongPress={openMenu}
-          style={({ pressed }) => [
-            styles.messageReply,
-            position === 'right' ? styles.messageReplyRight : styles.messageReplyLeft,
-            pressed && styles.pressed,
-          ]}>
-          <ThemedText
-            numberOfLines={1}
-            style={[
-              styles.messageReplyAuthor,
-              position === 'right' ? styles.messageReplyAuthorRight : styles.messageReplyAuthorLeft,
-            ]}>
-            {replyAuthor}
-          </ThemedText>
-          <ThemedText
-            numberOfLines={2}
-            style={[
-              styles.messageReplyText,
-              position === 'right' ? styles.messageReplyTextRight : styles.messageReplyTextLeft,
-            ]}>
-            {replyMessage.text}
-          </ThemedText>
-        </Pressable>
+          position={position}
+          replyMessage={replyMessage}
+        />
       ) : null}
       <MessageLongPressContext.Provider value={openMenu}>
-        <LinkParser
-          text={currentMessage.text}
-          TextComponent={MessageText}
-          textStyle={position === 'right' ? styles.bubbleTextRight : styles.bubbleTextLeft}
-          linkStyle={position === 'right' ? styles.bubbleLinkRight : styles.bubbleLinkLeft}
-          phone={false}
-          stripPrefix={false}
-        />
+        {currentMessage.chatImages?.length ? (
+          <ChatMessageImage
+            images={currentMessage.chatImages}
+            message={currentMessage}
+            onLongPress={openMenu}
+          />
+        ) : null}
+        {currentMessage.text ? (
+          <LinkParser
+            text={currentMessage.text}
+            TextComponent={MessageText}
+            textStyle={position === 'right' ? styles.bubbleTextRight : styles.bubbleTextLeft}
+            linkStyle={position === 'right' ? styles.bubbleLinkRight : styles.bubbleLinkLeft}
+            phone={false}
+            stripPrefix={false}
+          />
+        ) : null}
       </MessageLongPressContext.Provider>
       <View style={styles.bubbleMeta}>
         {position === 'right' && currentMessage.deliveryStatus === 'failed' ? (

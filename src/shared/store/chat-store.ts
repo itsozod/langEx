@@ -76,7 +76,13 @@ export const useChatStore = create<ChatState>((set) => ({
       conversations[conversationIndex] = {
         ...conversations[conversationIndex],
         lastMessage: message,
-        lastMessagePreview: message.content,
+        lastMessagePreview:
+          message.content ||
+          (message.images && message.images.length > 1
+            ? `${message.images.length} photos`
+            : message.images?.length || message.image
+              ? 'Photo'
+              : ''),
         lastMessageTimestamp: message.createdAt,
       };
       conversations.sort((first, second) => {

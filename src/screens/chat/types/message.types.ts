@@ -1,12 +1,18 @@
-import type { IMessage } from 'react-native-gifted-chat';
+import type { IMessage, ReplyMessage } from 'react-native-gifted-chat';
 
-export type GiftedMessage = IMessage & {
+export type GiftedReplyMessage = ReplyMessage & {
+  chatImages?: MessageImage[];
+};
+
+export type GiftedMessage = Omit<IMessage, 'replyMessage'> & {
+  chatImages?: MessageImage[];
   deliveryReceipt?: 'sent' | 'read';
   deliveryStatus?: OutgoingMessageStatus;
   sendError?: string;
   pending?: boolean;
   /** Non-null means the sender changed the text after sending. */
   editedAt?: string | null;
+  replyMessage?: GiftedReplyMessage;
 };
 
 export type OutgoingMessageStatus = 'queued' | 'sending' | 'failed';
@@ -25,12 +31,29 @@ export type MessageReply = {
   id: string;
   content: string;
   senderId: string;
+  image?: MessageImage | null;
+  images?: MessageImage[];
+};
+
+export type MessageImage = {
+  url: string;
+  thumbnailUrl: string;
+  width: number;
+  height: number;
+  bytes: number;
+  mimeType: string;
+};
+
+export type ChatImageSelection = Pick<MessageImage, 'width' | 'height'> & {
+  uri: string;
 };
 
 export type Message = {
   id: string;
   clientMessageId?: string | null;
   content: string;
+  image?: MessageImage | null;
+  images?: MessageImage[];
   senderId: string;
   conversationId?: string;
   createdAt: string;
@@ -144,4 +167,9 @@ export type SocketAcknowledgement = {
   error?: string;
   conversationId?: string;
   message?: Message;
+};
+
+export type SendImageResponse = {
+  conversationId: string;
+  message: Message;
 };

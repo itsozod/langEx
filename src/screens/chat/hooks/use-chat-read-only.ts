@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import type { ReplyMessage } from 'react-native-gifted-chat';
+
+import type { GiftedReplyMessage } from '../types/message.types';
 
 type UseChatReadOnlyOptions = {
   closeMessageMenu: () => void;
   isReadOnly: boolean;
-  setReplyingTo: (message: ReplyMessage | null) => void;
+  setReplyingTo: (message: GiftedReplyMessage | null) => void;
   stopEditing: () => void;
 };
 

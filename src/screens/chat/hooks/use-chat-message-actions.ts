@@ -1,16 +1,15 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from 'react';
 import { Alert, Clipboard } from 'react-native';
-import type { ReplyMessage } from 'react-native-gifted-chat';
 
 import type { MessageAnchor } from '../components/chat-message';
 import type { MessageMenuTarget } from '../components/chat-message-menu';
-import type { GiftedMessage } from '../types/message.types';
+import type { GiftedMessage, GiftedReplyMessage } from '../types/message.types';
 
 type UseChatMessageActionsOptions = {
   currentUserId?: string;
   onUnsendMessage: (messageId: string) => void;
-  setReplyingTo: (message: ReplyMessage | null) => void;
+  setReplyingTo: (message: GiftedReplyMessage | null) => void;
   startEditing: (message: GiftedMessage) => void;
   stopEditingAndResetComposer: () => void;
 };
@@ -33,6 +32,7 @@ export function useChatMessageActions({
         text: message.text,
         user: message.user,
         image: message.image,
+        chatImages: message.chatImages,
         audio: message.audio,
       });
       void Haptics.selectionAsync().catch(() => {});

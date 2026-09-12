@@ -1,9 +1,7 @@
-import type { ReplyMessage } from 'react-native-gifted-chat';
-
 import type { AppTheme } from '@/providers/theme-provider';
 import type { AuthUser } from '@/screens/auth/types';
 
-import type { GiftedMessage } from './message.types';
+import type { ChatImageSelection, GiftedMessage, GiftedReplyMessage } from './message.types';
 
 export type ChatThreadProps = {
   conversationId?: string;
@@ -15,7 +13,12 @@ export type ChatThreadProps = {
   isFetchingNextPage: boolean;
   isHistoricalWindow: boolean;
   isReadOnly: boolean;
+  imageSelection: ChatImageSelection[];
+  onCancelImages: () => void;
+  onConfirmImages: () => void;
   onInputChange: (text: string) => void;
+  onChooseImages: () => void;
+  onRemoveSelectedImage: (index: number) => void;
   onJumpToLatest: () => void;
   onLoadNewerMessages: () => void;
   onLoadOlderMessages: () => void;
@@ -24,8 +27,8 @@ export type ChatThreadProps = {
   onRetryMessage: (clientMessageId: string) => void;
   onSend: (messages: GiftedMessage[]) => void;
   onUnsendMessage: (messageId: string) => void;
-  replyingTo: ReplyMessage | null;
-  setReplyingTo: (message: ReplyMessage | null) => void;
+  replyingTo: GiftedReplyMessage | null;
+  setReplyingTo: (message: GiftedReplyMessage | null) => void;
   theme: AppTheme;
   topInset: number;
   typingUsers: string[];

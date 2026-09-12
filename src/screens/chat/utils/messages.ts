@@ -2,8 +2,21 @@ import type {
   ChatParticipant,
   GiftedMessage,
   Message,
+  MessageImage,
+  MessageReply,
   UnsentMessage,
 } from '../types/message.types';
+
+type ImageBearingMessage =
+  | Pick<Message, 'image' | 'images'>
+  | Pick<MessageReply, 'image' | 'images'>;
+
+/** Reads the gallery contract while older payloads still expose only the singular alias. */
+export function getMessageImages(message?: ImageBearingMessage | null): MessageImage[] {
+  if (!message) return [];
+  if (message.images?.length) return message.images;
+  return message.image ? [message.image] : [];
+}
 
 export function getInitials(name?: string | null) {
   const value = name?.trim() || 'Language partner';
@@ -17,11 +30,30 @@ export function getInitials(name?: string | null) {
 export function isMessage(value: unknown): value is Message {
   if (!value || typeof value !== 'object') return false;
   const message = value as Partial<Message>;
+  const isImage = (image: unknown): image is MessageImage => {
+    if (!image || typeof image !== 'object') return false;
+    const candidate = image as Partial<MessageImage>;
+    return (
+      typeof candidate.url === 'string' &&
+      typeof candidate.thumbnailUrl === 'string' &&
+      typeof candidate.width === 'number' &&
+      typeof candidate.height === 'number' &&
+      typeof candidate.bytes === 'number' &&
+      typeof candidate.mimeType === 'string'
+    );
+  };
+  const hasValidImages =
+    message.images === undefined ||
+    (Array.isArray(message.images) && message.images.length <= 4 && message.images.every(isImage));
+  const hasValidImageAlias =
+    message.image === undefined || message.image === null || isImage(message.image);
   return (
     typeof message.id === 'string' &&
     typeof message.content === 'string' &&
     typeof message.senderId === 'string' &&
-    typeof message.createdAt === 'string'
+    typeof message.createdAt === 'string' &&
+    hasValidImages &&
+    hasValidImageAlias
   );
 }
 
@@ -67,10 +99,14 @@ export function toGiftedMessages(
       const replySender = message.replyTo
         ? participants.find((participant) => participant.id === message.replyTo?.senderId)
         : undefined;
+      const images = getMessageImages(message);
+      const replyImages = getMessageImages(message.replyTo);
 
       return {
         _id: message.id,
         text: message.content,
+        image: images[0]?.thumbnailUrl,
+        chatImages: images.length ? images : undefined,
         createdAt: new Date(message.createdAt),
         pending: Boolean(message.deliveryStatus ?? message.isOptimistic),
         deliveryStatus: message.deliveryStatus,
@@ -91,6 +127,8 @@ export function toGiftedMessages(
           ? {
               _id: message.replyTo.id,
               text: message.replyTo.content,
+              image: replyImages[0]?.thumbnailUrl,
+              chatImages: replyImages.length ? replyImages : undefined,
               user: {
                 _id: message.replyTo.senderId,
                 name:

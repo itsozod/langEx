@@ -64,6 +64,29 @@ const createChatStyles = (theme: AppTheme) => {
       paddingHorizontal: 9,
       paddingVertical: 7,
     },
+    messageReplyBody: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    messageReplyCopy: { flex: 1, minWidth: 0 },
+    messageReplyThumbnail: {
+      width: 42,
+      height: 42,
+      borderRadius: 8,
+      borderCurve: 'continuous',
+      backgroundColor: 'rgba(0,0,0,0.12)',
+    },
+    replyThumbnailWrap: { position: 'relative' },
+    replyThumbnailBadge: {
+      position: 'absolute',
+      right: 3,
+      bottom: 3,
+      minWidth: 22,
+      height: 18,
+      borderRadius: 9,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 5,
+      backgroundColor: 'rgba(10,8,14,0.76)',
+    },
+    replyThumbnailBadgeText: { color: '#FFFFFF', fontSize: 9, lineHeight: 12 },
     messageReplyLeft: {
       backgroundColor: isDark ? 'rgba(123,102,218,0.13)' : '#F0ECFA',
       borderLeftColor: '#735FDC',
@@ -186,6 +209,13 @@ const createChatStyles = (theme: AppTheme) => {
       paddingLeft: 8,
       paddingRight: 4,
     },
+    imageAction: {
+      width: 44,
+      height: 46,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    imageActionIcon: { color: isDark ? '#BDB2F4' : '#6554B7' },
     // Gifted Chat's Composer only auto-grows the input on web; on native it leaves `height`
     // undefined and relies on the multiline input measuring its own content. Never give this
     // style `flex`: the toolbar is measured against the space left above the keyboard, so a
@@ -248,6 +278,14 @@ const createChatStyles = (theme: AppTheme) => {
       fontSize: 11,
       lineHeight: 16,
       marginTop: 1,
+    },
+    replyPreviewThumbnail: {
+      width: 42,
+      height: 42,
+      borderRadius: 9,
+      borderCurve: 'continuous',
+      marginRight: 4,
+      backgroundColor: 'rgba(0,0,0,0.12)',
     },
     replyPreviewClose: {
       width: 38,

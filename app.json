@@ -45,7 +45,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow LangEx to access your photos so you can choose a profile picture.",
+          "photosPermission": "Allow LangEx to access your photos so you can choose a profile picture or send photos in chat.",
           "cameraPermission": false,
           "microphonePermission": false
         }
