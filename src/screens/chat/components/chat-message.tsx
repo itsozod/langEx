@@ -4,6 +4,7 @@ import {
   Pressable as BubblePressable,
   Text,
   View,
+  type LayoutChangeEvent,
   type StyleProp,
   type TextProps,
   type ViewStyle,
@@ -23,7 +24,6 @@ import { formatMessageTime, isSameSenderOnSameDay } from '../utils/messages';
 import { ChatMessageImage } from './chat-message-image';
 import { ChatMessageReply } from './chat-message-reply';
 
-/** Carries long presses to text nodes without stealing iOS link taps. */
 const MessageLongPressContext = createContext<(() => void) | undefined>(undefined);
 
 function MessageText(props: TextProps) {
@@ -32,12 +32,12 @@ function MessageText(props: TextProps) {
   return <Text {...props} onLongPress={onLongPress} />;
 }
 
-/** Window coordinates of a bubble, so a menu can be placed against the message it belongs to. */
 export type MessageAnchor = { height: number; width: number; x: number; y: number };
 
 export type ChatMessageExtras = {
   highlightedMessageId?: SharedValue<string | null>;
   onJumpToMessage?: (messageId: string) => void;
+  onMessageLayoutById?: (messageId: string, event: LayoutChangeEvent) => void;
   onOpenMenu?: (message: GiftedMessage, anchor: MessageAnchor) => void;
   onRetryMessage?: (clientMessageId: string) => void;
 };
@@ -77,7 +77,6 @@ function MessageDeliveryReceipt({ status }: { status: 'sent' | 'read' }) {
   );
 }
 
-/** Flashes over the bubble that a tap on a reply quote just revealed. */
 function BubbleHighlight({ cornerStyles, highlightedMessageId, messageId }: BubbleHighlightProps) {
   const styles = useChatStyles();
 
@@ -124,9 +123,6 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
   }, [currentMessage, onOpenMenu]);
 
   return (
-    // React Native's pressable, not the gesture-handler one: it shares the responder system with
-    // the message text, so a long press anywhere on the bubble opens the menu without stealing the
-    // taps that open links.
     <BubblePressable
       ref={bubbleRef}
       onLongPress={openMenu}
@@ -229,17 +225,23 @@ function ChatMessageComponent(props: ChatMessageProps) {
   const swipeableRef = useRef<SwipeableMethods>(null);
   const joinsNext = isSameSenderOnSameDay(props.currentMessage, props.nextMessage);
   const canReply = Boolean(props.swipeToReply?.isEnabled && !props.currentMessage.pending);
-  // Own messages sit on the right, so replying to them is a swipe towards their own side.
   const isOwnMessage = props.position === 'right';
 
   const handleReply = useCallback(() => {
     if (canReply) props.swipeToReply?.onSwipe?.(props.currentMessage);
   }, [canReply, props.currentMessage, props.swipeToReply]);
   const closeSwipeable = useCallback(() => swipeableRef.current?.close(), []);
+  const handleLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      props.onMessageLayout?.(event);
+      props.onMessageLayoutById?.(String(props.currentMessage._id), event);
+    },
+    [props],
+  );
 
   return (
     <View
-      onLayout={props.onMessageLayout}
+      onLayout={handleLayout}
       style={[
         styles.messageLane,
         joinsNext ? styles.messageRowGrouped : styles.messageRowSeparated,
@@ -283,6 +285,7 @@ function areChatMessagePropsEqual(previous: ChatMessageProps, next: ChatMessageP
     previous.user?._id === next.user?._id &&
     previous.highlightedMessageId === next.highlightedMessageId &&
     previous.onJumpToMessage === next.onJumpToMessage &&
+    previous.onMessageLayoutById === next.onMessageLayoutById &&
     previous.onOpenMenu === next.onOpenMenu &&
     previous.onRetryMessage === next.onRetryMessage &&
     previous.onMessageLayout === next.onMessageLayout &&

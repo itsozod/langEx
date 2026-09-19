@@ -12,6 +12,8 @@ type ChatListProps = NonNullable<Parameters<typeof GiftedChat<GiftedMessage>>[0]
 type UseChatListPropsOptions = {
   contentContainerStyle: ChatListProps['contentContainerStyle'];
   maintainVisibleContentPosition: ChatListProps['maintainVisibleContentPosition'];
+  onMomentumScrollEnd: ChatListProps['onMomentumScrollEnd'];
+  onScrollBeginDrag: ChatListProps['onScrollBeginDrag'];
   onScroll: ChatListProps['onScroll'];
   onScrollToIndexFailed: ChatListProps['onScrollToIndexFailed'];
 };
@@ -19,6 +21,8 @@ type UseChatListPropsOptions = {
 export function useChatListProps({
   contentContainerStyle,
   maintainVisibleContentPosition,
+  onMomentumScrollEnd,
+  onScrollBeginDrag,
   onScroll,
   onScrollToIndexFailed,
 }: UseChatListPropsOptions): ChatListProps {
@@ -29,12 +33,21 @@ export function useChatListProps({
       keyboardShouldPersistTaps: 'handled',
       maintainVisibleContentPosition,
       maxToRenderPerBatch: MESSAGE_RENDER_BATCH_SIZE,
+      onMomentumScrollEnd,
+      onScrollBeginDrag,
       onScroll,
       onScrollToIndexFailed,
       removeClippedSubviews: Platform.OS === 'android',
       updateCellsBatchingPeriod: 40,
       windowSize: MESSAGE_LIST_WINDOW_SIZE,
     }),
-    [contentContainerStyle, maintainVisibleContentPosition, onScroll, onScrollToIndexFailed],
+    [
+      contentContainerStyle,
+      maintainVisibleContentPosition,
+      onMomentumScrollEnd,
+      onScrollBeginDrag,
+      onScroll,
+      onScrollToIndexFailed,
+    ],
   );
 }

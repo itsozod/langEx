@@ -28,7 +28,6 @@ import { OlderMessagesLoader } from './older-messages-loader';
 const LOAD_NEWER_OFFSET = 600;
 const AT_LATEST_OFFSET = 80;
 const SCROLLED_AWAY_OFFSET = 420;
-
 export function ChatThread({ conversation, history, messaging, presentation }: ChatThreadProps) {
   const { id: conversationId, currentUser, isHistoricalWindow, isReadOnly } = conversation;
   const {
@@ -62,25 +61,36 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
   const { theme, topInset, typingUsers } = presentation;
   const styles = useChatStyles();
   const currentUserId = currentUser?.id;
+  const scrollOffsetRef = useRef(0);
   const {
     listRef,
     maintainVisibleContentPosition,
     messagesContainerRef,
+    resumeReadingPositionAnchor,
     scrollToLatestAfterSend,
     scrollToLatestWindow,
-  } = useChatAutoscroll();
-  const { handleScrollToIndexFailed, highlightedMessageId, isRevealPending, jumpToMessage } =
-    useChatJumpToMessage({
-      listRef,
-      messages: giftedMessages,
-      onRequestMessageWindow,
-    });
-  const scrollOffsetRef = useRef(0);
+    suspendReadingPositionAnchor,
+  } = useChatAutoscroll(isHistoricalWindow);
+  const {
+    highlightedMessageId,
+    isRevealPending,
+    jumpToMessage,
+    onMessageLayout,
+    onScrollBeginDrag,
+    onScrollEnd,
+    onScrollFailed,
+  } = useChatJumpToMessage({
+    listRef,
+    messages: giftedMessages,
+    onRevealSettled: resumeReadingPositionAnchor,
+    onRevealStart: suspendReadingPositionAnchor,
+    onRequestMessageWindow,
+    scrollOffsetRef,
+  });
   const wasScrolledAwayRef = useRef(false);
   const wasAtLatestRef = useRef(true);
   const [isScrolledAway, setIsScrolledAway] = useState(false);
   const [unseenMessageCount, setUnseenMessageCount] = useState(0);
-
   useEffect(
     () =>
       useChatStore.subscribe((state, previousState) => {
@@ -119,7 +129,6 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
     onSend: sendMessage,
     scrollToLatestAfterSend,
   });
-
   const {
     closeMessageMenu,
     copyFromMenu,
@@ -137,15 +146,22 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
     startEditing,
     stopEditingAndResetComposer,
   });
-
   useChatReadOnly({
     closeMessageMenu,
     isReadOnly,
     setReplyingTo,
     stopEditing: stopEditingAndResetComposer,
   });
+  const jumpToLatest = useCallback(() => {
+    setUnseenMessageCount(0);
+    if (!isHistoricalWindow) {
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      return;
+    }
 
-  // Offset 0 is the newest end of the inverted list, so nearing it means asking for newer messages.
+    onJumpToLatest();
+    scrollToLatestWindow();
+  }, [isHistoricalWindow, listRef, onJumpToLatest, scrollToLatestWindow]);
   const handleScroll = useCallback(
     (event: { contentOffset: { y: number } }) => {
       const offset = event.contentOffset.y;
@@ -158,41 +174,29 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
       const isAtLatest = !isHistoricalWindow && offset < AT_LATEST_OFFSET;
       if (isAtLatest && !wasAtLatestRef.current) setUnseenMessageCount(0);
       wasAtLatestRef.current = isAtLatest;
-      // Paging renumbers rows, so it must never run while a jump is still resolving its target.
       if (isRevealPending()) return;
       if (offset < LOAD_NEWER_OFFSET) onLoadNewerMessages();
 
-      // Scrolling an older window forward until nothing newer is left means the thread has caught
-      // up with the present, so it rejoins the live window: the arrow goes away and messages
-      // arriving over the socket start appearing again.
-      if (isHistoricalWindow && !hasNewerMessages && offset < AT_LATEST_OFFSET) onJumpToLatest();
+      if (isHistoricalWindow && !hasNewerMessages && offset < AT_LATEST_OFFSET) jumpToLatest();
     },
-    [hasNewerMessages, isHistoricalWindow, isRevealPending, onJumpToLatest, onLoadNewerMessages],
+    [hasNewerMessages, isHistoricalWindow, isRevealPending, jumpToLatest, onLoadNewerMessages],
   );
-
-  const jumpToLatest = useCallback(() => {
-    setUnseenMessageCount(0);
-    if (!isHistoricalWindow) {
-      listRef.current?.scrollToOffset({ offset: 0, animated: true });
-      return;
-    }
-
-    onJumpToLatest();
-    scrollToLatestWindow();
-  }, [isHistoricalWindow, listRef, onJumpToLatest, scrollToLatestWindow]);
   const { giftedUser, renderMessage } = useChatMessageRenderer({
     currentUser,
     highlightedMessageId,
     isReadOnly,
     jumpToMessage,
+    onMessageLayout,
     onRetryMessage: retryMessage,
     openMessageMenu,
   });
   const listProps = useChatListProps({
     contentContainerStyle: styles.messageList,
     maintainVisibleContentPosition,
+    onMomentumScrollEnd: onScrollEnd,
+    onScrollBeginDrag,
     onScroll: handleScroll,
-    onScrollToIndexFailed: handleScrollToIndexFailed,
+    onScrollToIndexFailed: onScrollFailed,
   });
 
   return (
@@ -263,9 +267,6 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
           onChangeText: handleInputChange,
           placeholder: 'Write a message…',
           placeholderTextColor: styles.placeholder.color,
-          // Android scrolls a multiline input to the cursor before React can grow its explicit
-          // height, briefly hiding the previous line. Keep native scrolling off until the input
-          // has reached its maximum height and genuinely needs to scroll internally.
           scrollEnabled: isComposerScrollable,
           style: [styles.composer, { height: composerHeight }],
           multiline: true,

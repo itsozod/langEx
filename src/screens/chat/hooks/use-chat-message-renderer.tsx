@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import type { LayoutChangeEvent } from 'react-native';
 import type { MessageProps } from 'react-native-gifted-chat';
 import type { SharedValue } from 'react-native-reanimated';
 
@@ -12,6 +13,7 @@ type UseChatMessageRendererOptions = {
   highlightedMessageId: SharedValue<string | null>;
   isReadOnly: boolean;
   jumpToMessage: (messageId: string) => void;
+  onMessageLayout: (messageId: string, event: LayoutChangeEvent) => void;
   onRetryMessage: (clientMessageId: string) => void;
   openMessageMenu: (message: GiftedMessage, anchor: MessageAnchor) => void;
 };
@@ -21,6 +23,7 @@ export function useChatMessageRenderer({
   highlightedMessageId,
   isReadOnly,
   jumpToMessage,
+  onMessageLayout,
   onRetryMessage,
   openMessageMenu,
 }: UseChatMessageRendererOptions) {
@@ -38,11 +41,19 @@ export function useChatMessageRenderer({
         {...props}
         highlightedMessageId={highlightedMessageId}
         onJumpToMessage={jumpToMessage}
+        onMessageLayoutById={onMessageLayout}
         onOpenMenu={isReadOnly ? undefined : openMessageMenu}
         onRetryMessage={onRetryMessage}
       />
     ),
-    [highlightedMessageId, isReadOnly, jumpToMessage, onRetryMessage, openMessageMenu],
+    [
+      highlightedMessageId,
+      isReadOnly,
+      jumpToMessage,
+      onMessageLayout,
+      onRetryMessage,
+      openMessageMenu,
+    ],
   );
 
   return { giftedUser, renderMessage };
