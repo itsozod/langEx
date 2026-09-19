@@ -1,27 +1,17 @@
-import { useState } from 'react';
 import { Text } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  useAnimatedReaction,
-  type SharedValue,
-} from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 
 import { useChatStyles } from '../styles/chat-styles';
 import { useChatThreadStyles } from '../styles/chat-thread-styles';
 
-/** How far up the thread has to be scrolled before the button offers a way back down. */
-const SCROLLED_AWAY_OFFSET = 420;
-
 type ChatJumpToLatestProps = {
   isAlwaysVisible: boolean;
+  isScrolledAway: boolean;
   newMessageCount: number;
   onPress: () => void;
-  scrolledY: SharedValue<number>;
 };
 
 /**
@@ -30,21 +20,12 @@ type ChatJumpToLatestProps = {
  */
 export function ChatJumpToLatest({
   isAlwaysVisible,
+  isScrolledAway,
   newMessageCount,
   onPress,
-  scrolledY,
 }: ChatJumpToLatestProps) {
   const styles = useChatStyles();
   const threadStyles = useChatThreadStyles();
-  const [isScrolledAway, setIsScrolledAway] = useState(false);
-
-  // Reacting on the UI thread keeps per-frame scrolling out of React; only crossings re-render.
-  useAnimatedReaction(
-    () => scrolledY.get() > SCROLLED_AWAY_OFFSET,
-    (isAway, wasAway) => {
-      if (isAway !== wasAway) scheduleOnRN(setIsScrolledAway, isAway);
-    },
-  );
 
   if (!isAlwaysVisible && !isScrolledAway && newMessageCount === 0) return null;
 

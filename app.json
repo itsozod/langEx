@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/langex-app-icon.png",
+      "appleTeamId": "6CH53R3HJ9",
       "bundleIdentifier": "com.ozod2905.langEx"
     },
     "android": {

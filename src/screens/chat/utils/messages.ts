@@ -1,5 +1,4 @@
 import type {
-  ChatParticipant,
   GiftedMessage,
   Message,
   MessageImage,
@@ -84,61 +83,10 @@ export function isSameSenderOnSameDay(first?: GiftedMessage, second?: GiftedMess
 }
 
 export function formatMessageTime(value: Date | number) {
-  return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return messageTimeFormatter.format(new Date(value));
 }
 
-export function toGiftedMessages(
-  messages: Message[],
-  participants: ChatParticipant[] = [],
-  currentUserId?: string,
-  participantReadAt?: string,
-): GiftedMessage[] {
-  return messages
-    .map((message) => {
-      const sender = participants.find((participant) => participant.id === message.senderId);
-      const replySender = message.replyTo
-        ? participants.find((participant) => participant.id === message.replyTo?.senderId)
-        : undefined;
-      const images = getMessageImages(message);
-      const replyImages = getMessageImages(message.replyTo);
-
-      return {
-        _id: message.id,
-        text: message.content,
-        image: images[0]?.thumbnailUrl,
-        chatImages: images.length ? images : undefined,
-        createdAt: new Date(message.createdAt),
-        pending: Boolean(message.deliveryStatus ?? message.isOptimistic),
-        deliveryStatus: message.deliveryStatus,
-        sendError: message.sendError,
-        deliveryReceipt:
-          message.senderId === currentUserId && !message.isOptimistic
-            ? participantReadAt && new Date(message.createdAt) <= new Date(participantReadAt)
-              ? 'read'
-              : 'sent'
-            : undefined,
-        editedAt: message.editedAt,
-        user: {
-          _id: message.senderId,
-          name: sender?.displayName || (message.senderId === currentUserId ? 'You' : 'Partner'),
-          avatar: sender?.avatarUrl || undefined,
-        },
-        replyMessage: message.replyTo
-          ? {
-              _id: message.replyTo.id,
-              text: message.replyTo.content,
-              image: replyImages[0]?.thumbnailUrl,
-              chatImages: replyImages.length ? replyImages : undefined,
-              user: {
-                _id: message.replyTo.senderId,
-                name:
-                  replySender?.displayName ||
-                  (message.replyTo.senderId === currentUserId ? 'You' : 'Partner'),
-                avatar: replySender?.avatarUrl || undefined,
-              },
-            }
-          : undefined,
-      } satisfies GiftedMessage;
-    })
-    .sort((first, second) => Number(second.createdAt) - Number(first.createdAt));
-}
+const messageTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: 'numeric',
+  minute: '2-digit',
+});

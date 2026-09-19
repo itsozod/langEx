@@ -14,6 +14,7 @@ type ChatState = {
   clearConversationUnread: (conversationId: string) => void;
   addMessage: (message: Message) => void;
   mergeMessages: (messages: Message[]) => void;
+  syncActiveMessages: (messages: Message[]) => void;
   removeMessage: (messageId: string) => void;
   replaceMessage: (message: Message) => void;
   discardMessage: (messageId: string) => void;
@@ -144,6 +145,39 @@ export const useChatStore = create<ChatState>((set) => ({
       }
 
       return { activeMessages };
+    }),
+  syncActiveMessages: (messages) =>
+    set((state) => {
+      const nextMessages: Message[] = [];
+      const messageIds = new Set<string>();
+      const clientMessageIds = new Set<string>();
+
+      for (const message of messages) {
+        if (messageIds.has(message.id)) continue;
+        messageIds.add(message.id);
+        if (message.clientMessageId) clientMessageIds.add(message.clientMessageId);
+        nextMessages.push(message);
+      }
+
+      // Text outbox and gallery uploads are not guaranteed to be in a server page yet. Preserve
+      // only those local messages; server-backed rows outside the retained query window are
+      // deliberately released so long-running history reads stay bounded.
+      for (const message of state.activeMessages) {
+        if (
+          !message.isOptimistic ||
+          messageIds.has(message.id) ||
+          (message.clientMessageId && clientMessageIds.has(message.clientMessageId))
+        ) {
+          continue;
+        }
+        messageIds.add(message.id);
+        nextMessages.push(message);
+      }
+
+      const isUnchanged =
+        nextMessages.length === state.activeMessages.length &&
+        nextMessages.every((message, index) => message === state.activeMessages[index]);
+      return isUnchanged ? state : { activeMessages: nextMessages };
     }),
   removeMessage: (messageId) =>
     set((state) => ({

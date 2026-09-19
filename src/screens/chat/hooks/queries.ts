@@ -10,6 +10,9 @@ import {
 } from '../api';
 import type { ConversationWindowParams } from '../api';
 
+/** Keep chat memory bounded while still retaining several screens around the reader. */
+const MAX_CONVERSATION_WINDOW_PAGES = 5;
+
 export const chatQueryKeys = {
   all: ['chats'] as const,
   conversations: (accountId = useAuthStore.getState().activeAccountId ?? '') =>
@@ -70,6 +73,7 @@ export function useConversation(id?: string, anchorMessageId?: string | null) {
       lastPage.pageInfo?.olderCursor ? { before: lastPage.pageInfo.olderCursor } : undefined,
     getPreviousPageParam: (firstPage): ConversationWindowParams | undefined =>
       firstPage.pageInfo?.newerCursor ? { after: firstPage.pageInfo.newerCursor } : undefined,
+    maxPages: MAX_CONVERSATION_WINDOW_PAGES,
     enabled: Boolean(accountId && token && id),
     refetchOnWindowFocus: 'always',
   });

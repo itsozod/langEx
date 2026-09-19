@@ -18,11 +18,12 @@ import type {
   Message,
 } from '../types/message.types';
 import { discardMessageFromWindows, replaceMessageInWindows } from '../utils/conversation-cache';
-import { isMessage, toGiftedMessages } from '../utils/messages';
+import { isMessage } from '../utils/messages';
 import { belongsToChat, outboxMessageToOptimisticMessage } from '../utils/outbox';
 import { subscribeToOutboxDelivery } from '../utils/outbox-events';
 import { seedNewConversation } from '../utils/seed-new-conversation';
 import { useChatImageMessaging } from './use-chat-image-messaging';
+import { useGiftedMessages } from './use-gifted-messages';
 
 type UseChatMessagingOptions = {
   conversation?: Conversation;
@@ -79,15 +80,11 @@ export function useChatMessaging({
     [],
   );
 
-  const giftedMessages = useMemo(
-    () =>
-      toGiftedMessages(
-        activeMessages,
-        conversation?.participants,
-        currentUserId,
-        participantReadAt,
-      ),
-    [activeMessages, conversation?.participants, currentUserId, participantReadAt],
+  const giftedMessages = useGiftedMessages(
+    activeMessages,
+    conversation?.participants,
+    currentUserId,
+    participantReadAt,
   );
 
   const handleInputChange = useCallback(

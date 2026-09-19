@@ -10,6 +10,7 @@
 - Core API requests use the established Axios transport. Android session verification retries only unreachable/timeout failures and can render a persisted user while verification continues.
 - Account deletion permanently removes authentication/profile data while retaining old conversations and messages under a “Deleted user” tombstone. Affected chats become read-only in realtime.
 - Chat gallery sending supports existing and draft direct conversations. Users select one to four ordered photos, review/remove them in an explicit confirmation grid, and send one optimistic gallery message. The client bounds local resize/compression concurrency, retries the gallery with one sender-scoped idempotency key, renders CDN thumbnails in 1–4 tile layouts, and opens the assets in a safe-area-aware swipeable viewer. Gallery replies retain a compact first thumbnail with a `+N` badge.
+- Chat history keeps at most five 40-message query pages around the reader. The active Zustand window mirrors retained server pages while preserving unsent optimistic rows, and evicted pages can be fetched again in either direction.
 
 ## Architecture
 
@@ -23,12 +24,16 @@
 - `src/shared/lib/api-client.ts` owns the authenticated and unauthenticated Axios clients, bearer auth, response normalization, and unauthorized handling.
 - `src/screens/chat/hooks/use-active-conversation-presence.ts` reports the focused, foreground conversation and renews that presence every 20 seconds.
 - `src/screens/chat/hooks/use-chat-image-messaging.ts` owns multi-photo permission/picking, confirmation state, transient optimistic gallery upload state, retry, account-switch safety, and reconciliation into the normal message/query caches. `optimize-chat-images.ts` bounds device-side resize/compression to two concurrent jobs; the backend remains authoritative for validation, final normalization, ordering, and attachment metadata.
+- `src/screens/chat/hooks/use-gifted-messages.ts` converts the bounded message window for Gifted Chat and weakly caches conversions by immutable source object plus display/read-receipt inputs. `ChatMessage` is memoized, while `use-chat-list-props.ts` bounds FlatList render windows and batches for older Android devices.
+- `ChatThread` has four explicit input contracts in `types/chat-thread-types.ts`: conversation identity/mode, history pagination/navigation, messaging capabilities, and presentation metadata. `chat-screen.tsx` assembles those contracts and keeps layout composition to a single typed component spread.
+- Reply jumps keep the current message window visible while their anchored query loads. `ChatMessageLoadStatus` surfaces that fetch with a nonblocking “Loading message…” pill and a retry action on failure; the existing jump hook scrolls and highlights once the target row arrives.
 - The sibling backend's `src/sockets/presence.ts` validates conversation membership and treats active-conversation presence as a 60-second lease.
 - Account deletion is a backend-owned tombstone transaction: it scrubs the user, closes every conversation, deletes read-state metadata, emits participant/account deletion events, and disconnects all sockets for that identity. See `docs/DECISIONS.md`.
 - Chats presence uses the participant fields returned by `GET /conversations` as its initial snapshot. `src/screens/chat/chat-socket-manager.tsx` applies `user_presence_changed` to every matching row in both the account-scoped React Query cache and `useChatStore`; individual chat rows never fetch presence.
 
 ## Decisions
 
+- 2026-09-19: Long chat history is a bounded bidirectional window, not an indefinitely accumulated client array. Retain five pages (about 200 server messages), synchronize the rendering store to query eviction, preserve only unresolved optimistic rows outside that window, and refetch distant pages when the reader reverses direction.
 - 2026-09-02: Conversation-list presence is a collection concern, not a row concern. Hydrate from `GET /conversations` and fan out one shared socket event by participant ID; reserve `GET /users/:userId/presence` for the opened-chat snapshot.
 - 2026-09-12: Chat galleries are ordinary messages with one to four ordered typed image attachments. Upload uses authenticated multipart REST because Socket.IO should not carry multi-megabyte binary payloads; resulting delivery, pagination, replies, unread counts, and unsend reuse the existing message protocol. The backend-first rollout keeps a temporary singular-image compatibility alias.
 - 2026-08-29: Authentication state and user domain state have separate stores. Auth owns tokens and account selection; the user store owns profile snapshots and the current user. Cross-store login, switching, and logout updates remain centralized and React-batched in the session-transition boundary.
@@ -60,6 +65,7 @@
 
 ## Next steps
 
+- On the older physical Android device, continuously page backward well beyond five pages, then reverse to the latest messages. Check scroll smoothness, stable visible position at both eviction boundaries, image-heavy rows, reply jumps, incoming messages, and failed/queued optimistic sends. Physical iOS regression coverage remains outstanding.
 - Deploy the backend `MessageImage` migration before the matching mobile build, then test one- through four-photo JPEG, screenshot/PNG, and iPhone HEIC galleries, selection removal/order, retries, reply `+N` thumbnails, full-screen swiping, unsend, and background push text on two physical devices.
 - Deploy the sibling backend before testing cross-account notification taps, then verify add/login, add/register/onboarding, switching, per-account logout fallback, relaunch persistence, and notification routing on physical Android and iOS devices.
 - Deploy the sibling backend together with the next Android app build; either half alone does not provide the full stale-presence guarantee.
@@ -67,6 +73,7 @@
 
 ## Verification
 
+- 2026-09-19: Bounded chat-history performance changes, the grouped `ChatThread` contract, and reply-jump loading/retry status passed TypeScript, targeted ESLint/Prettier, locally cached Expo dependency validation, `git diff --check`, and Android production Expo exports. Full repository lint/format remain blocked by pre-existing unrelated issues in `use-color-scheme.web.ts`, `eslint.config.js`, and `google-services.json`. Largest affected handwritten file: `src/screens/chat/components/chat-thread.tsx` at 297 lines; the chat route remains a one-line re-export. Older physical Android and iOS verification remain outstanding.
 - 2026-09-12: One- through four-photo galleries passed frontend TypeScript, targeted ESLint/Prettier, the locally cached Expo dependency check, `git diff --check`, and production Expo exports for Android and iOS. Backend passed TypeScript build, Prisma validation, all 12 Node tests, targeted Prettier, and `git diff --check`. Physical Android/iOS, production Cloudinary, migration, partial-upload cleanup, and two-device realtime verification remain outstanding. Largest affected frontend handwritten file: `src/screens/chat/styles/chat-styles.ts` at 368 lines; chat route remains a one-line re-export.
 - 2026-09-02: Conversation-list presence passed TypeScript, targeted ESLint/Prettier, and production Expo exports for Android and iOS. The Chats route is a one-line re-export; the largest affected handwritten file is `src/shared/store/chat-store.ts` at 189 lines. Physical Android/iOS indicator verification remains outstanding.
 - 2026-08-29: Account deletion passed backend Prisma formatting/generation/validation, TypeScript, and `git diff --check`; frontend TypeScript, targeted ESLint/Prettier, `git diff --check`, and Android production export also passed. Database migration and physical multi-device deletion/read-only-chat verification remain outstanding.

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
-import { useSharedValue } from 'react-native-reanimated';
 
 import { useChatStore } from '@/shared/store/chat-store';
 import { CHAT_HEADER_HEIGHT } from '../constants';
 import { useChatAutoscroll } from '../hooks/use-chat-autoscroll';
 import { useChatComposer } from '../hooks/use-chat-composer';
 import { useChatJumpToMessage } from '../hooks/use-chat-jump-to-message';
+import { useChatListProps } from '../hooks/use-chat-list-props';
+import { useChatMessageRenderer } from '../hooks/use-chat-message-renderer';
 import { useChatMessageActions } from '../hooks/use-chat-message-actions';
 import { useChatReadOnly } from '../hooks/use-chat-read-only';
 import { useChatStyles } from '../styles/chat-styles';
@@ -16,48 +17,49 @@ import type { GiftedMessage } from '../types/message.types';
 import { ChatInputToolbar, ChatSend } from './chat-composer';
 import { ChatImageConfirmation } from './chat-image-confirmation';
 import { ChatJumpToLatest } from './chat-jump-to-latest';
-import { ChatMessage, ReplySwipeAction } from './chat-message';
+import { ChatMessageLoadStatus } from './chat-message-load-status';
+import { ReplySwipeAction } from './chat-message';
 import { ChatMessageMenu } from './chat-message-menu';
 import { ChatReplyPreview } from './chat-reply-preview';
 import { ChatEmptyState, DeletedUserNotice } from './chat-thread-states';
 import { ChatTypingIndicator } from './chat-typing-indicator';
 import { OlderMessagesLoader } from './older-messages-loader';
 
-/** Distance from the newest end at which the next newer page is requested. */
 const LOAD_NEWER_OFFSET = 600;
-/** Distance from the newest end that counts as having reached the end of the thread. */
 const AT_LATEST_OFFSET = 80;
+const SCROLLED_AWAY_OFFSET = 420;
 
-export function ChatThread({
-  conversationId,
-  currentUser,
-  giftedMessages,
-  hasNewerMessages,
-  hasNextPage,
-  isFetchNextPageError,
-  isFetchingNextPage,
-  isHistoricalWindow,
-  isReadOnly,
-  imageSelection,
-  onCancelImages,
-  onConfirmImages,
-  onInputChange,
-  onChooseImages,
-  onJumpToLatest,
-  onLoadNewerMessages,
-  onLoadOlderMessages,
-  onEditMessage,
-  onRequestMessageWindow,
-  onRemoveSelectedImage,
-  onRetryMessage,
-  onSend,
-  onUnsendMessage,
-  replyingTo,
-  setReplyingTo,
-  theme,
-  topInset,
-  typingUsers,
-}: ChatThreadProps) {
+export function ChatThread({ conversation, history, messaging, presentation }: ChatThreadProps) {
+  const { id: conversationId, currentUser, isHistoricalWindow, isReadOnly } = conversation;
+  const {
+    hasNewerMessages,
+    hasOlderMessages,
+    isLoadingMessageWindow: messageLoading,
+    olderLoadFailed,
+    messageWindowLoadFailed: messageLoadFailed,
+    isLoadingOlderMessages,
+    onJumpToLatest,
+    onLoadNewerMessages,
+    onLoadOlderMessages,
+    onRequestMessageWindow,
+    onRetryMessageWindow: retryMessageWindow,
+  } = history;
+  const {
+    cancelImages,
+    confirmImages,
+    editMessage,
+    giftedMessages,
+    handleChooseImages,
+    handleInputChange: notifyInputChange,
+    handleSend: sendMessage,
+    removeSelectedImage,
+    retryMessage,
+    replyingTo,
+    selectedImages,
+    setReplyingTo,
+    unsendMessage,
+  } = messaging;
+  const { theme, topInset, typingUsers } = presentation;
   const styles = useChatStyles();
   const currentUserId = currentUser?.id;
   const {
@@ -73,8 +75,10 @@ export function ChatThread({
       messages: giftedMessages,
       onRequestMessageWindow,
     });
-  const scrolledY = useSharedValue(0);
+  const scrollOffsetRef = useRef(0);
+  const wasScrolledAwayRef = useRef(false);
   const wasAtLatestRef = useRef(true);
+  const [isScrolledAway, setIsScrolledAway] = useState(false);
   const [unseenMessageCount, setUnseenMessageCount] = useState(0);
 
   useEffect(
@@ -91,10 +95,10 @@ export function ChatThread({
         if (!latestMessage || latestMessage.id === previousMessage?.id) return;
 
         const isIncoming = latestMessage.senderId !== currentUserId;
-        const isAwayFromLatest = isHistoricalWindow || scrolledY.get() > AT_LATEST_OFFSET;
+        const isAwayFromLatest = isHistoricalWindow || scrollOffsetRef.current > AT_LATEST_OFFSET;
         if (isIncoming && isAwayFromLatest) setUnseenMessageCount((count) => count + 1);
       }),
-    [conversationId, currentUserId, isHistoricalWindow, scrolledY],
+    [conversationId, currentUserId, isHistoricalWindow],
   );
   const {
     composerHeight,
@@ -109,10 +113,10 @@ export function ChatThread({
     submitEdit,
   } = useChatComposer({
     isHistoricalWindow,
-    onEditMessage,
-    onInputChange,
+    onEditMessage: editMessage,
+    onInputChange: notifyInputChange,
     onJumpToLatest,
-    onSend,
+    onSend: sendMessage,
     scrollToLatestAfterSend,
   });
 
@@ -128,7 +132,7 @@ export function ChatThread({
     unsendFromMenu,
   } = useChatMessageActions({
     currentUserId,
-    onUnsendMessage,
+    onUnsendMessage: unsendMessage,
     setReplyingTo,
     startEditing,
     stopEditingAndResetComposer,
@@ -144,22 +148,25 @@ export function ChatThread({
   // Offset 0 is the newest end of the inverted list, so nearing it means asking for newer messages.
   const handleScroll = useCallback(
     (event: { contentOffset: { y: number } }) => {
-      scrolledY.set(event.contentOffset.y);
-      const isAtLatest = !isHistoricalWindow && event.contentOffset.y < AT_LATEST_OFFSET;
+      const offset = event.contentOffset.y;
+      scrollOffsetRef.current = offset;
+      const hasScrolledAway = offset > SCROLLED_AWAY_OFFSET;
+      if (hasScrolledAway !== wasScrolledAwayRef.current) {
+        wasScrolledAwayRef.current = hasScrolledAway;
+        setIsScrolledAway(hasScrolledAway);
+      }
+      const isAtLatest = !isHistoricalWindow && offset < AT_LATEST_OFFSET;
       if (isAtLatest && !wasAtLatestRef.current) setUnseenMessageCount(0);
       wasAtLatestRef.current = isAtLatest;
       // Paging renumbers rows, so it must never run while a jump is still resolving its target.
       if (isRevealPending()) return;
-      if (event.contentOffset.y < LOAD_NEWER_OFFSET) onLoadNewerMessages();
+      if (offset < LOAD_NEWER_OFFSET) onLoadNewerMessages();
 
       // Scrolling an older window forward until nothing newer is left means the thread has caught
       // up with the present, so it rejoins the live window: the arrow goes away and messages
       // arriving over the socket start appearing again.
-      if (isHistoricalWindow && !hasNewerMessages && event.contentOffset.y < AT_LATEST_OFFSET)
-        onJumpToLatest();
+      if (isHistoricalWindow && !hasNewerMessages && offset < AT_LATEST_OFFSET) onJumpToLatest();
     },
-    // `scrolledY` is a shared value and is stable across renders.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [hasNewerMessages, isHistoricalWindow, isRevealPending, onJumpToLatest, onLoadNewerMessages],
   );
 
@@ -173,6 +180,20 @@ export function ChatThread({
     onJumpToLatest();
     scrollToLatestWindow();
   }, [isHistoricalWindow, listRef, onJumpToLatest, scrollToLatestWindow]);
+  const { giftedUser, renderMessage } = useChatMessageRenderer({
+    currentUser,
+    highlightedMessageId,
+    isReadOnly,
+    jumpToMessage,
+    onRetryMessage: retryMessage,
+    openMessageMenu,
+  });
+  const listProps = useChatListProps({
+    contentContainerStyle: styles.messageList,
+    maintainVisibleContentPosition,
+    onScroll: handleScroll,
+    onScrollToIndexFailed: handleScrollToIndexFailed,
+  });
 
   return (
     <View style={styles.chat}>
@@ -181,25 +202,13 @@ export function ChatThread({
         text={composerText}
         messagesContainerRef={messagesContainerRef}
         onSend={handleSend}
-        user={{
-          _id: currentUserId ?? '',
-          name: currentUser?.displayName || currentUser?.email || 'You',
-          avatar: currentUser?.avatarUrl || undefined,
-        }}
+        user={giftedUser}
         colorScheme={theme}
         isTyping={typingUsers.length > 0}
         isSendButtonAlwaysVisible
         isDayAnimationEnabled={false}
         renderAvatar={null}
-        renderMessage={(props) => (
-          <ChatMessage
-            {...props}
-            highlightedMessageId={highlightedMessageId}
-            onJumpToMessage={jumpToMessage}
-            onOpenMenu={isReadOnly ? () => {} : openMessageMenu}
-            onRetryMessage={onRetryMessage}
-          />
-        )}
+        renderMessage={renderMessage}
         renderInputToolbar={
           isReadOnly
             ? () => null
@@ -208,7 +217,7 @@ export function ChatThread({
                   {...props}
                   isEditing={editing !== null}
                   onCancelEdit={stopEditingAndResetComposer}
-                  onChooseImages={onChooseImages}
+                  onChooseImages={handleChooseImages}
                 />
               )
         }
@@ -219,21 +228,19 @@ export function ChatThread({
         renderChatFooter={() => (
           <ChatJumpToLatest
             isAlwaysVisible={isHistoricalWindow}
+            isScrolledAway={isScrolledAway}
             newMessageCount={unseenMessageCount}
             onPress={jumpToLatest}
-            scrolledY={scrolledY}
           />
         )}
         renderChatEmpty={() => <ChatEmptyState />}
         loadEarlierMessagesProps={{
-          isAvailable: hasNextPage,
-          isLoading: isFetchingNextPage,
+          isAvailable: hasOlderMessages,
+          isLoading: isLoadingOlderMessages,
           isInfiniteScrollEnabled: true,
           onPress: onLoadOlderMessages,
         }}
-        renderLoadEarlier={(props) => (
-          <OlderMessagesLoader {...props} hasError={isFetchNextPageError} />
-        )}
+        renderLoadEarlier={(props) => <OlderMessagesLoader {...props} hasError={olderLoadFailed} />}
         reply={{
           message: replyingTo,
           onClear: () => setReplyingTo(null),
@@ -246,13 +253,7 @@ export function ChatThread({
           },
         }}
         messagesContainerStyle={styles.messagesContainer}
-        listProps={{
-          contentContainerStyle: styles.messageList,
-          keyboardShouldPersistTaps: 'handled',
-          maintainVisibleContentPosition,
-          onScroll: handleScroll,
-          onScrollToIndexFailed: handleScrollToIndexFailed,
-        }}
+        listProps={listProps}
         keyboardAvoidingViewProps={{
           automaticOffset: false,
           keyboardVerticalOffset: topInset + CHAT_HEADER_HEIGHT,
@@ -270,6 +271,11 @@ export function ChatThread({
           multiline: true,
         }}
       />
+      <ChatMessageLoadStatus
+        failed={messageLoadFailed}
+        loading={messageLoading}
+        onRetry={retryMessageWindow}
+      />
       {isReadOnly ? <DeletedUserNotice /> : null}
       <ChatMessageMenu
         onClose={closeMessageMenu}
@@ -281,10 +287,10 @@ export function ChatThread({
         target={menuTarget}
       />
       <ChatImageConfirmation
-        images={imageSelection}
-        onCancel={onCancelImages}
-        onConfirm={onConfirmImages}
-        onRemove={onRemoveSelectedImage}
+        images={selectedImages}
+        onCancel={cancelImages}
+        onConfirm={confirmImages}
+        onRemove={removeSelectedImage}
       />
     </View>
   );

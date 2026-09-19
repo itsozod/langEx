@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,12 +18,13 @@ import { useConversation } from './hooks';
 import { useActiveConversationPresence } from './hooks/use-active-conversation-presence';
 import { useChatMessaging } from './hooks/use-chat-messaging';
 import { useChatRoom } from './hooks/use-chat-room';
-import { useUserPresence } from './hooks/use-user-presence';
 import {
   getActiveDeleteConversationVariables,
   useDeleteConversation,
 } from './hooks/use-delete-conversation';
+import { useUserPresence } from './hooks/use-user-presence';
 import { useChatStyles } from './styles/chat-styles';
+import type { ChatThreadProps } from './types/chat-thread-types';
 import type { ChatParticipant, UserPresence } from './types/message.types';
 
 export default function ChatScreen() {
@@ -41,7 +42,7 @@ export default function ChatScreen() {
   const currentUser = useUserStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const setActiveMessages = useChatStore((state) => state.setActiveMessages);
-  const mergeMessages = useChatStore((state) => state.mergeMessages);
+  const syncActiveMessages = useChatStore((state) => state.syncActiveMessages);
   const typingUsers = useChatStore((state) => state.typingUsers);
   const listParticipant = useChatStore((state) =>
     state.conversations
@@ -56,11 +57,11 @@ export default function ChatScreen() {
     anchorMessageId ? conversationId : undefined,
     anchorMessageId,
   );
+  const refetchMessageWindow = anchorQuery.refetch;
   const activeQuery = anchorMessageId ? anchorQuery : query;
   const participantQuery = usePublicUser(isDraft ? participantId : undefined);
   const deleteConversation = useDeleteConversation();
   const windowKey = anchorMessageId ?? 'latest';
-  const loadedWindowKeyRef = useRef(windowKey);
 
   const draftParticipant = useMemo<ChatParticipant | undefined>(() => {
     const user = participantQuery.data?.user;
@@ -113,20 +114,12 @@ export default function ChatScreen() {
   }, [routeId, setActiveMessages]);
 
   // The previous window stays on screen until the new one has loaded, so jumping never flashes an
-  // empty thread. Optimistic messages survive the swap because they are not part of any window yet.
+  // empty thread. Synchronizing instead of merging also releases pages evicted by `maxPages`, while
+  // the store keeps optimistic text and gallery messages that have not reached the server window.
   useEffect(() => {
-    if (loadedWindowKeyRef.current === windowKey) {
-      mergeMessages(paginatedMessages);
-      return;
-    }
-
-    if (!paginatedMessages.length) return;
-    loadedWindowKeyRef.current = windowKey;
-    setActiveMessages([
-      ...useChatStore.getState().activeMessages.filter((message) => message.isOptimistic),
-      ...paginatedMessages,
-    ]);
-  }, [mergeMessages, paginatedMessages, setActiveMessages, windowKey]);
+    if (!activeWindowPages) return;
+    syncActiveMessages(paginatedMessages);
+  }, [activeWindowPages, paginatedMessages, syncActiveMessages, windowKey]);
 
   const serverParticipantReadAt = conversation?.reads?.find(
     (readState) => readState.userId === otherParticipant?.id,
@@ -215,6 +208,9 @@ export default function ChatScreen() {
     void activeQuery.fetchPreviousPage();
   }, [activeQuery, conversationId]);
   const openMessageWindow = useCallback((messageId: string) => setAnchorMessageId(messageId), []);
+  const retryMessageWindow = useCallback(() => {
+    void refetchMessageWindow();
+  }, [refetchMessageWindow]);
   const openLatestWindow = useCallback(() => setAnchorMessageId(null), []);
 
   const hasValidTarget = isDraft ? Boolean(participantId) : Boolean(conversationId);
@@ -227,6 +223,38 @@ export default function ChatScreen() {
     const error = hasValidTarget ? loadError : new Error('The conversation link is invalid.');
     return <ChatErrorState error={error} onBack={goBack} />;
   }
+
+  const chatThreadProps = {
+    conversation: {
+      id: conversationId,
+      currentUser,
+      isHistoricalWindow: anchorMessageId !== null,
+      isReadOnly: conversation.isReadOnly,
+    },
+    history: {
+      hasNewerMessages: Boolean(activeQuery.hasPreviousPage),
+      hasOlderMessages: Boolean(activeQuery.hasNextPage),
+      isLoadingMessageWindow:
+        anchorMessageId !== null &&
+        !anchorQuery.data &&
+        (anchorQuery.isPending || anchorQuery.isFetching),
+      olderLoadFailed: activeQuery.isFetchNextPageError,
+      messageWindowLoadFailed:
+        anchorMessageId !== null && anchorQuery.isError && !anchorQuery.isFetching,
+      isLoadingOlderMessages: activeQuery.isFetchingNextPage,
+      onJumpToLatest: openLatestWindow,
+      onLoadNewerMessages: loadNewerMessages,
+      onLoadOlderMessages: loadOlderMessages,
+      onRequestMessageWindow: openMessageWindow,
+      onRetryMessageWindow: retryMessageWindow,
+    },
+    messaging,
+    presentation: {
+      theme,
+      topInset: insets.top,
+      typingUsers,
+    },
+  } satisfies ChatThreadProps;
 
   return (
     <GradientBackground>
@@ -244,36 +272,7 @@ export default function ChatScreen() {
         {socketError ? (
           <ChatErrorBanner message={socketError} onDismiss={() => setSocketError(null)} />
         ) : null}
-        <ChatThread
-          currentUser={currentUser}
-          conversationId={conversationId}
-          giftedMessages={messaging.giftedMessages}
-          hasNewerMessages={Boolean(activeQuery.hasPreviousPage)}
-          hasNextPage={Boolean(activeQuery.hasNextPage)}
-          isFetchNextPageError={activeQuery.isFetchNextPageError}
-          isFetchingNextPage={activeQuery.isFetchingNextPage}
-          isHistoricalWindow={anchorMessageId !== null}
-          isReadOnly={conversation.isReadOnly}
-          imageSelection={messaging.selectedImages}
-          onCancelImages={messaging.cancelImages}
-          onConfirmImages={messaging.confirmImages}
-          onEditMessage={messaging.editMessage}
-          onChooseImages={messaging.handleChooseImages}
-          onInputChange={messaging.handleInputChange}
-          onJumpToLatest={openLatestWindow}
-          onLoadNewerMessages={loadNewerMessages}
-          onLoadOlderMessages={loadOlderMessages}
-          onRequestMessageWindow={openMessageWindow}
-          onRemoveSelectedImage={messaging.removeSelectedImage}
-          onRetryMessage={messaging.retryMessage}
-          onSend={messaging.handleSend}
-          onUnsendMessage={messaging.unsendMessage}
-          replyingTo={messaging.replyingTo}
-          setReplyingTo={messaging.setReplyingTo}
-          theme={theme}
-          topInset={insets.top}
-          typingUsers={typingUsers}
-        />
+        <ChatThread {...chatThreadProps} />
       </View>
     </GradientBackground>
   );

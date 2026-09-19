@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { createContext, useCallback, useContext, useRef } from 'react';
+import { createContext, memo, useCallback, useContext, useRef } from 'react';
 import {
   Pressable as BubblePressable,
   Text,
@@ -222,7 +222,9 @@ export function ReplySwipeAction() {
   );
 }
 
-export function ChatMessage(props: MessageProps<GiftedMessage> & ChatMessageExtras) {
+type ChatMessageProps = MessageProps<GiftedMessage> & ChatMessageExtras;
+
+function ChatMessageComponent(props: ChatMessageProps) {
   const styles = useChatStyles();
   const swipeableRef = useRef<SwipeableMethods>(null);
   const joinsNext = isSameSenderOnSameDay(props.currentMessage, props.nextMessage);
@@ -271,3 +273,22 @@ export function ChatMessage(props: MessageProps<GiftedMessage> & ChatMessageExtr
     </View>
   );
 }
+
+function areChatMessagePropsEqual(previous: ChatMessageProps, next: ChatMessageProps) {
+  return (
+    previous.currentMessage === next.currentMessage &&
+    previous.previousMessage === next.previousMessage &&
+    previous.nextMessage === next.nextMessage &&
+    previous.position === next.position &&
+    previous.user?._id === next.user?._id &&
+    previous.highlightedMessageId === next.highlightedMessageId &&
+    previous.onJumpToMessage === next.onJumpToMessage &&
+    previous.onOpenMenu === next.onOpenMenu &&
+    previous.onRetryMessage === next.onRetryMessage &&
+    previous.onMessageLayout === next.onMessageLayout &&
+    previous.swipeToReply?.isEnabled === next.swipeToReply?.isEnabled &&
+    previous.swipeToReply?.onSwipe === next.swipeToReply?.onSwipe
+  );
+}
+
+export const ChatMessage = memo(ChatMessageComponent, areChatMessagePropsEqual);
