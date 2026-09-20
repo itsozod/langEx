@@ -92,8 +92,8 @@ export function getUserPresence(userId: string) {
 }
 
 /**
- * A window is either the newest messages, the page next to a cursor, or the page centred on a
- * specific message. The modes are mutually exclusive; the backend rejects combinations.
+ * A window is either the newest messages, an older page, or the page centred on a specific
+ * message. The modes are mutually exclusive; the backend rejects combinations.
  */
 export type ConversationWindowParams = {
   after?: string;
@@ -101,11 +101,13 @@ export type ConversationWindowParams = {
   before?: string;
 };
 
+const CONVERSATION_WINDOW_MESSAGE_LIMIT = 24;
+
 export function getConversation(conversationId: string, window: ConversationWindowParams = {}) {
-  const query = new URLSearchParams({ limit: '40' });
+  const query = new URLSearchParams({ limit: String(CONVERSATION_WINDOW_MESSAGE_LIMIT) });
   if (window.around) query.set('around', window.around);
-  else if (window.after) query.set('after', window.after);
   else if (window.before) query.set('before', window.before);
+  else if (window.after) query.set('after', window.after);
 
   return apiRequest<ConversationResponse>(
     `/conversations/${encodeURIComponent(conversationId)}?${query.toString()}`,

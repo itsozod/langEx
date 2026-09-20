@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -50,18 +50,20 @@ export default function ChatScreen() {
       ?.participants.find((participant) => participant.id !== currentUser?.id),
   );
   const [anchorMessageId, setAnchorMessageId] = useState<string | null>(null);
+  const [anchorWindowVersion, setAnchorWindowVersion] = useState(0);
   const query = useConversation(conversationId);
   // The newest window is never torn down, so returning to it is instant and the screen keeps its
   // loading, error and participant state while an older window is being fetched.
   const anchorQuery = useConversation(
     anchorMessageId ? conversationId : undefined,
     anchorMessageId,
+    anchorWindowVersion,
   );
   const refetchMessageWindow = anchorQuery.refetch;
   const activeQuery = anchorMessageId ? anchorQuery : query;
   const participantQuery = usePublicUser(isDraft ? participantId : undefined);
   const deleteConversation = useDeleteConversation();
-  const windowKey = anchorMessageId ?? 'latest';
+  const windowKey = anchorMessageId ? `${anchorMessageId}:${anchorWindowVersion}` : 'latest';
 
   const draftParticipant = useMemo<ChatParticipant | undefined>(() => {
     const user = participantQuery.data?.user;
@@ -108,15 +110,15 @@ export default function ChatScreen() {
   );
   const presenceQuery = useUserPresence(otherParticipant?.id, initialPresence);
 
-  useEffect(() => {
-    setActiveMessages([]);
-    return () => setActiveMessages([]);
-  }, [routeId, setActiveMessages]);
+  // Clear the shared window only when leaving or switching chats. Clearing on mount races the
+  // layout-phase cache hydration below: cached messages are restored first and then erased by a
+  // passive effect, which renders the empty state beside an in-flight older-page loader.
+  useLayoutEffect(() => () => setActiveMessages([]), [routeId, setActiveMessages]);
 
-  // The previous window stays on screen until the new one has loaded, so jumping never flashes an
-  // empty thread. Synchronizing instead of merging also releases pages evicted by `maxPages`, while
-  // the store keeps optimistic text and gallery messages that have not reached the server window.
-  useEffect(() => {
+  // Keep the previous window until the query resolves, then synchronize in the layout phase so the
+  // query result and Gifted Chat rows reach native in one paint. Synchronizing instead of merging
+  // also releases evicted pages while retaining optimistic rows outside the server window.
+  useLayoutEffect(() => {
     if (!activeWindowPages) return;
     syncActiveMessages(paginatedMessages);
   }, [activeWindowPages, paginatedMessages, syncActiveMessages, windowKey]);
@@ -207,11 +209,19 @@ export default function ChatScreen() {
       return;
     void activeQuery.fetchPreviousPage();
   }, [activeQuery, conversationId]);
-  const openMessageWindow = useCallback((messageId: string) => setAnchorMessageId(messageId), []);
+  const openMessageWindow = useCallback((messageId: string) => {
+    // A bounded historical query can evict its original around-page after the reader pages away.
+    // Give every unloaded-target request a fresh key, including requests made after returning to
+    // latest, so another tap can never reopen a cached window that no longer contains its target.
+    setAnchorWindowVersion((version) => version + 1);
+    setAnchorMessageId(messageId);
+  }, []);
   const retryMessageWindow = useCallback(() => {
     void refetchMessageWindow();
   }, [refetchMessageWindow]);
-  const openLatestWindow = useCallback(() => setAnchorMessageId(null), []);
+  const openLatestWindow = useCallback(() => {
+    setAnchorMessageId(null);
+  }, []);
 
   const hasValidTarget = isDraft ? Boolean(participantId) : Boolean(conversationId);
   const isLoading = hasValidTarget && (isDraft ? participantQuery.isPending : query.isPending);
@@ -238,9 +248,11 @@ export default function ChatScreen() {
         anchorMessageId !== null &&
         !anchorQuery.data &&
         (anchorQuery.isPending || anchorQuery.isFetching),
+      newerLoadFailed: activeQuery.isFetchPreviousPageError,
       olderLoadFailed: activeQuery.isFetchNextPageError,
       messageWindowLoadFailed:
         anchorMessageId !== null && anchorQuery.isError && !anchorQuery.isFetching,
+      isLoadingNewerMessages: activeQuery.isFetchingPreviousPage,
       isLoadingOlderMessages: activeQuery.isFetchingNextPage,
       onJumpToLatest: openLatestWindow,
       onLoadNewerMessages: loadNewerMessages,

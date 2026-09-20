@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { useAppTheme, type AppTheme } from '@/providers/theme-provider';
 
@@ -100,10 +100,6 @@ const createChatThreadStyles = (theme: AppTheme) => {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 34,
-      ...Platform.select({
-        ios: { transform: [{ scaleY: -1 }] },
-        android: { transform: [{ scale: -1 }] },
-      }),
     },
     emptyTitle: { fontSize: 17, lineHeight: 23, textAlign: 'center' },
     emptyMessage: { marginTop: 6, fontSize: 12, lineHeight: 19, textAlign: 'center' },

@@ -4,7 +4,6 @@ import {
   Pressable as BubblePressable,
   Text,
   View,
-  type LayoutChangeEvent,
   type StyleProp,
   type TextProps,
   type ViewStyle,
@@ -37,7 +36,6 @@ export type MessageAnchor = { height: number; width: number; x: number; y: numbe
 export type ChatMessageExtras = {
   highlightedMessageId?: SharedValue<string | null>;
   onJumpToMessage?: (messageId: string) => void;
-  onMessageLayoutById?: (messageId: string, event: LayoutChangeEvent) => void;
   onOpenMenu?: (message: GiftedMessage, anchor: MessageAnchor) => void;
   onRetryMessage?: (clientMessageId: string) => void;
 };
@@ -231,17 +229,9 @@ function ChatMessageComponent(props: ChatMessageProps) {
     if (canReply) props.swipeToReply?.onSwipe?.(props.currentMessage);
   }, [canReply, props.currentMessage, props.swipeToReply]);
   const closeSwipeable = useCallback(() => swipeableRef.current?.close(), []);
-  const handleLayout = useCallback(
-    (event: LayoutChangeEvent) => {
-      props.onMessageLayout?.(event);
-      props.onMessageLayoutById?.(String(props.currentMessage._id), event);
-    },
-    [props],
-  );
 
   return (
     <View
-      onLayout={handleLayout}
       style={[
         styles.messageLane,
         joinsNext ? styles.messageRowGrouped : styles.messageRowSeparated,
@@ -285,10 +275,8 @@ function areChatMessagePropsEqual(previous: ChatMessageProps, next: ChatMessageP
     previous.user?._id === next.user?._id &&
     previous.highlightedMessageId === next.highlightedMessageId &&
     previous.onJumpToMessage === next.onJumpToMessage &&
-    previous.onMessageLayoutById === next.onMessageLayoutById &&
     previous.onOpenMenu === next.onOpenMenu &&
     previous.onRetryMessage === next.onRetryMessage &&
-    previous.onMessageLayout === next.onMessageLayout &&
     previous.swipeToReply?.isEnabled === next.swipeToReply?.isEnabled &&
     previous.swipeToReply?.onSwipe === next.swipeToReply?.onSwipe
   );

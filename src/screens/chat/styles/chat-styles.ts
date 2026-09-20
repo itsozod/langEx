@@ -9,8 +9,8 @@ const createChatStyles = (theme: AppTheme) => {
     safeArea: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' },
     pressed: { opacity: 0.65 },
     chat: { flex: 1, backgroundColor: isDark ? '#181420' : '#F8F6FC' },
-    messagesContainer: { backgroundColor: isDark ? '#181420' : '#F8F6FC' },
-    messageList: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10 },
+    messagesContainer: { flex: 1, backgroundColor: isDark ? '#181420' : '#F8F6FC' },
+    messageList: { flexGrow: 1, paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10 },
     messageLane: { width: '100%' },
     messageRowGrouped: { marginBottom: 3 },
     messageRowSeparated: { marginBottom: 10 },
@@ -203,6 +203,7 @@ const createChatStyles = (theme: AppTheme) => {
     },
     inputPrimary: {
       minHeight: 46,
+      flexDirection: 'row',
       alignItems: 'flex-end',
       borderRadius: 23,
       backgroundColor: isDark ? '#302A3C' : '#F2EFF6',

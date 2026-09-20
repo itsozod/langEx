@@ -1,24 +1,38 @@
-import { Pressable, View } from 'react-native';
-import { InputToolbar, type InputToolbarProps, type SendProps } from 'react-native-gifted-chat';
+import { Pressable, View, type TextInputProps } from 'react-native';
+import { Composer } from 'react-native-gifted-chat';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
-import type { GiftedMessage } from '../types/message.types';
+import type { GiftedReplyMessage } from '../types/message.types';
+import { ChatReplyPreview } from './chat-reply-preview';
 
-type ChatInputToolbarProps = InputToolbarProps<GiftedMessage> & {
+type ChatInputToolbarProps = {
+  currentUserId?: string;
   isEditing?: boolean;
   onCancelEdit?: () => void;
+  onClearReply: () => void;
   onChooseImages?: () => void;
+  onSendText: (text: string) => void;
+  onSubmitEdit: (text: string) => void;
+  replyMessage: GiftedReplyMessage | null;
+  text: string;
+  textInputProps: Partial<TextInputProps>;
 };
 
 export function ChatInputToolbar({
   isEditing,
   onCancelEdit,
+  onClearReply,
   onChooseImages,
-  ...props
+  onSendText,
+  onSubmitEdit,
+  replyMessage,
+  text,
+  textInputProps,
+  currentUserId,
 }: ChatInputToolbarProps) {
   const styles = useChatStyles();
   const insets = useSafeAreaInsets();
@@ -52,20 +66,30 @@ export function ChatInputToolbar({
           </Pressable>
         </View>
       ) : null}
-      <InputToolbar
-        {...props}
-        containerStyle={[
+      <View
+        style={[
           styles.inputToolbar,
           isEditing && styles.inputToolbarJoined,
           { paddingBottom: Math.max(insets.bottom, 8) },
-        ]}
-        primaryStyle={styles.inputPrimary}
-        renderActions={
-          !isEditing && onChooseImages
-            ? () => <ChatImageAction onPress={onChooseImages} />
-            : undefined
-        }
-      />
+        ]}>
+        {replyMessage ? (
+          <ChatReplyPreview
+            currentUserId={currentUserId}
+            onClearReply={onClearReply}
+            replyMessage={replyMessage}
+          />
+        ) : null}
+        <View style={styles.inputPrimary}>
+          {!isEditing && onChooseImages ? <ChatImageAction onPress={onChooseImages} /> : null}
+          <Composer text={text} textInputProps={textInputProps} />
+          <ChatSend
+            isEditing={isEditing}
+            onSendText={onSendText}
+            onSubmitEdit={onSubmitEdit}
+            text={text}
+          />
+        </View>
+      </View>
     </View>
   );
 }
@@ -89,14 +113,15 @@ function ChatImageAction({ onPress }: { onPress: () => void }) {
   );
 }
 
-type ChatSendProps = SendProps<GiftedMessage> & {
+type ChatSendProps = {
   isEditing?: boolean;
+  onSendText: (text: string) => void;
   onSubmitEdit?: (text: string) => void;
+  text: string;
 };
 
-export function ChatSend({ isEditing, onSubmitEdit, ...props }: ChatSendProps) {
+export function ChatSend({ isEditing, onSendText, onSubmitEdit, text }: ChatSendProps) {
   const styles = useChatStyles();
-  const text = props.text ?? '';
   const trimmedText = text.trim();
   const isDisabled = !trimmedText;
   const icon = (
@@ -129,7 +154,7 @@ export function ChatSend({ isEditing, onSubmitEdit, ...props }: ChatSendProps) {
       accessibilityRole="button"
       accessibilityLabel="Send message"
       disabled={isDisabled}
-      onPress={() => props.onSend?.({ text: trimmedText }, true)}
+      onPress={() => onSendText(trimmedText)}
       style={({ pressed }) => [styles.sendContainer, pressed && styles.pressed]}>
       {icon}
     </Pressable>

@@ -136,9 +136,9 @@ export type UserPresenceResponse = {
 
 export type ConversationPageInfo = {
   hasMore: boolean;
+  hasMoreNewer: boolean;
+  newerCursor: string | null;
   olderCursor: string | null;
-  hasMoreNewer?: boolean;
-  newerCursor?: string | null;
 };
 
 export type ConversationResponse = {

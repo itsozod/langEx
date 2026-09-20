@@ -81,9 +81,9 @@ export function useChatComposer({
 
   const handleInputChange = useCallback(
     (text: string) => {
-      // Gifted Chat does not consistently report native content-size changes once an explicit
-      // height is supplied, particularly on iOS. Keep growth responsive from the text itself;
-      // `onContentSizeChange` can still correct the estimate when the platform emits it.
+      // The native multiline input does not consistently report content-size changes once an
+      // explicit height is supplied, particularly on iOS. Keep growth responsive from the text
+      // itself; `onContentSizeChange` can still correct the estimate when the platform emits it.
       // Android reports multiline content size reliably. Estimating here as well makes the
       // composer alternate between the estimated and measured heights on each keystroke.
       // iOS still needs the estimate because it can stop emitting content-size changes once an

@@ -27,7 +27,11 @@ export const chatQueryKeys = {
     id: string,
     anchorMessageId: string | null,
     accountId = useAuthStore.getState().activeAccountId ?? '',
-  ) => ['chats', 'conversation', accountId, id, anchorMessageId ?? 'latest'] as const,
+    windowVersion = 0,
+  ) =>
+    anchorMessageId
+      ? (['chats', 'conversation', accountId, id, anchorMessageId, windowVersion] as const)
+      : (['chats', 'conversation', accountId, id, 'latest'] as const),
 };
 
 export function useConversationsUnreadCount() {
@@ -56,15 +60,20 @@ export function useConversations() {
 
 /**
  * Each anchor gets its own cached window, so jumping to an old message never disturbs the newest
- * window and returning to it is instant. Pages run newest-first: the next page is older, the
- * previous page is newer.
+ * window and returning to it is instant. Historical windows page in both directions while the
+ * bounded cache evicts the page furthest from the direction of travel.
  */
-export function useConversation(id?: string, anchorMessageId?: string | null) {
+export function useConversation(id?: string, anchorMessageId?: string | null, windowVersion = 0) {
   const accountId = useAuthStore((state) => state.activeAccountId);
   const token = useAuthStore((state) => state.token);
 
   return useInfiniteQuery({
-    queryKey: chatQueryKeys.conversationWindow(id ?? '', anchorMessageId ?? null, accountId ?? ''),
+    queryKey: chatQueryKeys.conversationWindow(
+      id ?? '',
+      anchorMessageId ?? null,
+      accountId ?? '',
+      windowVersion,
+    ),
     queryFn: ({ pageParam }) => getConversation(id as string, pageParam),
     initialPageParam: (anchorMessageId
       ? { around: anchorMessageId }

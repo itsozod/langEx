@@ -112,7 +112,9 @@ export function useGiftedMessages(
       giftedMessages.push(giftedMessage);
     }
 
-    giftedMessages.sort((first, second) => Number(second.createdAt) - Number(first.createdAt));
+    // FlashList renders chat data in visual order and starts from the bottom. Keeping the array
+    // oldest-first avoids inversion transforms and makes its start/end pagination semantics exact.
+    giftedMessages.sort((first, second) => Number(first.createdAt) - Number(second.createdAt));
     return giftedMessages;
   }, [currentUserId, messages, participantReadAt, participants]);
 }

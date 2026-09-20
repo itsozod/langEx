@@ -14,8 +14,10 @@ export type ChatThreadHistory = {
   hasNewerMessages: boolean;
   hasOlderMessages: boolean;
   isLoadingMessageWindow: boolean;
+  newerLoadFailed: boolean;
   olderLoadFailed: boolean;
   messageWindowLoadFailed: boolean;
+  isLoadingNewerMessages: boolean;
   isLoadingOlderMessages: boolean;
   onJumpToLatest: () => void;
   onLoadNewerMessages: () => void;

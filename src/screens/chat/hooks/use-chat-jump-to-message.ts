@@ -1,249 +1,189 @@
+import type { FlashListRef } from '@shopify/flash-list';
 import type { RefObject } from 'react';
-import { useCallback, useEffect, useRef } from 'react';
-import { findNodeHandle, UIManager } from 'react-native';
-import type { FlatList, LayoutChangeEvent } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useSharedValue } from 'react-native-reanimated';
 
 import type { GiftedMessage } from '../types/message.types';
 
 const HIGHLIGHT_MS = 1400;
-const SCROLL_RETRY_MS = 240;
-const SCROLL_END_FALLBACK_MS = 500;
-/** How long a reveal owns the scroll position, so nothing else moves the list mid-jump. */
 const REVEAL_SETTLE_MS = 900;
-/** Abandons a jump whose target never shows up, so a stale target cannot be revealed later. */
 const GIVE_UP_MS = 8000;
+const LAYOUT_SETTLE_MS = 80;
+const CENTER_TOLERANCE_PX = 1.5;
+const MAX_CENTER_ATTEMPTS = 3;
 
-type ScrollToIndexFailure = {
-  averageItemLength: number;
-  highestMeasuredFrameIndex: number;
-  index: number;
-};
+type RevealAttempt = { id: number; messageId: string };
 
 type UseChatJumpToMessageOptions = {
-  listRef: RefObject<FlatList<GiftedMessage> | null>;
+  listRef: RefObject<FlashListRef<GiftedMessage> | null>;
   messages: GiftedMessage[];
-  onRevealSettled: () => void;
-  onRevealStart: () => void;
   onRequestMessageWindow: (messageId: string) => void;
-  scrollOffsetRef: RefObject<number>;
 };
 
 function indexOfMessage(messages: GiftedMessage[], messageId: string) {
   return messages.findIndex((message) => String(message._id) === messageId);
 }
 
-/**
- * Tapping the quote inside a reply bubble reveals the message it answers, the way Instagram does.
- * When the original is outside the loaded window, the thread swaps to the window centred on it and
- * the jump completes as soon as that window renders, however far back the message is.
- *
- * The pending target and the highlight are deliberately kept out of React state: resolving a jump
- * is a side effect on the list and the pagination query, not rendered state, and the flash is a
- * transient animation that should never re-render the thread.
- */
+function getCenteringError(list: FlashListRef<GiftedMessage>, index: number) {
+  try {
+    const layout = list.getLayout(index);
+    if (!layout) return Number.POSITIVE_INFINITY;
+
+    const windowHeight = list.getWindowSize().height;
+    const contentHeight = list.getChildContainerDimensions().height;
+    const firstItemOffset = list.getFirstItemOffset();
+    const maxOffset = Math.max(0, contentHeight - windowHeight + firstItemOffset);
+    const desiredOffset = Math.min(
+      maxOffset,
+      Math.max(0, layout.y - (windowHeight - layout.height) / 2 + firstItemOffset),
+    );
+    return Math.abs(desiredOffset - list.getAbsoluteLastScrollOffset());
+  } catch {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
+/** Reveals a loaded reply target or swaps to a server window centred on an unloaded target. */
 export function useChatJumpToMessage({
   listRef,
   messages,
-  onRevealSettled,
-  onRevealStart,
   onRequestMessageWindow,
-  scrollOffsetRef,
 }: UseChatJumpToMessageOptions) {
   const highlightedMessageId = useSharedValue<string | null>(null);
-  const pendingMessageIdRef = useRef<string | null>(null);
-  const revealingMessageIdRef = useRef<string | null>(null);
-  const awaitingHighlightMessageIdRef = useRef<string | null>(null);
-  const scrollAttemptFailedRef = useRef(false);
-  const messageViewsRef = useRef(new Map<string, LayoutChangeEvent['currentTarget']>());
+  const attemptSequenceRef = useRef(0);
+  const pendingRevealRef = useRef<RevealAttempt | null>(null);
+  const revealingRef = useRef<RevealAttempt | null>(null);
+  const highlightAttemptRef = useRef<number | null>(null);
   const messagesRef = useRef(messages);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
-
-  // Deferred scroll retries must resolve against the list as it is then, not as it was when the
-  // retry was scheduled: loading a page in either direction renumbers every row.
-  useEffect(() => {
+  useLayoutEffect(() => {
     messagesRef.current = messages;
-    const messageIds = new Set(messages.map((message) => String(message._id)));
-    for (const messageId of messageViewsRef.current.keys())
-      if (!messageIds.has(messageId)) messageViewsRef.current.delete(messageId);
   }, [messages]);
 
-  const onMessageLayout = useCallback((messageId: string, event: LayoutChangeEvent) => {
-    messageViewsRef.current.set(messageId, event.currentTarget);
-  }, []);
+  const waitForLayout = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        timersRef.current.push(setTimeout(resolve, LAYOUT_SETTLE_MS));
+      }),
+    [],
+  );
 
   const completeReveal = useCallback(
-    (messageId: string) => {
-      if (awaitingHighlightMessageIdRef.current === messageId)
-        awaitingHighlightMessageIdRef.current = null;
-      highlightedMessageId.set(messageId);
+    (attempt: RevealAttempt) => {
+      if (revealingRef.current?.id !== attempt.id) return;
+      highlightAttemptRef.current = attempt.id;
+      highlightedMessageId.set(attempt.messageId);
       timersRef.current.push(
         setTimeout(() => {
-          if (revealingMessageIdRef.current !== messageId) return;
-          revealingMessageIdRef.current = null;
-          onRevealSettled();
+          if (revealingRef.current?.id !== attempt.id) return;
+          revealingRef.current = null;
         }, REVEAL_SETTLE_MS),
         setTimeout(() => {
-          if (highlightedMessageId.get() === messageId) highlightedMessageId.set(null);
+          if (highlightAttemptRef.current !== attempt.id) return;
+          highlightAttemptRef.current = null;
+          highlightedMessageId.set(null);
         }, HIGHLIGHT_MS),
       );
     },
-    [highlightedMessageId, onRevealSettled],
-  );
-
-  const completeScrolledReveal = useCallback(() => {
-    const messageId = awaitingHighlightMessageIdRef.current;
-    if (!messageId) return;
-
-    const messageView = messageViewsRef.current.get(messageId);
-    const scrollView = listRef.current?.getNativeScrollRef();
-    const scrollViewTag = scrollView ? findNodeHandle(scrollView) : null;
-    if (!messageView || scrollViewTag === null) return;
-
-    messageView.measureInWindow((_messageX, messageY, _messageWidth, messageHeight) => {
-      UIManager.measureInWindow(scrollViewTag, (_listX, listY, _listWidth, listHeight) => {
-        if (awaitingHighlightMessageIdRef.current !== messageId) return;
-
-        const messageCenter = messageY + messageHeight / 2;
-        const viewportCenter = listY + listHeight / 2;
-        const remainingDelta = messageCenter - viewportCenter;
-        if (Math.abs(remainingDelta) > 1) {
-          listRef.current?.scrollToOffset({
-            animated: false,
-            offset: Math.max(0, scrollOffsetRef.current - remainingDelta),
-          });
-        }
-        completeReveal(messageId);
-      });
-    });
-  }, [completeReveal, listRef, scrollOffsetRef]);
-
-  const scrollToMessage = useCallback(
-    (index: number, messageId?: string) => {
-      const list = listRef.current;
-      if (!list) return;
-
-      // `onScrollToIndexFailed` fires synchronously. Only start the highlight when FlatList has
-      // accepted the exact centred scroll, not while it is still estimating an unmeasured row.
-      scrollAttemptFailedRef.current = false;
-      list.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
-      if (!scrollAttemptFailedRef.current && messageId) {
-        awaitingHighlightMessageIdRef.current = messageId;
-        // `onMomentumScrollEnd` is the normal completion signal. Keep a fallback for an already
-        // centred row, where iOS accepts the command but has no momentum event to emit.
-        timersRef.current.push(
-          setTimeout(() => {
-            if (awaitingHighlightMessageIdRef.current === messageId) completeScrolledReveal();
-          }, SCROLL_END_FALLBACK_MS),
-        );
-      }
-    },
-    [completeScrolledReveal, listRef],
+    [highlightedMessageId],
   );
 
   const reveal = useCallback(
-    (index: number, messageId: string) => {
-      revealingMessageIdRef.current = messageId;
-      scrollToMessage(index, messageId);
+    (attempt: RevealAttempt) => {
+      if (!listRef.current) return;
+      revealingRef.current = attempt;
+
+      void (async () => {
+        for (let centerAttempt = 0; centerAttempt < MAX_CENTER_ATTEMPTS; centerAttempt += 1) {
+          if (revealingRef.current?.id !== attempt.id) return;
+          const list = listRef.current;
+          const index = indexOfMessage(messagesRef.current, attempt.messageId);
+          if (!list || index < 0) return;
+
+          // FlashList's promise resolves on a fixed post-command delay. A newly swapped window can
+          // still commit corrected variable-height rows immediately afterwards, so verify against
+          // FlashList's own layout map and converge with a non-animated correction when needed.
+          await list.scrollToIndex({
+            index,
+            animated: centerAttempt === 0,
+            viewPosition: 0.5,
+          });
+          await waitForLayout();
+          if (revealingRef.current?.id !== attempt.id) return;
+
+          const currentList = listRef.current;
+          const currentIndex = indexOfMessage(messagesRef.current, attempt.messageId);
+          if (
+            currentList &&
+            currentIndex >= 0 &&
+            getCenteringError(currentList, currentIndex) <= CENTER_TOLERANCE_PX
+          ) {
+            // Require the centred position to survive one more layout interval before highlighting.
+            await waitForLayout();
+            const stableList = listRef.current;
+            const stableIndex = indexOfMessage(messagesRef.current, attempt.messageId);
+            if (
+              revealingRef.current?.id === attempt.id &&
+              stableList &&
+              stableIndex >= 0 &&
+              getCenteringError(stableList, stableIndex) <= CENTER_TOLERANCE_PX
+            )
+              break;
+          }
+        }
+
+        completeReveal(attempt);
+      })();
     },
-    [scrollToMessage],
+    [completeReveal, listRef, waitForLayout],
   );
 
   const jumpToMessage = useCallback(
     (messageId: string) => {
-      onRevealStart();
+      const attempt = { id: ++attemptSequenceRef.current, messageId };
       timersRef.current.push(
         setTimeout(() => {
-          const stillPending = pendingMessageIdRef.current === messageId;
-          const stillRevealing = revealingMessageIdRef.current === messageId;
+          const stillPending = pendingRevealRef.current?.id === attempt.id;
+          const stillRevealing = revealingRef.current?.id === attempt.id;
           if (!stillPending && !stillRevealing) return;
-
-          if (stillPending) pendingMessageIdRef.current = null;
-          if (stillRevealing) revealingMessageIdRef.current = null;
-          if (awaitingHighlightMessageIdRef.current === messageId)
-            awaitingHighlightMessageIdRef.current = null;
-          onRevealSettled();
+          if (stillPending) pendingRevealRef.current = null;
+          if (stillRevealing) revealingRef.current = null;
         }, GIVE_UP_MS),
       );
 
       const index = indexOfMessage(messages, messageId);
       if (index >= 0) {
-        pendingMessageIdRef.current = null;
-        reveal(index, messageId);
+        pendingRevealRef.current = null;
+        reveal(attempt);
         return;
       }
 
-      pendingMessageIdRef.current = messageId;
+      pendingRevealRef.current = attempt;
       onRequestMessageWindow(messageId);
     },
-    [messages, onRequestMessageWindow, onRevealSettled, onRevealStart, reveal],
+    [messages, onRequestMessageWindow, reveal],
   );
 
-  // The requested window reaches this list a render after it reaches the query, so the jump is
-  // completed here rather than at the call site.
   useEffect(() => {
-    const pendingMessageId = pendingMessageIdRef.current;
-    if (!pendingMessageId) return;
-
-    const index = indexOfMessage(messages, pendingMessageId);
-    if (index < 0) return;
-
-    pendingMessageIdRef.current = null;
-    reveal(index, pendingMessageId);
+    const attempt = pendingRevealRef.current;
+    if (!attempt) return;
+    const index = indexOfMessage(messages, attempt.messageId);
+    if (index < 0 || pendingRevealRef.current?.id !== attempt.id) return;
+    pendingRevealRef.current = null;
+    reveal(attempt);
   }, [messages, reveal]);
 
-  // Rows far outside the render window have no measured layout yet, so approximate first and land
-  // on the row once it has been rendered.
-  const handleScrollToIndexFailed = useCallback(
-    (info: ScrollToIndexFailure) => {
-      scrollAttemptFailedRef.current = true;
-      // Move into the target's render neighbourhood without animation. Animating both this
-      // estimate and the exact retry made iOS visibly continue past an already-highlighted row.
-      listRef.current?.scrollToOffset({
-        offset: info.averageItemLength * info.index,
-        animated: false,
-      });
-
-      timersRef.current.push(
-        setTimeout(() => {
-          const messageId = revealingMessageIdRef.current;
-          const index = messageId
-            ? indexOfMessage(messagesRef.current, messageId)
-            : Math.min(info.index, messagesRef.current.length - 1);
-          if (index < 0) return;
-          scrollToMessage(index, messageId ?? undefined);
-        }, SCROLL_RETRY_MS),
-      );
-    },
-    [listRef, scrollToMessage],
-  );
-
-  const interruptReveal = useCallback(() => {
-    const hasActiveReveal =
-      pendingMessageIdRef.current !== null || revealingMessageIdRef.current !== null;
-    if (!hasActiveReveal) return;
-
-    pendingMessageIdRef.current = null;
-    revealingMessageIdRef.current = null;
-    awaitingHighlightMessageIdRef.current = null;
-    onRevealSettled();
-  }, [onRevealSettled]);
-
-  /** True while a jump is being resolved, so scroll-driven paging can stay out of its way. */
-  const isRevealPending = useCallback(
-    () => pendingMessageIdRef.current !== null || revealingMessageIdRef.current !== null,
-    [],
-  );
+  const cancelReveal = useCallback(() => {
+    pendingRevealRef.current = null;
+    revealingRef.current = null;
+  }, []);
 
   return {
+    cancelReveal,
     highlightedMessageId,
-    isRevealPending,
     jumpToMessage,
-    onMessageLayout,
-    onScrollBeginDrag: interruptReveal,
-    onScrollEnd: completeScrolledReveal,
-    onScrollFailed: handleScrollToIndexFailed,
+    onScrollBeginDrag: cancelReveal,
   };
 }

@@ -41,7 +41,12 @@ export function seedNewConversation({
             isReadOnly: false,
             messages: [message],
           },
-          pageInfo: { hasMore: false, olderCursor: null },
+          pageInfo: {
+            hasMore: false,
+            hasMoreNewer: false,
+            newerCursor: null,
+            olderCursor: null,
+          },
         },
       ],
       pageParams: [{}],

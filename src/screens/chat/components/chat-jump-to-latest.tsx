@@ -15,8 +15,8 @@ type ChatJumpToLatestProps = {
 };
 
 /**
- * Mirrors the arrow Instagram shows once the thread is no longer at the newest message. It is
- * always offered while an older window is open, because scrolling alone cannot get back from there.
+ * Mirrors the arrow Instagram shows once the thread is no longer at the newest message. It remains
+ * visible in a historical window until the reader either taps it or manually reaches the true end.
  */
 export function ChatJumpToLatest({
   isAlwaysVisible,
