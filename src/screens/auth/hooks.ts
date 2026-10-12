@@ -4,7 +4,7 @@ import { ApiError } from '@/shared/lib/api-client';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 import { activateAuthenticatedSession } from './_shared/utils/session-transition';
-import { getMe, login, register } from './api';
+import { authenticateWithGoogle, getMe, login, register } from './api';
 
 export const authQueryKeys = {
   all: ['auth'] as const,
@@ -43,6 +43,17 @@ export const useRegisterMutation = () => {
   return useMutation({
     mutationKey: ['auth', 'register'],
     mutationFn: register,
+    onSuccess,
+    retry: retryUnreachable,
+  });
+};
+
+export const useGoogleAuthMutation = () => {
+  const onSuccess = useAuthMutationSuccess();
+
+  return useMutation({
+    mutationKey: ['auth', 'google'],
+    mutationFn: authenticateWithGoogle,
     onSuccess,
     retry: retryUnreachable,
   });

@@ -2,6 +2,19 @@
 
 Record durable decisions here. Add the date, decision, rationale, and consequences; do not use this file as a session diary.
 
+## 2026-10-10 — Keep Google identity outside the app session
+
+**Decision:** Use the platform-native Google account flow only to obtain an ID token. Exchange that
+token with the LangEx backend and continue using the existing LangEx JWT/session transition.
+
+**Rationale:** Backend verification makes issuer, signature, expiry, and audience authoritative in
+one place while preserving all existing multi-account, onboarding, and API behavior.
+
+**Consequences:** Google sign-in needs a custom native development/release build and configured Web,
+iOS, and Android OAuth clients. New Google users enter onboarding. A first Google sign-in whose
+verified email matches an active LangEx user links to that existing account; later sign-ins resolve
+by Google's immutable subject. Deleted users are never linked.
+
 ## 2026-08-26 — Keep Expo Router entries thin
 
 **Decision:** Route files under `src/app/` only read route parameters and compose feature screens. Feature behavior lives under `src/screens/<feature>/`.

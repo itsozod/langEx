@@ -87,7 +87,13 @@ export default function ChatScreen() {
     () =>
       conversationPages?.[0]?.conversation ??
       (isDraft && draftParticipant
-        ? { id: 'new', participants: [draftParticipant], messages: [], isReadOnly: false }
+        ? {
+            id: 'new',
+            participants: [draftParticipant],
+            messages: [],
+            pinnedMessages: [],
+            isReadOnly: false,
+          }
         : undefined),
     [conversationPages, draftParticipant, isDraft],
   );
@@ -240,6 +246,8 @@ export default function ChatScreen() {
       currentUser,
       isHistoricalWindow: anchorMessageId !== null,
       isReadOnly: conversation.isReadOnly,
+      participants: conversation.participants,
+      pinnedMessages: conversation.pinnedMessages ?? [],
     },
     history: {
       hasNewerMessages: Boolean(activeQuery.hasPreviousPage),

@@ -14,6 +14,7 @@ import type {
 } from '../types/message.types';
 
 type ConversationWindows = InfiniteData<ConversationResponse, ConversationWindowParams>;
+type WindowConversation = ConversationResponse['conversation'];
 
 export function applyPresenceToConversation(conversation: Conversation, presence: UserPresence) {
   if (!conversation.participants.some((participant) => participant.id === presence.userId)) {
@@ -60,7 +61,7 @@ export function updateParticipantPresenceInCache(accountId: string, presence: Us
  */
 function updateWindows(
   conversationId: string | undefined,
-  updateMessages: (messages: Message[]) => Message[],
+  updateConversation: (conversation: WindowConversation) => WindowConversation,
 ) {
   if (!conversationId) return;
 
@@ -72,10 +73,7 @@ function updateWindows(
             ...windows,
             pages: windows.pages.map((page) => ({
               ...page,
-              conversation: {
-                ...page.conversation,
-                messages: updateMessages(page.conversation.messages),
-              },
+              conversation: updateConversation(page.conversation),
             })),
           }
         : windows,
@@ -83,19 +81,34 @@ function updateWindows(
 }
 
 export function discardMessageFromWindows(conversationId: string | undefined, messageId: string) {
-  updateWindows(conversationId, (messages) =>
-    messages
+  updateWindows(conversationId, (conversation) => ({
+    ...conversation,
+    messages: conversation.messages
       .filter((message) => message.id !== messageId)
       .map((message) =>
         message.replyTo?.id === messageId ? { ...message, replyTo: null } : message,
       ),
-  );
+    pinnedMessages: (conversation.pinnedMessages ?? []).filter(
+      (message) => message.id !== messageId,
+    ),
+  }));
 }
 
 export function replaceMessageInWindows(conversationId: string | undefined, next: Message) {
-  updateWindows(conversationId, (messages) =>
-    messages.map((message) => (message.id === next.id ? next : message)),
-  );
+  updateWindows(conversationId, (conversation) => ({
+    ...conversation,
+    messages: conversation.messages.map((message) => (message.id === next.id ? next : message)),
+    pinnedMessages: (conversation.pinnedMessages ?? []).map((message) =>
+      message.id === next.id ? next : message,
+    ),
+  }));
+}
+
+export function replacePinnedMessagesInWindows(
+  conversationId: string | undefined,
+  pinnedMessages: Message[],
+) {
+  updateWindows(conversationId, (conversation) => ({ ...conversation, pinnedMessages }));
 }
 
 /**

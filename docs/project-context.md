@@ -2,6 +2,12 @@
 
 ## Current state
 
+- Login and registration share a native Google identity option. The device obtains a Google ID
+  token, the sibling backend verifies it, and the existing session-transition boundary stores the
+  resulting LangEx JWT. New Google users continue through normal onboarding; existing identities
+  resume their account, and a first verified-email match links to the active existing user. Public
+  OAuth client IDs are configured for local and EAS builds; a rebuilt development client is still
+  required.
 - Profile supports multiple saved accounts. Add account presents the existing login/register/reset-password flow as a dismissible full-screen modal; successful login switches immediately, while registration continues through onboarding before entering tabs.
 - Onboarding for an added or selected incomplete secondary account shows a persistent close action that switches back to the previous account; normal first-account onboarding remains non-dismissible.
 - Discover includes an authenticated display-name search sheet owned by the Discover screen. Selecting a result pushes the normal partner profile while the open sheet remains in Discover state underneath it, so every native or explicit back path reveals the same sheet.
@@ -11,6 +17,7 @@
 - Account deletion permanently removes authentication/profile data while retaining old conversations and messages under a “Deleted user” tombstone. Affected chats become read-only in realtime.
 - Chat gallery sending supports existing and draft direct conversations. Users select one to four ordered photos, review/remove them in an explicit confirmation grid, and send one optimistic gallery message. The client bounds local resize/compression concurrency, retries the gallery with one sender-scoped idempotency key, renders CDN thumbnails in 1–4 tile layouts, and opens the assets in a safe-area-aware swipeable viewer. Gallery replies retain a compact first thumbnail with a `+N` badge.
 - Chat history keeps at most five 24-message query pages around the reader. The active Zustand window mirrors retained server pages while preserving unsent optimistic rows. Latest and reply-target windows are cached separately; historical windows page smoothly in both directions.
+- Direct chats support up to five shared pinned messages. Long-press offers Pin/Unpin, the compact header cycles through pins while jumping to each message, and its count button opens a chat-themed bottom sheet containing every pin.
 
 ## Architecture
 
@@ -26,6 +33,7 @@
 - `src/screens/chat/hooks/use-chat-image-messaging.ts` owns multi-photo permission/picking, confirmation state, transient optimistic gallery upload state, retry, account-switch safety, and reconciliation into the normal message/query caches. `optimize-chat-images.ts` bounds device-side resize/compression to two concurrent jobs; the backend remains authoritative for validation, final normalization, ordering, and attachment metadata.
 - `src/screens/chat/hooks/use-gifted-messages.ts` converts the bounded message window into chronological FlashList rows and weakly caches conversions by immutable source object plus display/read-receipt inputs. `ChatMessage` remains memoized; `chat-message-list.tsx` supplies stable keys, row types, bounded draw distance, and recycled variable-height cells.
 - `ChatThread` has four explicit input contracts in `types/chat-thread-types.ts`: conversation identity/mode, history pagination/navigation, messaging capabilities, and presentation metadata. `chat-screen.tsx` assembles those contracts and keeps layout composition to a single typed component spread.
+- `use-chat-pins.ts` owns pin/unpin mutations and patches every cached window for the conversation. `chat-pinned-messages.tsx` owns cyclic selection, message jumps, and a full-screen transparent modal whose bottom-aligned surface extends through the device inset. Long-pressing one of its rows opens embedded Copy/Unpin/Delete actions; Delete is sender-only and can unsend an older pin even when that message is outside the active history window. `use-chat-pinned-sheet.ts` owns its reduced-motion-aware entrance, backdrop, and swipe-down dismissal. The controlled surface avoids native form-sheet chrome while backdrop tap, iOS accessibility escape, Android back, swipe-down, and Done all dismiss it. Global socket invalidation refreshes shared pin state on the other participant's device.
 - Reply jumps keep the current message window visible while their anchored query loads. `ChatMessageLoadStatus` surfaces that fetch with a nonblocking “Loading message…” pill and retry action. Because FlashList resolves `scrollToIndex` on a fixed delay while a newly swapped window may still refine variable-height layouts, `use-chat-jump-to-message.ts` verifies the target against FlashList's layout map and absolute offset, applies at most two non-animated corrections, and highlights only after centering survives another layout interval. Each tap owns a unique attempt ID, and each unloaded-target request uses a monotonic window version so it cannot reopen a bounded cache whose anchor page was evicted. Historical windows use the backend `before` and `after` cursors at the list start/end; FlashList's native visible-content maintenance preserves the row under the reader while either page is inserted and the bounded query evicts the opposite page. The down-arrow is a direct shortcut to the separately cached latest window, while a real user drag to the true newest edge automatically promotes the thread to that latest window and removes the arrow.
 - The sibling backend's `src/sockets/presence.ts` validates conversation membership and treats active-conversation presence as a 60-second lease.
 - Account deletion is a backend-owned tombstone transaction: it scrubs the user, closes every conversation, deletes read-state metadata, emits participant/account deletion events, and disconnects all sockets for that identity. See `docs/DECISIONS.md`.
@@ -33,7 +41,12 @@
 
 ## Decisions
 
+- 2026-10-10: Google is an external identity provider, not the LangEx session authority. The API
+  verifies Google ID tokens and keys identities by immutable `sub`, then issues the same LangEx JWT
+  used by password login. A first Google sign-in with a verified email matching an active LangEx
+  user links that Google subject to the existing account; deleted users are never linked.
 - 2026-09-19: Long chat history uses bounded query windows rather than an indefinitely accumulated client array. Retain five pages, synchronize the rendering store to query eviction, preserve only unresolved optimistic rows outside that window, and keep latest/reply-target windows independently cached. Page size was reduced from 40 to 24 on 2026-09-20 to reduce mount/layout spikes on older phones.
+- 2026-10-10: Pinned messages are shared conversation state with a server-enforced maximum of five. Pins retain oldest-pin-first cycle order; unpinning and re-pinning moves a message to the end. Account-local history clearing hides pins older than that account's clear boundary without changing what the other participant sees.
 - 2026-09-20: The chat viewport uses FlashList v2 with chronological rows and `startRenderingFromBottom`. Historical reply windows page with both `before` and `after` cursors; FlashList owns recycling and visible-position maintenance instead of custom FlatList anchor correction. The persistent down-arrow remains an explicit shortcut to latest.
 - 2026-09-20: A historical chat window becomes the normal latest window only after a user drag reaches the true newest edge and no newer-page request remains. Unloaded reply navigation always receives a fresh monotonic query key, because the five-page cache may have evicted the original target even after the reader returned to latest.
 - 2026-09-02: Conversation-list presence is a collection concern, not a row concern. Hydrate from `GET /conversations` and fan out one shared socket event by participant ID; reserve `GET /users/:userId/presence` for the opened-chat snapshot.
@@ -56,6 +69,9 @@
 
 ## API behavior
 
+- `POST /auth/google` accepts `{ idToken }`, creates or resumes the Google-backed user, and returns
+  the normal `{ token, user }` auth response. A verified email owned by an active existing user
+  links Google as another sign-in method and returns that same user; deleted users remain blocked.
 - `GET /users/search?q=<display-name>&limit=20` requires authentication, accepts 2–50 trimmed characters, returns at most 30 complete profiles, excludes the caller, and never returns email or private account fields. “Username” currently maps to the existing `displayName`; there is no separate username column.
 - `GET /users/:id` requires authentication and no longer exposes email addresses.
 - Message push payloads must include string `data.conversationId` and `data.recipientUserId` values.
@@ -64,17 +80,55 @@
 - `DELETE /me` tombstones the authenticated account and returns `{ success: true }`. Deleted sessions receive `401`; `GET /users/:id` returns an `isDeleted: true` tombstone; conversation participants expose `isDeleted`, and conversations expose `isReadOnly`.
 - `GET /conversations` participants may include `isOnline` and nullable `lastSeenAt`. `user_presence_changed` carries `{ userId, isOnline, lastSeenAt }` and updates every conversation whose participant ID matches.
 - `POST /conversations/images` accepts one to four multipart `images`, `clientMessageId`, exactly one of `conversationId` or `participantId`, and optional `replyToId`; it returns the normal `{ conversationId, message }` response with ordered `images[]` full/thumbnail metadata and a temporary singular first-image alias.
+- `GET /conversations/:id` includes `conversation.pinnedMessages` in pin order. `POST` and `DELETE /conversations/:id/messages/:messageId/pin` return the updated visible list; `conversation_pins_changed` tells both participants to refetch account-filtered pin state.
 
 ## Next steps
 
+- Set `GOOGLE_CLIENT_IDS` on the deployed Render service, deploy backend migration
+  `20261010200000_add_google_auth`, rebuild the native app, and verify the complete flow on physical
+  Android and iOS devices.
 - On physical iOS and Android, repeatedly tap the same uncached reply, manually scroll through every newer page to the true end, and confirm the down-arrow disappears. Then tap the same reply again both quickly and after its highlight ends; every tap must fetch, reopen, center, and highlight the target. Also verify tapping the arrow still returns directly to latest.
 - On the older physical Android device, continuously page backward well beyond five pages, then reverse to the latest messages. Check scroll smoothness, stable visible position at both eviction boundaries, image-heavy rows, reply jumps, incoming messages, and failed/queued optimistic sends. Physical iOS regression coverage remains outstanding.
 - Deploy the backend `MessageImage` migration before the matching mobile build, then test one- through four-photo JPEG, screenshot/PNG, and iPhone HEIC galleries, selection removal/order, retries, reply `+N` thumbnails, full-screen swiping, unsend, and background push text on two physical devices.
 - Deploy the sibling backend before testing cross-account notification taps, then verify add/login, add/register/onboarding, switching, per-account logout fallback, relaunch persistence, and notification routing on physical Android and iOS devices.
 - Deploy the sibling backend together with the next Android app build; either half alone does not provide the full stale-presence guarantee.
 - With an authenticated test account, verify Samsung autofill login plus notification display/tap routing in terminated, background, foreground-other-screen, foreground-same-chat, and locked-device states.
+- Deploy backend migration `20261010120000_add_conversation_pins` before the matching app build, then verify five-pin limit, cyclic banner order, sheet dismissal/back gestures, unloaded-message jumps, edit/unsend behavior, account-local clear boundaries, and two-device realtime updates on physical Android and iOS.
 
 ## Verification
+
+- 2026-10-12: The Google action is a full-width branded dark/light control matching the auth form,
+  with explicit pressed, disabled, loading, and accessibility states. It owns one Credential Manager
+  explicit account-picker flow and forwards only a successful ID token to the existing auth
+  mutation. The picker intentionally opens on every tap so a saved credential never prevents
+  choosing or adding another Google account. Targeted ESLint/Prettier, `git diff --check`, and
+  production Android/iOS Expo exports pass. Full TypeScript remains blocked only by the pre-existing
+  `optimize-chat-images.ts` and `symbol-view.tsx` errors; account selection and visual treatment still
+  need physical Android/iOS verification.
+- 2026-10-12: Google sign-in now links a verified matching email to the existing active LangEx user
+  in the sibling backend and returns the unchanged `AuthResponse` consumed by the app's existing
+  session transition. Backend build, all 18 tests, Prisma validation, targeted Prettier, and diff
+  checks pass. The frontend auth contract required no runtime change. Backend deployment and
+  physical Android/iOS end-to-end verification remain outstanding.
+- 2026-10-10: Google authentication passed targeted ESLint/Prettier, Expo dependency validation,
+  dynamic config validation with representative OAuth client IDs, `git diff --check`, and
+  production Android/iOS Expo exports. The full lint/type gates still contain pre-existing failures
+  in `use-color-scheme.web.ts`, `optimize-chat-images.ts`, and `symbol-view.tsx`. The largest
+  auth file touched is `register-form.tsx` at 209 lines; auth route entries remain thin. OAuth
+  rebuilt native client, backend production environment/migration deployment, and physical
+  Android/iOS verification remain outstanding.
+- 2026-10-11: Google Sign-In loads lazily so Expo Go and development clients built before the
+  Nitro dependency was added no longer crash while evaluating the login screen. Those binaries
+  retain email authentication without exposing setup instructions in the auth UI; a newly compiled
+  client is still required for Google authentication itself.
+- 2026-10-11: Google Web, iOS, and Android OAuth clients were provisioned. The Web and iOS IDs are
+  configured in ignored local app environment plus EAS preview/production build profiles; the
+  sibling backend accepts both audiences locally. Expo config resolves the native iOS URL scheme,
+  and all 16 backend tests plus Prisma validation pass. Render environment configuration, migration
+  deployment, a rebuilt client, and physical-device verification remain outstanding.
+- 2026-10-10: Shared pinned messages passed frontend TypeScript, targeted ESLint/Prettier, local Expo dependency validation, `git diff --check`, and production Android/iOS Expo exports. Backend passed Prisma generation/validation, TypeScript build, all 12 Node tests, and `git diff --check`. Largest affected frontend handwritten file: `src/screens/chat/chat-screen.tsx` at 303 lines; Expo Router chat entries remain thin. Applying the new migration and physical Android/iOS interaction verification remain outstanding.
+- 2026-10-10: The pinned-message sheet was rebuilt after the SDK 57 native form sheet squeezed bridged RN content, retained unwanted system shadow/chrome, and leaked a light system background through the bottom safe area. It now uses one opaque, chat-themed surface in an over-full-screen modal, sizes to short lists up to a 78% cap, and draws through the bottom inset without a detached rounded bottom edge. It retains swipe-down, backdrop, accessibility escape, Android-back, and Done dismissal. Physical-device verification remains outstanding.
+- 2026-10-10: Pinned-sheet rows gained a long-press action card with Copy, Unpin, and sender-only Delete. The unsend pipeline now accepts a pinned-message fallback so deleting an unloaded historical pin still performs the server request and patches cached pinned state. TypeScript, targeted ESLint/Prettier, `git diff --check`, and production Android/iOS Expo exports passed; physical Android/iOS long-press and destructive-confirmation verification remains outstanding.
 
 - 2026-09-20: Historical-to-latest promotion and repeat reply reopening passed TypeScript, targeted ESLint/Prettier, `git diff --check`, and production Expo exports for Android and iOS. Promotion requires a real drag, no remaining/fetching newer page, and bottom-edge proximity; it clears stale arrow state immediately. Every unloaded reply request now gets a fresh versioned query key. Largest affected handwritten file: `src/screens/chat/styles/chat-styles.ts` at 369 lines; the chat route remains a one-line re-export. Physical Android/iOS verification remains outstanding.
 - 2026-09-20: FlashList v2 chat migration and post-layout reply-centering correction passed TypeScript, targeted ESLint/Prettier, `git diff --check`, and production Expo exports for Android and iOS. The viewport uses chronological recycled rows, bidirectional historical cursors, native visible-position maintenance, preserved day separators/composer/reply interactions, and no per-row pagination measurement. Removed obsolete `use-chat-list-props.ts` and the untracked custom pagination-anchor hook. Largest affected handwritten file: `src/screens/chat/styles/chat-styles.ts` at 369 lines; the chat route remains a one-line re-export. Physical reply-centering on older Android and iOS remains outstanding.

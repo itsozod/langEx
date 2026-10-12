@@ -40,6 +40,7 @@ export function seedNewConversation({
             ],
             isReadOnly: false,
             messages: [message],
+            pinnedMessages: [],
           },
           pageInfo: {
             hasMore: false,

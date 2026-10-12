@@ -11,6 +11,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import AuthFormCard from './auth-form-card';
 import AuthFormField from './auth-form-field';
+import { GoogleAuthOption } from './google-auth-option';
 import { LoginPrimaryButton } from './login-primary-button';
 import PasswordInput from './password-input';
 
@@ -47,6 +48,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
     <View style={styles.wrapper}>
       <AuthFormCard>
         <View style={styles.form}>
+          <GoogleAuthOption />
           <View style={styles.fields}>
             <AuthFormField label="Email address" error={errors.email?.message}>
               <Controller

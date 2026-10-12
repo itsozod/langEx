@@ -8,7 +8,9 @@
       "distribution": "internal",
       "environment": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://langex-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://langex-backend.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "387371414953-ocvookpuquri44po89r0p7k1c97e8uam.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "387371414953-hfq73iq7o5985b8oicn291pqjlgfuc1m.apps.googleusercontent.com"
       },
       "android": {
         "buildType": "apk"
@@ -21,7 +23,9 @@
       "autoIncrement": true,
       "environment": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://langex-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://langex-backend.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "387371414953-ocvookpuquri44po89r0p7k1c97e8uam.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "387371414953-hfq73iq7o5985b8oicn291pqjlgfuc1m.apps.googleusercontent.com"
       }
     }
   }

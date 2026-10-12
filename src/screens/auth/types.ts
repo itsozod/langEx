@@ -23,6 +23,10 @@ export type RegisterCredentials = AuthCredentials & {
   confirmPassword: string;
 };
 
+export type GoogleAuthCredentials = {
+  idToken: string;
+};
+
 export type AuthResponse = {
   token: string;
   user: AuthUser;

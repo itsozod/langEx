@@ -1,13 +1,21 @@
 import type { AppTheme } from '@/providers/theme-provider';
 import type { AuthUser } from '@/screens/auth/types';
 
-import type { ChatImageSelection, GiftedMessage, GiftedReplyMessage } from './message.types';
+import type {
+  ChatImageSelection,
+  ChatParticipant,
+  GiftedMessage,
+  GiftedReplyMessage,
+  Message,
+} from './message.types';
 
 export type ChatThreadConversation = {
   id?: string;
   currentUser: AuthUser | null;
   isHistoricalWindow: boolean;
   isReadOnly: boolean;
+  participants: ChatParticipant[];
+  pinnedMessages: Message[];
 };
 
 export type ChatThreadHistory = {
@@ -39,7 +47,7 @@ export type ChatThreadMessaging = {
   replyingTo: GiftedReplyMessage | null;
   selectedImages: ChatImageSelection[];
   setReplyingTo: (message: GiftedReplyMessage | null) => void;
-  unsendMessage: (messageId: string) => void;
+  unsendMessage: (messageId: string, fallbackMessage?: Message) => void;
 };
 
 export type ChatThreadPresentation = {

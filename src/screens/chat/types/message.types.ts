@@ -102,6 +102,7 @@ export type Conversation = {
   lastMessageTimestamp?: string | null;
   lastMessageEditedAt?: string | null;
   messages?: Message[];
+  pinnedMessages?: Message[];
   reads?: ConversationReadState[];
 };
 
@@ -142,8 +143,12 @@ export type ConversationPageInfo = {
 };
 
 export type ConversationResponse = {
-  conversation: Conversation & { messages: Message[] };
+  conversation: Conversation & { messages: Message[]; pinnedMessages: Message[] };
   pageInfo: ConversationPageInfo;
+};
+
+export type PinnedMessagesResponse = {
+  pinnedMessages: Message[];
 };
 
 export type DirectConversationResponse = {

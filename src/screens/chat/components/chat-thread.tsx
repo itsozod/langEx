@@ -9,6 +9,7 @@ import { useChatJumpToMessage } from '../hooks/use-chat-jump-to-message';
 import { useChatLatestNavigation } from '../hooks/use-chat-latest-navigation';
 import { useChatMessageRenderer } from '../hooks/use-chat-message-renderer';
 import { useChatMessageActions } from '../hooks/use-chat-message-actions';
+import { useChatPins } from '../hooks/use-chat-pins';
 import { useChatReadOnly } from '../hooks/use-chat-read-only';
 import { useChatScrollState } from '../hooks/use-chat-scroll-state';
 import { useChatUnseenMessages } from '../hooks/use-chat-unseen-messages';
@@ -20,10 +21,18 @@ import { ChatJumpToLatest } from './chat-jump-to-latest';
 import { ChatMessageList } from './chat-message-list';
 import { ChatMessageLoadStatus } from './chat-message-load-status';
 import { ChatMessageMenu } from './chat-message-menu';
+import { ChatPinnedMessages } from './chat-pinned-messages';
 import { DeletedUserNotice } from './chat-thread-states';
 
 export function ChatThread({ conversation, history, messaging, presentation }: ChatThreadProps) {
-  const { id: conversationId, currentUser, isHistoricalWindow, isReadOnly } = conversation;
+  const {
+    id: conversationId,
+    currentUser,
+    isHistoricalWindow,
+    isReadOnly,
+    participants,
+    pinnedMessages,
+  } = conversation;
   const {
     hasNewerMessages,
     hasOlderMessages,
@@ -57,6 +66,15 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
   const { theme, topInset, typingUsers } = presentation;
   const styles = useChatStyles();
   const currentUserId = currentUser?.id;
+  const { isPending: pinMutationPending, togglePin } = useChatPins(conversationId);
+  const toggleMessagePin = useCallback(
+    (messageId: string, pinned: boolean) => togglePin({ messageId, pinned }),
+    [togglePin],
+  );
+  const unpinMessage = useCallback(
+    (messageId: string) => toggleMessagePin(messageId, true),
+    [toggleMessagePin],
+  );
   const latestDistanceRef = useRef(0);
   const { listRef, maintainVisibleContentPosition, scrollToLatestAfterSend, scrollToLatestWindow } =
     useChatAutoscroll(isHistoricalWindow);
@@ -126,9 +144,11 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
     openMessageMenu,
     replyFromMenu,
     startReply,
+    togglePinFromMenu,
     unsendFromMenu,
   } = useChatMessageActions({
     currentUserId,
+    onTogglePin: toggleMessagePin,
     onUnsendMessage: unsendMessage,
     setReplyingTo,
     startEditing,
@@ -183,6 +203,16 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
         behavior="translate-with-padding"
         keyboardVerticalOffset={topInset + CHAT_HEADER_HEIGHT}
         style={styles.chat}>
+        <ChatPinnedMessages
+          currentUserId={currentUserId}
+          isReadOnly={isReadOnly}
+          messages={pinnedMessages}
+          onDeleteMessage={unsendMessage}
+          onJumpToMessage={revealMessage}
+          onUnpinMessage={unpinMessage}
+          participants={participants}
+          unpinPending={pinMutationPending}
+        />
         <View style={styles.messagesContainer}>
           <ChatMessageList
             hasNewerMessages={hasNewerMessages}
@@ -249,8 +279,13 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
         onCopyLink={copyLinkFromMenu}
         onEdit={editFromMenu}
         onReply={replyFromMenu}
+        onTogglePin={togglePinFromMenu}
         onUnsend={unsendFromMenu}
         target={menuTarget}
+        targetIsPinned={Boolean(
+          menuTarget && pinnedMessages.some(({ id }) => id === String(menuTarget.message._id)),
+        )}
+        togglePinPending={pinMutationPending}
       />
       <ChatImageConfirmation
         images={selectedImages}

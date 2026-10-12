@@ -11,6 +11,7 @@ import type {
   DeleteConversationResponse,
   DirectConversationResponse,
   Message,
+  PinnedMessagesResponse,
   SendImageResponse,
   UserPresenceResponse,
 } from './types/message.types';
@@ -127,6 +128,20 @@ export function editMessage(conversationId: string, messageId: string, content: 
 export function unsendMessage(conversationId: string, messageId: string) {
   return apiRequest<{ message?: Message }>(
     `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}`,
+    { method: 'DELETE' },
+  );
+}
+
+export function pinMessage(conversationId: string, messageId: string) {
+  return apiRequest<PinnedMessagesResponse>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/pin`,
+    { method: 'POST' },
+  );
+}
+
+export function unpinMessage(conversationId: string, messageId: string) {
+  return apiRequest<PinnedMessagesResponse>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/pin`,
     { method: 'DELETE' },
   );
 }

@@ -1,6 +1,12 @@
 import { apiRequest, authApiRequest } from '@/shared/lib/api-client';
 
-import type { AuthCredentials, AuthResponse, MeResponse, RegisterCredentials } from './types';
+import type {
+  AuthCredentials,
+  AuthResponse,
+  GoogleAuthCredentials,
+  MeResponse,
+  RegisterCredentials,
+} from './types';
 
 export const register = (credentials: RegisterCredentials) =>
   authApiRequest<AuthResponse>('/auth/register', {
@@ -10,6 +16,12 @@ export const register = (credentials: RegisterCredentials) =>
 
 export const login = (credentials: AuthCredentials) =>
   authApiRequest<AuthResponse>('/auth/login', {
+    method: 'POST',
+    body: credentials,
+  });
+
+export const authenticateWithGoogle = (credentials: GoogleAuthCredentials) =>
+  authApiRequest<AuthResponse>('/auth/google', {
     method: 'POST',
     body: credentials,
   });

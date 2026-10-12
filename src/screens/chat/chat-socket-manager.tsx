@@ -101,6 +101,12 @@ export function ChatSocketManager() {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
       refreshActiveAccountUnreadCount();
     };
+    const handlePinsChanged = (payload: { conversationId: string }) => {
+      if (!payload?.conversationId) return;
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversation(payload.conversationId),
+      });
+    };
     const handleParticipantDeleted = (payload: { conversationId: string; userId: string }) => {
       if (!payload.conversationId || !payload.userId) return;
       markParticipantDeletedInCaches(payload.conversationId, payload.userId);
@@ -128,6 +134,7 @@ export function ChatSocketManager() {
     socket.on('receive_message', handleMessage);
     socket.on('message_edited', handleMessageChanged);
     socket.on('message_unsent', handleMessageChanged);
+    socket.on('conversation_pins_changed', handlePinsChanged);
     socket.on('participant_deleted', handleParticipantDeleted);
     socket.on('account_deleted', handleAccountDeleted);
     socket.on('user_presence_changed', handlePresenceChanged);
@@ -140,6 +147,7 @@ export function ChatSocketManager() {
       socket.off('receive_message', handleMessage);
       socket.off('message_edited', handleMessageChanged);
       socket.off('message_unsent', handleMessageChanged);
+      socket.off('conversation_pins_changed', handlePinsChanged);
       socket.off('participant_deleted', handleParticipantDeleted);
       socket.off('account_deleted', handleAccountDeleted);
       socket.off('user_presence_changed', handlePresenceChanged);

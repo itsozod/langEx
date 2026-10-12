@@ -13,6 +13,7 @@ import { Form } from 'tamagui';
 import AuthFormCard from './auth-form-card';
 import AuthFormField from './auth-form-field';
 import AuthPrimaryButton from './auth-primary-button';
+import { GoogleAuthOption } from './google-auth-option';
 import PasswordInput from './password-input';
 
 const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
@@ -51,6 +52,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
     <View style={styles.wrapper}>
       <AuthFormCard>
         <Form style={styles.form}>
+          <GoogleAuthOption />
           <View style={styles.fields}>
             <AuthFormField label="Email address" error={errors.email?.message}>
               <Controller

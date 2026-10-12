@@ -20,6 +20,7 @@ type ServerToClientEvents = {
   user_stop_typing: (payload: { userId: string }) => void;
   chat_error: (payload: { error: string }) => void;
   conversation_read: (payload: ConversationReadResponse) => void;
+  conversation_pins_changed: (payload: { conversationId: string }) => void;
   participant_deleted: (payload: ParticipantDeleted) => void;
   account_deleted: (payload: { userId: string }) => void;
   user_presence_changed: (presence: {

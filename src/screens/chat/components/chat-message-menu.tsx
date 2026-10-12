@@ -27,8 +27,11 @@ type ChatMessageMenuProps = {
   onCopyLink: (url: string) => void;
   onEdit: (message: GiftedMessage) => void;
   onReply: (message: GiftedMessage) => void;
+  onTogglePin: (message: GiftedMessage, pinned: boolean) => void;
   onUnsend: (message: GiftedMessage) => void;
   target: MessageMenuTarget | null;
+  targetIsPinned: boolean;
+  togglePinPending: boolean;
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -42,8 +45,11 @@ export function ChatMessageMenu({
   onCopyLink,
   onEdit,
   onReply,
+  onTogglePin,
   onUnsend,
   target,
+  targetIsPinned,
+  togglePinPending,
 }: ChatMessageMenuProps) {
   const styles = useChatStyles();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
@@ -60,8 +66,10 @@ export function ChatMessageMenu({
   const canChange = isOwnMessage;
   const canCopy = Boolean(messageText);
   const canEdit = canChange && canCopy;
+  const canPin = !message.pending;
   const menuHeight =
-    (1 + Number(canCopy) + links.length + Number(canEdit) + Number(canChange)) * MENU_ITEM_HEIGHT;
+    (1 + Number(canPin) + Number(canCopy) + links.length + Number(canEdit) + Number(canChange)) *
+    MENU_ITEM_HEIGHT;
   const belowTop = anchor.y + anchor.height + ANCHOR_GAP;
   const fitsBelow = belowTop + menuHeight <= screenHeight - SCREEN_MARGIN;
   const top = fitsBelow ? belowTop : Math.max(anchor.y - menuHeight - ANCHOR_GAP, SCREEN_MARGIN);
@@ -83,6 +91,27 @@ export function ChatMessageMenu({
           />
           <ThemedText style={styles.menuLabel}>Reply</ThemedText>
         </Pressable>
+        {canPin ? (
+          <View>
+            <View style={styles.menuDivider} />
+            <Pressable
+              accessibilityRole="button"
+              disabled={togglePinPending}
+              onPress={() => onTogglePin(message, targetIsPinned)}
+              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
+              <SymbolView
+                name={{
+                  ios: targetIsPinned ? 'pin.slash' : 'pin',
+                  android: 'push_pin',
+                  web: 'push_pin',
+                }}
+                size={18}
+                tintColor={styles.menuIcon.color}
+              />
+              <ThemedText style={styles.menuLabel}>{targetIsPinned ? 'Unpin' : 'Pin'}</ThemedText>
+            </Pressable>
+          </View>
+        ) : null}
         {canCopy ? (
           <View>
             <View style={styles.menuDivider} />

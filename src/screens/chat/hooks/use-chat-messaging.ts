@@ -246,9 +246,10 @@ export function useChatMessaging({
   );
 
   const unsendMessage = useCallback(
-    async (messageId: string) => {
+    async (messageId: string, fallbackMessage?: Message) => {
       const { activeMessages } = useChatStore.getState();
-      const existing = activeMessages.find((message) => message.id === messageId);
+      const activeMessage = activeMessages.find((message) => message.id === messageId);
+      const existing = activeMessage ?? fallbackMessage;
       if (!conversationId || !existing) return;
 
       // Kept for rollback: restoring means putting the message back and re-linking its quotes.
@@ -260,7 +261,7 @@ export function useChatMessaging({
         await unsendMessageRequest(conversationId, messageId);
         void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
       } catch (error) {
-        addMessage(existing);
+        if (activeMessage) addMessage(existing);
         quotingMessages.forEach(replaceMessage);
         // The cached pages are put right by refetching rather than by unpicking the patch.
         void queryClient.invalidateQueries({

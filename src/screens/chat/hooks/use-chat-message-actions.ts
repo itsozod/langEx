@@ -8,6 +8,7 @@ import type { GiftedMessage, GiftedReplyMessage } from '../types/message.types';
 
 type UseChatMessageActionsOptions = {
   currentUserId?: string;
+  onTogglePin: (messageId: string, pinned: boolean) => void;
   onUnsendMessage: (messageId: string) => void;
   setReplyingTo: (message: GiftedReplyMessage | null) => void;
   startEditing: (message: GiftedMessage) => void;
@@ -16,6 +17,7 @@ type UseChatMessageActionsOptions = {
 
 export function useChatMessageActions({
   currentUserId,
+  onTogglePin,
   onUnsendMessage,
   setReplyingTo,
   startEditing,
@@ -88,6 +90,13 @@ export function useChatMessageActions({
     },
     [onUnsendMessage],
   );
+  const togglePinFromMenu = useCallback(
+    (message: GiftedMessage, pinned: boolean) => {
+      setMenuTarget(null);
+      onTogglePin(String(message._id), pinned);
+    },
+    [onTogglePin],
+  );
 
   return {
     closeMessageMenu,
@@ -98,6 +107,7 @@ export function useChatMessageActions({
     openMessageMenu,
     replyFromMenu,
     startReply,
+    togglePinFromMenu,
     unsendFromMenu,
   };
 }
