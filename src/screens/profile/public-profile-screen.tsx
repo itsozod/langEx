@@ -91,6 +91,7 @@ export default function PublicProfile() {
   }
 
   const shared = new Set(currentUser?.interests ?? []);
+  const isOwnProfile = currentUser?.id === user.id;
 
   return (
     <GradientBackground>
@@ -112,7 +113,7 @@ export default function PublicProfile() {
                 />
               </Pressable>
               <ThemedText type="bold" style={styles.headerTitle}>
-                Partner profile
+                {isOwnProfile ? 'Your profile' : 'Partner profile'}
               </ThemedText>
               <View style={styles.headerSpacer} />
             </View>
@@ -215,37 +216,41 @@ export default function PublicProfile() {
               </View>
             ) : null}
 
-            <AuthPrimaryButton
-              label="Send Message"
-              pending={findConversation.isPending}
-              onPress={() =>
-                findConversation.mutate(user.id, {
-                  onSuccess: ({ conversationId }) => {
-                    if (
-                      conversationId &&
-                      conversationId === returnToConversationId &&
-                      router.canGoBack()
-                    ) {
-                      router.back();
-                      return;
-                    }
+            {!isOwnProfile ? (
+              <>
+                <AuthPrimaryButton
+                  label="Send Message"
+                  pending={findConversation.isPending}
+                  onPress={() =>
+                    findConversation.mutate(user.id, {
+                      onSuccess: ({ conversationId }) => {
+                        if (
+                          conversationId &&
+                          conversationId === returnToConversationId &&
+                          router.canGoBack()
+                        ) {
+                          router.back();
+                          return;
+                        }
 
-                    router.push({
-                      pathname: '/chat/[id]',
-                      params: conversationId
-                        ? { id: conversationId }
-                        : { id: 'new', participantId: user.id },
-                    });
-                  },
-                })
-              }
-            />
-            {findConversation.isError ? (
-              <ThemedText style={styles.startChatError}>
-                {findConversation.error instanceof Error
-                  ? findConversation.error.message
-                  : 'Could not open this conversation.'}
-              </ThemedText>
+                        router.push({
+                          pathname: '/chat/[id]',
+                          params: conversationId
+                            ? { id: conversationId }
+                            : { id: 'new', participantId: user.id },
+                        });
+                      },
+                    })
+                  }
+                />
+                {findConversation.isError ? (
+                  <ThemedText style={styles.startChatError}>
+                    {findConversation.error instanceof Error
+                      ? findConversation.error.message
+                      : 'Could not open this conversation.'}
+                  </ThemedText>
+                ) : null}
+              </>
             ) : null}
           </View>
         </SafeAreaView>

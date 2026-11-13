@@ -12,7 +12,9 @@ export type GiftedMessage = Omit<IMessage, 'replyMessage'> & {
   pending?: boolean;
   /** Non-null means the sender changed the text after sending. */
   editedAt?: string | null;
+  kind: MessageKind;
   replyMessage?: GiftedReplyMessage;
+  systemEvent?: MessageSystemEvent | null;
 };
 
 export type OutgoingMessageStatus = 'queued' | 'sending' | 'failed';
@@ -26,6 +28,23 @@ export type ChatParticipant = {
   isOnline?: boolean;
   lastSeenAt?: string | null;
 };
+
+export type MessageKind = 'CHAT' | 'GROUP_MEMBER_ADDED';
+
+export type MessageSystemEventUser = {
+  id: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  isDeleted: boolean;
+};
+
+export type GroupMemberAddedSystemEvent = {
+  type: 'GROUP_MEMBER_ADDED';
+  actor: MessageSystemEventUser;
+  subject: MessageSystemEventUser;
+};
+
+export type MessageSystemEvent = GroupMemberAddedSystemEvent;
 
 export type MessageReply = {
   id: string;
@@ -50,6 +69,7 @@ export type ChatImageSelection = Pick<MessageImage, 'width' | 'height'> & {
 
 export type Message = {
   id: string;
+  kind?: MessageKind;
   clientMessageId?: string | null;
   content: string;
   image?: MessageImage | null;
@@ -62,6 +82,7 @@ export type Message = {
   deliveryStatus?: OutgoingMessageStatus;
   sendError?: string;
   editedAt?: string | null;
+  systemEvent?: MessageSystemEvent | null;
   /** Only ever seen on a `message_unsent` payload; unsent messages are dropped, never rendered. */
   deletedAt?: string | null;
 };
@@ -93,12 +114,18 @@ export type UnsentMessage = {
 
 export type Conversation = {
   id: string;
+  type?: 'DIRECT' | 'GROUP';
+  name?: string | null;
+  createdById?: string | null;
+  adminIds?: string[];
   createdAt?: string;
   participants: ChatParticipant[];
   isReadOnly: boolean;
   unreadCount?: number;
   lastMessage?: Message | null;
+  lastMessageKind?: MessageKind | null;
   lastMessagePreview?: string | null;
+  lastMessageSystemEvent?: MessageSystemEvent | null;
   lastMessageTimestamp?: string | null;
   lastMessageEditedAt?: string | null;
   messages?: Message[];

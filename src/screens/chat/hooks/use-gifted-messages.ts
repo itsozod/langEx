@@ -87,6 +87,8 @@ export function useGiftedMessages(
         sendError: message.sendError,
         deliveryReceipt,
         editedAt: message.editedAt,
+        kind: message.kind ?? 'CHAT',
+        systemEvent: message.systemEvent,
         user: {
           _id: message.senderId,
           name: senderName,

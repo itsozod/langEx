@@ -1,6 +1,8 @@
 import { io, type Socket } from 'socket.io-client';
 
 import type {
+  ChatParticipant,
+  Conversation,
   ConversationReadResponse,
   Message,
   ParticipantDeleted,
@@ -12,6 +14,20 @@ import { useAuthStore } from '@/shared/store/auth-store';
 import { API_URL } from './api-client';
 
 type ServerToClientEvents = {
+  conversation_created: (payload: { conversation: Conversation }) => void;
+  conversation_participants_changed: (payload: {
+    conversationId: string;
+    addedParticipantIds: string[];
+    removedParticipantIds: string[];
+    ownerId: string;
+    adminIds: string[];
+    participants: ChatParticipant[];
+  }) => void;
+  conversation_roles_changed: (payload: {
+    conversationId: string;
+    ownerId: string;
+    adminIds: string[];
+  }) => void;
   receive_message: (message: Message) => void;
   message_edited: (message: Message) => void;
   // Unsend carries only a tombstone; the message it names is dropped rather than replaced.

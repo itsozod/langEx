@@ -3,6 +3,7 @@ import type {
   Message,
   MessageImage,
   MessageReply,
+  MessageSystemEvent,
   UnsentMessage,
 } from '../types/message.types';
 
@@ -46,13 +47,40 @@ export function isMessage(value: unknown): value is Message {
     (Array.isArray(message.images) && message.images.length <= 4 && message.images.every(isImage));
   const hasValidImageAlias =
     message.image === undefined || message.image === null || isImage(message.image);
+  const hasValidKind =
+    message.kind === undefined || message.kind === 'CHAT' || message.kind === 'GROUP_MEMBER_ADDED';
+  const hasValidSystemEvent =
+    message.kind === 'GROUP_MEMBER_ADDED'
+      ? isMessageSystemEvent(message.systemEvent)
+      : message.systemEvent === undefined || message.systemEvent === null;
   return (
     typeof message.id === 'string' &&
     typeof message.content === 'string' &&
     typeof message.senderId === 'string' &&
     typeof message.createdAt === 'string' &&
+    hasValidKind &&
+    hasValidSystemEvent &&
     hasValidImages &&
     hasValidImageAlias
+  );
+}
+
+function isMessageSystemEvent(value: unknown): value is MessageSystemEvent {
+  if (!value || typeof value !== 'object') return false;
+  const event = value as Partial<MessageSystemEvent>;
+  if (event.type !== 'GROUP_MEMBER_ADDED') return false;
+
+  return isSystemEventUser(event.actor) && isSystemEventUser(event.subject);
+}
+
+function isSystemEventUser(value: unknown) {
+  if (!value || typeof value !== 'object') return false;
+  const user = value as Partial<MessageSystemEvent['actor']>;
+  return (
+    typeof user.id === 'string' &&
+    (typeof user.displayName === 'string' || user.displayName === null) &&
+    (typeof user.avatarUrl === 'string' || user.avatarUrl === null) &&
+    typeof user.isDeleted === 'boolean'
   );
 }
 
@@ -63,6 +91,7 @@ export function isUnsentMessage(value: unknown): value is UnsentMessage {
 }
 
 export function isSameSenderOnSameDay(first?: GiftedMessage, second?: GiftedMessage) {
+  if (first?.kind !== 'CHAT' || second?.kind !== 'CHAT') return false;
   const firstUserId = first?.user?._id;
   const secondUserId = second?.user?._id;
   if (firstUserId == null || secondUserId == null || firstUserId !== secondUserId) return false;

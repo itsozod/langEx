@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import type { Conversation, Message, UserPresence } from '@/screens/chat/types/message.types';
+import { formatMessageSystemEvent } from '@/screens/chat/utils/system-events';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 type ChatState = {
@@ -77,13 +78,20 @@ export const useChatStore = create<ChatState>((set) => ({
       conversations[conversationIndex] = {
         ...conversations[conversationIndex],
         lastMessage: message,
+        lastMessageKind: message.kind ?? 'CHAT',
         lastMessagePreview:
-          message.content ||
-          (message.images && message.images.length > 1
-            ? `${message.images.length} photos`
-            : message.images?.length || message.image
-              ? 'Photo'
-              : ''),
+          message.kind === 'GROUP_MEMBER_ADDED'
+            ? formatMessageSystemEvent(
+                message.systemEvent,
+                useAuthStore.getState().activeAccountId ?? undefined,
+              )
+            : message.content ||
+              (message.images && message.images.length > 1
+                ? `${message.images.length} photos`
+                : message.images?.length || message.image
+                  ? 'Photo'
+                  : ''),
+        lastMessageSystemEvent: message.systemEvent ?? null,
         lastMessageTimestamp: message.createdAt,
       };
       conversations.sort((first, second) => {

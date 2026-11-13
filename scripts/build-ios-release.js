@@ -2,6 +2,7 @@
 
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 
 const ENV_FILE = path.resolve(process.cwd(), '.env.production.local');
@@ -43,6 +44,22 @@ function validateEnvironment() {
   }
 }
 
+function createProvisioningEnabledXcodebuild() {
+  const wrapperDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'langex-xcodebuild-'));
+  const wrapperPath = path.join(wrapperDirectory, 'xcodebuild');
+
+  // Expo CLI omits these flags when the project already has a development team configured.
+  // A first-time physical-device build still needs them so Xcode can create the certificate,
+  // register the device, and generate the development provisioning profile.
+  fs.writeFileSync(
+    wrapperPath,
+    '#!/bin/sh\nexec /usr/bin/xcodebuild "$@" -allowProvisioningUpdates -allowProvisioningDeviceRegistration\n',
+    { mode: 0o755 },
+  );
+
+  return wrapperDirectory;
+}
+
 function build() {
   if (process.platform !== 'darwin') {
     throw new Error('A local iOS device build requires macOS and Xcode.');
@@ -54,21 +71,31 @@ function build() {
   const deviceArgs = process.env.IOS_DEVICE_ID
     ? ['--device', process.env.IOS_DEVICE_ID]
     : ['--device'];
+  const xcodebuildWrapperDirectory = createProvisioningEnabledXcodebuild();
+  const cleanupXcodebuildWrapper = () => {
+    fs.rmSync(xcodebuildWrapperDirectory, { recursive: true, force: true });
+  };
 
   const child = spawn(
     'caffeinate',
     ['-i', 'npx', 'expo', 'run:ios', ...deviceArgs, '--configuration', 'Release'],
     {
       stdio: 'inherit',
-      env: { ...process.env, EXPO_NO_DOTENV: '1' },
+      env: {
+        ...process.env,
+        EXPO_NO_DOTENV: '1',
+        PATH: `${xcodebuildWrapperDirectory}${path.delimiter}${process.env.PATH ?? ''}`,
+      },
     },
   );
 
   child.on('error', (error) => {
+    cleanupXcodebuildWrapper();
     console.error(`Could not start the iOS release build: ${error.message}`);
     process.exitCode = 1;
   });
   child.on('exit', (code, signal) => {
+    cleanupXcodebuildWrapper();
     if (signal) {
       console.error(`iOS release build stopped by signal ${signal}.`);
       process.exitCode = 1;

@@ -55,6 +55,16 @@ export function useChatHeaderStyles() {
       justifyContent: 'center',
       backgroundColor: isDark ? '#55488A' : '#E8E2FF',
     },
+    groupAvatarPlaceholder: {
+      width: 42,
+      height: 42,
+      borderRadius: 15,
+      borderCurve: 'continuous',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isDark ? '#55488A' : '#E8E2FF',
+    },
+    groupAvatarIcon: { color: isDark ? '#F2EEFF' : '#5846AA' },
     headerCountryBadge: {
       position: 'absolute',
       right: -3,

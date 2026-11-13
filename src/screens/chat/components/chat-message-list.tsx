@@ -18,6 +18,7 @@ import { Day, type MessageProps, type User } from 'react-native-gifted-chat';
 import { useChatStyles } from '../styles/chat-styles';
 import type { GiftedMessage } from '../types/message.types';
 import { ChatEmptyState } from './chat-thread-states';
+import { ChatSystemMessage } from './chat-system-message';
 import { ChatTypingIndicator } from './chat-typing-indicator';
 import { NewerMessagesLoader, OlderMessagesLoader } from './older-messages-loader';
 
@@ -50,6 +51,7 @@ function messageKey(message: GiftedMessage) {
 }
 
 function getMessageType(message: GiftedMessage) {
+  if (message.kind !== 'CHAT') return 'system-event';
   if (message.chatImages?.length) return 'gallery';
   if (message.replyMessage) return 'reply';
   return 'text';
@@ -95,6 +97,18 @@ function ChatMessageListComponent({
   const renderItem = useCallback<ListRenderItem<GiftedMessage>>(
     ({ item, index }) => {
       const previousMessage = messages[index - 1];
+      const daySeparator = !isSameMessageDay(item, previousMessage) ? (
+        <Day createdAt={item.createdAt} />
+      ) : null;
+
+      if (item.kind !== 'CHAT') {
+        return (
+          <View>
+            {daySeparator}
+            <ChatSystemMessage currentUserId={String(user._id)} message={item} />
+          </View>
+        );
+      }
       const message = renderMessage({
         currentMessage: item,
         // The data is chronological: the older neighbour is visually above and the newer one is
@@ -109,7 +123,7 @@ function ChatMessageListComponent({
 
       return (
         <View>
-          {!isSameMessageDay(item, previousMessage) ? <Day createdAt={item.createdAt} /> : null}
+          {daySeparator}
           {message}
         </View>
       );

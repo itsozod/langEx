@@ -38,11 +38,17 @@ export default function ChatsScreen() {
 
   const renderConversation: ListRenderItem<Conversation> = ({ item }) => {
     const participant = getOtherParticipant(item, userId);
+    const isGroup = item.type === 'GROUP';
     return (
       <ConversationRow
         conversation={item}
+        currentUserId={userId}
         participant={participant}
         onOpenProfile={() => {
+          if (isGroup) {
+            router.push({ pathname: '/group/[id]', params: { id: item.id } });
+            return;
+          }
           if (!participant?.id) return;
           router.push({ pathname: '/profile/[id]', params: { id: participant.id } });
         }}
@@ -129,17 +135,30 @@ export default function ChatsScreen() {
                   Keep the conversation going
                 </ThemedText>
               </View>
-              <View style={styles.headerBadge}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Create a group"
+                hitSlop={5}
+                onPress={() => router.push('/group/new')}
+                style={({ pressed }) => [styles.headerBadge, pressed && styles.headerBadgePressed]}>
                 <SymbolView
                   name={{
-                    ios: 'bubble.left.and.bubble.right.fill',
-                    android: 'chat',
-                    web: 'chat',
+                    ios: 'person.3.fill',
+                    android: 'group',
+                    web: 'group',
                   }}
                   size={22}
                   tintColor="#FFFFFF"
                 />
-              </View>
+                <View style={styles.headerBadgePlus}>
+                  <SymbolView
+                    name={{ ios: 'plus', android: 'add', web: 'add' }}
+                    size={11}
+                    weight="bold"
+                    tintColor="#6654C7"
+                  />
+                </View>
+              </Pressable>
             </View>
           }
           ListEmptyComponent={emptyContent}

@@ -2,6 +2,12 @@
 
 ## Current state
 
+- Group conversations support the complete owner/admin lifecycle: users can create a named group
+  from eligible direct-chat partners, see groups in Chats, open group chat/info, and owners or
+  admins can add people. Owners can manage up to three admins and transfer ownership; owners and
+  admins can remove non-owner members, and non-owners can leave. Member additions render as
+  structured, non-interactive timeline events and localized chat-list previews. Drafts and
+  selections remain intact after API failures.
 - Login and registration share a native Google identity option. The device obtains a Google ID
   token, the sibling backend verifies it, and the existing session-transition boundary stores the
   resulting LangEx JWT. New Google users continue through normal onboarding; existing identities
@@ -21,6 +27,12 @@
 
 ## Architecture
 
+- Group-specific API, queries, candidate selection, member lists, validation, and styles live under
+  `src/screens/groups`; `src/app/group` contains only thin Expo Router entries. Existing chat domain
+  types remain the shared conversation contract, while chat list/header rendering branches on
+  `Conversation.type`. Group member actions use the SDK 57 universal `@expo/ui` BottomSheet; the
+  socket manager patches account-scoped membership/role caches and immediately discards a group
+  when the active account is removed.
 - `src/shared/store/auth-store.ts` owns only credentials: it persists `{ token, userId }` records and derives the active token/account ID. `src/shared/store/user.store.ts` separately owns persisted user entities and the active user. Both stores migrate automatically from the legacy combined session, while `src/screens/auth/session-transition.ts` coordinates their updates.
 - `src/screens/auth/session-transition.ts` is the only account-transition boundary. It cancels and clears server queries, disconnects the socket, and resets chat/onboarding state before activating another account. Outbox data remains user-scoped and is deleted only when that account logs out.
 - Adding or switching accounts requires no backend account-linking model: each saved account remains an independent authenticated user. Message push payloads include `recipientUserId`, allowing a notification tap to activate the matching locally saved account before conversation navigation.
@@ -41,6 +53,12 @@
 
 ## Decisions
 
+- 2026-11-05: Group creation and membership management use dedicated full-screen routes with
+  virtualized candidate/member lists. The Chats header is the creation entry point, and a group
+  chat header opens group info. Owners and admins see Add people; only the owner sees
+  admin/ownership controls. Admins receive removal controls, and non-owners receive Leave group.
+  The server remains
+  authoritative for eligibility, permissions, role limits, and the 50-member limit.
 - 2026-10-10: Google is an external identity provider, not the LangEx session authority. The API
   verifies Google ID tokens and keys identities by immutable `sub`, then issues the same LangEx JWT
   used by password login. A first Google sign-in with a verified email matching an active LangEx
@@ -69,6 +87,16 @@
 
 ## API behavior
 
+- `GET /conversations/group-candidates` returns active users from visible direct chats. Group names
+  normalize whitespace and allow at most 80 Unicode characters; creation accepts 1–49 other users.
+  `POST /conversations/groups` creates the group; owners and admins may add eligible people, while
+  owner-only admin/ownership endpoints enforce up to 50 members and three admins. Owners and admins
+  may remove members; non-owners may leave, while owners must transfer ownership first. Each actual
+  addition returns and emits an immutable `GROUP_MEMBER_ADDED` message whose structured actor and
+  subject drive the timeline and chat-list copy. The client handles
+  `conversation_created`, `conversation_participants_changed`, and `conversation_roles_changed` by
+  patching or refetching account-scoped caches; a removed active account immediately discards the
+  group and exits its chat/info route.
 - `POST /auth/google` accepts `{ idToken }`, creates or resumes the Google-backed user, and returns
   the normal `{ token, user }` auth response. A verified email owned by an active existing user
   links Google as another sign-in method and returns that same user; deleted users remain blocked.
@@ -84,6 +112,11 @@
 
 ## Next steps
 
+- Deploy the sibling backend group contract, then verify create/open/message/add-person flows with
+  four or more accounts on physical Android and iOS. Include keyboard-open group naming,
+  80-character names, failed-create retry, 49 selections, full groups, three-admin limit,
+  promote/revoke, ownership transfer, owner/admin removal permissions, leave/rejoin history boundary,
+  realtime removal while viewing chat/info, narrow Android, large font scale, and light/dark themes.
 - Set `GOOGLE_CLIENT_IDS` on the deployed Render service, deploy backend migration
   `20261010200000_add_google_auth`, rebuild the native app, and verify the complete flow on physical
   Android and iOS devices.
@@ -97,6 +130,26 @@
 
 ## Verification
 
+- 2026-11-14: Frontend integration now matches `docs/GROUPS_API.md` through persisted
+  `GROUP_MEMBER_ADDED` messages, structured list previews, non-interactive system-event rows, and
+  owner/admin Add people access. Targeted ESLint, Prettier, and `git diff --check` pass. Full
+  TypeScript reaches only the two pre-existing errors in `optimize-chat-images.ts` and
+  `symbol-view.tsx`. No build/export was run per user request; backend migration
+  `20261114120000_add_group_membership_events` and physical Android/iOS realtime/push verification
+  remain outstanding.
+- 2026-11-14: The custom chat header and pinned-message banner remain outside the keyboard-translated
+  subtree. Only the message/composer viewport is clipped and moved, and the keyboard controller
+  measures that viewport's real screen position instead of relying on hardcoded header/banner
+  heights. Targeted ESLint, Prettier, and `git diff --check` pass. Full TypeScript still reaches only
+  the two pre-existing errors in `optimize-chat-images.ts` and `symbol-view.tsx`. No native
+  build/export was run; keyboard-open verification remains outstanding on physical Android and iOS.
+- 2026-11-05: Updated group owner/admin/member UI passed targeted ESLint, Prettier, and
+  `git diff --check`. Full TypeScript reaches only the two pre-existing errors in
+  `optimize-chat-images.ts` (`ImageManipulator.manipulate`) and `symbol-view.tsx` (Lucide `color`
+  typing). Per user request, no Android/iOS build or export was run after this contract expansion.
+  The largest affected handwritten file is `src/screens/chat/utils/conversation-cache.ts` at 277
+  lines; all group route entries remain one-line re-exports except the five-line stack layout.
+  Physical Android/iOS verification remains outstanding.
 - 2026-10-12: The Google action is a full-width branded dark/light control matching the auth form,
   with explicit pressed, disabled, loading, and accessibility states. It owns one Credential Manager
   explicit account-picker flow and forwards only a successful ID token to the existing auth

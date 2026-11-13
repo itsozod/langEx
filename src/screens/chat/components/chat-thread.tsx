@@ -2,7 +2,6 @@ import { useCallback, useRef } from 'react';
 import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
-import { CHAT_HEADER_HEIGHT } from '../constants';
 import { useChatAutoscroll } from '../hooks/use-chat-autoscroll';
 import { useChatComposer } from '../hooks/use-chat-composer';
 import { useChatJumpToMessage } from '../hooks/use-chat-jump-to-message';
@@ -63,7 +62,7 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
     setReplyingTo,
     unsendMessage,
   } = messaging;
-  const { theme, topInset, typingUsers } = presentation;
+  const { theme, typingUsers } = presentation;
   const styles = useChatStyles();
   const currentUserId = currentUser?.id;
   const { isPending: pinMutationPending, togglePin } = useChatPins(conversationId);
@@ -187,6 +186,7 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
         {
           _id: 'composer-draft',
           createdAt: new Date(),
+          kind: 'CHAT',
           replyMessage: replyingTo ?? undefined,
           text,
           user: giftedUser,
@@ -198,81 +198,79 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
 
   return (
     <View style={styles.chat}>
-      <KeyboardAvoidingView
-        automaticOffset={false}
-        behavior="translate-with-padding"
-        keyboardVerticalOffset={topInset + CHAT_HEADER_HEIGHT}
-        style={styles.chat}>
-        <ChatPinnedMessages
-          currentUserId={currentUserId}
-          isReadOnly={isReadOnly}
-          messages={pinnedMessages}
-          onDeleteMessage={unsendMessage}
-          onJumpToMessage={revealMessage}
-          onUnpinMessage={unpinMessage}
-          participants={participants}
-          unpinPending={pinMutationPending}
-        />
-        <View style={styles.messagesContainer}>
-          <ChatMessageList
-            hasNewerMessages={hasNewerMessages}
-            hasOlderMessages={hasOlderMessages}
-            isLoadingNewerMessages={isLoadingNewerMessages}
-            isLoadingOlderMessages={isLoadingOlderMessages}
-            isReadOnly={isReadOnly}
-            listRef={listRef}
-            maintainVisibleContentPosition={maintainVisibleContentPosition}
-            messages={giftedMessages}
-            newerLoadFailed={newerLoadFailed}
-            olderLoadFailed={olderLoadFailed}
-            onLoadNewerMessages={onLoadNewerMessages}
-            onLoadOlderMessages={requestOlderMessages}
-            onScroll={handleScroll}
-            onScrollBeginDrag={handleListScrollBeginDrag}
-            renderMessage={renderMessage}
-            showEmptyState={!messageLoading && !isLoadingOlderMessages && !isLoadingNewerMessages}
-            startReply={startReply}
-            typing={typingUsers.length > 0}
-            user={giftedUser}
-          />
-          <ChatJumpToLatest
-            isAlwaysVisible={isHistoricalWindow}
-            isScrolledAway={isScrolledAway}
-            newMessageCount={unseenMessageCount}
-            onPress={jumpToLatest}
-          />
-        </View>
-        {isReadOnly ? (
-          <DeletedUserNotice />
-        ) : (
-          <ChatInputToolbar
-            currentUserId={currentUserId}
-            isEditing={editing !== null}
-            onCancelEdit={stopEditingAndResetComposer}
-            onChooseImages={handleChooseImages}
-            onClearReply={() => setReplyingTo(null)}
-            onSendText={sendComposerText}
-            onSubmitEdit={submitEdit}
-            replyMessage={replyingTo}
-            text={composerText}
-            textInputProps={{
-              keyboardAppearance: theme,
-              multiline: true,
-              onContentSizeChange: handleContentSizeChange,
-              onChangeText: handleInputChange,
-              placeholder: 'Write a message…',
-              placeholderTextColor: styles.placeholder.color,
-              scrollEnabled: isComposerScrollable,
-              style: [styles.composer, { height: composerHeight }],
-            }}
-          />
-        )}
-      </KeyboardAvoidingView>
-      <ChatMessageLoadStatus
-        failed={messageLoadFailed}
-        loading={messageLoading}
-        onRetry={retryMessageWindow}
+      <ChatPinnedMessages
+        currentUserId={currentUserId}
+        isReadOnly={isReadOnly}
+        messages={pinnedMessages}
+        onDeleteMessage={unsendMessage}
+        onJumpToMessage={revealMessage}
+        onUnpinMessage={unpinMessage}
+        participants={participants}
+        unpinPending={pinMutationPending}
       />
+      <View style={styles.threadViewport}>
+        <KeyboardAvoidingView automaticOffset behavior="translate-with-padding" style={styles.chat}>
+          <View style={styles.messagesContainer}>
+            <ChatMessageList
+              hasNewerMessages={hasNewerMessages}
+              hasOlderMessages={hasOlderMessages}
+              isLoadingNewerMessages={isLoadingNewerMessages}
+              isLoadingOlderMessages={isLoadingOlderMessages}
+              isReadOnly={isReadOnly}
+              listRef={listRef}
+              maintainVisibleContentPosition={maintainVisibleContentPosition}
+              messages={giftedMessages}
+              newerLoadFailed={newerLoadFailed}
+              olderLoadFailed={olderLoadFailed}
+              onLoadNewerMessages={onLoadNewerMessages}
+              onLoadOlderMessages={requestOlderMessages}
+              onScroll={handleScroll}
+              onScrollBeginDrag={handleListScrollBeginDrag}
+              renderMessage={renderMessage}
+              showEmptyState={!messageLoading && !isLoadingOlderMessages && !isLoadingNewerMessages}
+              startReply={startReply}
+              typing={typingUsers.length > 0}
+              user={giftedUser}
+            />
+            <ChatJumpToLatest
+              isAlwaysVisible={isHistoricalWindow}
+              isScrolledAway={isScrolledAway}
+              newMessageCount={unseenMessageCount}
+              onPress={jumpToLatest}
+            />
+          </View>
+          {isReadOnly ? (
+            <DeletedUserNotice />
+          ) : (
+            <ChatInputToolbar
+              currentUserId={currentUserId}
+              isEditing={editing !== null}
+              onCancelEdit={stopEditingAndResetComposer}
+              onChooseImages={handleChooseImages}
+              onClearReply={() => setReplyingTo(null)}
+              onSendText={sendComposerText}
+              onSubmitEdit={submitEdit}
+              replyMessage={replyingTo}
+              text={composerText}
+              textInputProps={{
+                keyboardAppearance: theme,
+                multiline: true,
+                onContentSizeChange: handleContentSizeChange,
+                onChangeText: handleInputChange,
+                placeholder: 'Write a message…',
+                placeholderTextColor: styles.placeholder.color,
+                scrollEnabled: isComposerScrollable,
+                style: [styles.composer, { height: composerHeight }],
+              }}
+            />
+          )}
+        </KeyboardAvoidingView>
+        <ChatMessageLoadStatus
+          failed={messageLoadFailed}
+          loading={messageLoading}
+          onRetry={retryMessageWindow}
+        />
+      </View>
       <ChatMessageMenu
         onClose={closeMessageMenu}
         onCopy={copyFromMenu}

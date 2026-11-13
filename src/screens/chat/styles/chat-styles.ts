@@ -8,6 +8,7 @@ const createChatStyles = (theme: AppTheme) => {
   return StyleSheet.create({
     safeArea: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' },
     pressed: { opacity: 0.65 },
+    threadViewport: { flex: 1, overflow: 'hidden' },
     chat: { flex: 1, backgroundColor: isDark ? '#181420' : '#F8F6FC' },
     messagesContainer: { flex: 1, backgroundColor: isDark ? '#181420' : '#F8F6FC' },
     messageList: { flexGrow: 1, paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10 },

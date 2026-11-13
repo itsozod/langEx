@@ -1,9 +1,15 @@
+import { router, usePathname } from 'expo-router';
 import { useEffect } from 'react';
 
 import { queryClient } from '@/providers/query-provider';
 import { removeInvalidActiveAccount } from '@/screens/auth/_shared/utils/session-transition';
 import { chatQueryKeys, useConversations } from '@/screens/chat/hooks';
-import type { Message, UserPresence } from '@/screens/chat/types/message.types';
+import type {
+  Conversation,
+  ConversationsResponse,
+  Message,
+  UserPresence,
+} from '@/screens/chat/types/message.types';
 import { discoverQueryKeys } from '@/screens/discover/hooks';
 import { prepareSocketAuth, socket } from '@/shared/lib/socket';
 import { useAuthStore } from '@/shared/store/auth-store';
@@ -13,21 +19,14 @@ import { useUserStore } from '@/shared/store/user.store';
 import { useOutboxStore } from './store/outbox-store';
 import {
   markParticipantDeletedInCaches,
+  removeConversationFromListCache,
+  updateGroupMembershipInCaches,
+  updateGroupRolesInCaches,
   updateParticipantPresenceInCache,
   upsertMessageInLatestWindow,
 } from './utils/conversation-cache';
+import { isMessage } from './utils/messages';
 import { outboxMessageToOptimisticMessage } from './utils/outbox';
-
-function isMessage(value: unknown): value is Message {
-  if (!value || typeof value !== 'object') return false;
-  const message = value as Partial<Message>;
-  return (
-    typeof message.id === 'string' &&
-    typeof message.content === 'string' &&
-    typeof message.senderId === 'string' &&
-    typeof message.createdAt === 'string'
-  );
-}
 
 function refreshActiveAccountUnreadCount() {
   const accountId = useAuthStore.getState().activeAccountId;
@@ -37,6 +36,7 @@ function refreshActiveAccountUnreadCount() {
 
 export function ChatSocketManager() {
   const activeAccountId = useAuthStore((state) => state.activeAccountId);
+  const pathname = usePathname();
   const token = useAuthStore((state) => state.token);
   const query = useConversations();
   const conversations = useChatStore((state) => state.conversations);
@@ -94,6 +94,83 @@ export function ChatSocketManager() {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
       refreshActiveAccountUnreadCount();
     };
+    const handleConversationCreated = (payload: { conversation?: Conversation }) => {
+      const conversation = payload?.conversation;
+      if (!conversation?.id || !activeAccountId) return;
+
+      queryClient.setQueryData<ConversationsResponse>(
+        chatQueryKeys.conversations(activeAccountId),
+        (current) => ({
+          conversations: [
+            conversation,
+            ...(current?.conversations.filter((item) => item.id !== conversation.id) ?? []),
+          ],
+        }),
+      );
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversations(activeAccountId),
+      });
+    };
+    const handleParticipantsChanged = (payload: {
+      conversationId?: string;
+      removedParticipantIds?: string[];
+      ownerId?: string;
+      adminIds?: string[];
+      participants?: Conversation['participants'];
+    }) => {
+      if (!payload?.conversationId || !activeAccountId) return;
+      if (payload.removedParticipantIds?.includes(activeAccountId)) {
+        removeConversationFromListCache(payload.conversationId);
+        useChatStore.getState().removeConversation(payload.conversationId);
+        queryClient.removeQueries({
+          queryKey: chatQueryKeys.conversation(payload.conversationId, activeAccountId),
+        });
+        const chatPath = `/chat/${payload.conversationId}`;
+        const groupPath = `/group/${payload.conversationId}`;
+        if (pathname === chatPath || pathname.startsWith(groupPath)) {
+          router.replace('/(tabs)/chats');
+        }
+        return;
+      }
+      if (
+        payload.participants &&
+        typeof payload.ownerId === 'string' &&
+        Array.isArray(payload.adminIds)
+      ) {
+        updateGroupMembershipInCaches(payload.conversationId, {
+          participants: payload.participants,
+          createdById: payload.ownerId,
+          adminIds: payload.adminIds,
+        });
+      }
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversations(activeAccountId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversation(payload.conversationId, activeAccountId),
+      });
+    };
+    const handleRolesChanged = (payload: {
+      conversationId?: string;
+      ownerId?: string;
+      adminIds?: string[];
+    }) => {
+      if (
+        !payload?.conversationId ||
+        !activeAccountId ||
+        typeof payload.ownerId !== 'string' ||
+        !Array.isArray(payload.adminIds)
+      ) {
+        return;
+      }
+      updateGroupRolesInCaches(payload.conversationId, payload.ownerId, payload.adminIds);
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversations(activeAccountId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversation(payload.conversationId, activeAccountId),
+      });
+    };
 
     // An unsend can hit any message, and only the server knows whether it was the last one, so the
     // row's preview and unread count are refetched rather than guessed at.
@@ -132,6 +209,9 @@ export function ChatSocketManager() {
 
     socket.on('connect', joinRooms);
     socket.on('receive_message', handleMessage);
+    socket.on('conversation_created', handleConversationCreated);
+    socket.on('conversation_participants_changed', handleParticipantsChanged);
+    socket.on('conversation_roles_changed', handleRolesChanged);
     socket.on('message_edited', handleMessageChanged);
     socket.on('message_unsent', handleMessageChanged);
     socket.on('conversation_pins_changed', handlePinsChanged);
@@ -145,6 +225,9 @@ export function ChatSocketManager() {
     return () => {
       socket.off('connect', joinRooms);
       socket.off('receive_message', handleMessage);
+      socket.off('conversation_created', handleConversationCreated);
+      socket.off('conversation_participants_changed', handleParticipantsChanged);
+      socket.off('conversation_roles_changed', handleRolesChanged);
       socket.off('message_edited', handleMessageChanged);
       socket.off('message_unsent', handleMessageChanged);
       socket.off('conversation_pins_changed', handlePinsChanged);
@@ -152,7 +235,14 @@ export function ChatSocketManager() {
       socket.off('account_deleted', handleAccountDeleted);
       socket.off('user_presence_changed', handlePresenceChanged);
     };
-  }, [activeAccountId, roomKey, token, updateConversationFromMessage, updateParticipantPresence]);
+  }, [
+    activeAccountId,
+    pathname,
+    roomKey,
+    token,
+    updateConversationFromMessage,
+    updateParticipantPresence,
+  ]);
 
   useEffect(
     () => () => {

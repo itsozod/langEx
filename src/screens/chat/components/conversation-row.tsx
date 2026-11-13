@@ -2,10 +2,12 @@ import { Image } from 'expo-image';
 import { Pressable, View } from 'react-native';
 
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatsStyles } from '../styles/chats-styles';
 import type { ChatParticipant, Conversation } from '../types/message.types';
+import { formatMessageSystemEvent } from '../utils/system-events';
 
 function initials(name?: string | null) {
   const value = name?.trim() || 'Language partner';
@@ -45,6 +47,7 @@ export function getOtherParticipant(conversation: Conversation, currentUserId?: 
 
 type ConversationRowProps = {
   conversation: Conversation;
+  currentUserId?: string;
   participant?: ChatParticipant;
   onOpenProfile: () => void;
   onPress: () => void;
@@ -52,13 +55,21 @@ type ConversationRowProps = {
 
 export function ConversationRow({
   conversation,
+  currentUserId,
   participant,
   onOpenProfile,
   onPress,
 }: ConversationRowProps) {
   const styles = useChatsStyles();
-  const name = participant?.displayName?.trim() || 'Language partner';
-  const onlineLabel = participant?.isOnline ? ', online' : '';
+  const isGroup = conversation.type === 'GROUP';
+  const name = isGroup
+    ? conversation.name?.trim() || 'Group conversation'
+    : participant?.displayName?.trim() || 'Language partner';
+  const onlineLabel = !isGroup && participant?.isOnline ? ', online' : '';
+  const systemPreview =
+    conversation.lastMessageKind === 'GROUP_MEMBER_ADDED'
+      ? formatMessageSystemEvent(conversation.lastMessageSystemEvent, currentUserId)
+      : '';
 
   return (
     <Pressable
@@ -68,15 +79,26 @@ export function ConversationRow({
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`View ${name}'s profile${onlineLabel}`}
-        disabled={!participant?.id}
+        accessibilityLabel={
+          isGroup ? `View ${name} group info` : `View ${name}'s profile${onlineLabel}`
+        }
+        disabled={!isGroup && !participant?.id}
         hitSlop={5}
         onPress={(event) => {
           event.stopPropagation();
           onOpenProfile();
         }}
         style={({ pressed }) => [styles.avatarWrap, pressed && styles.avatarPressed]}>
-        {participant?.avatarUrl ? (
+        {isGroup ? (
+          <View style={styles.groupAvatarPlaceholder}>
+            <SymbolView
+              name={{ ios: 'person.3.fill', android: 'group', web: 'group' }}
+              size={24}
+              weight="semibold"
+              tintColor={styles.groupAvatarIcon.color}
+            />
+          </View>
+        ) : participant?.avatarUrl ? (
           <Image source={{ uri: participant.avatarUrl }} contentFit="cover" style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
@@ -85,14 +107,14 @@ export function ConversationRow({
             </ThemedText>
           </View>
         )}
-        {participant?.isOnline ? (
+        {!isGroup && participant?.isOnline ? (
           <View
             accessibilityLabel={`${name} is online`}
             accessibilityRole="image"
             style={styles.onlineDot}
           />
         ) : null}
-        {participant?.country ? (
+        {!isGroup && participant?.country ? (
           <View pointerEvents="none" style={styles.countryBadge}>
             <CountryFlag country={participant.country} size={14} boxSize={19} />
           </View>
@@ -110,7 +132,11 @@ export function ConversationRow({
         </View>
         <View style={styles.rowBottom}>
           <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.preview}>
-            {conversation.lastMessagePreview || 'Start the conversation'}
+            {systemPreview ||
+              conversation.lastMessagePreview ||
+              (isGroup
+                ? `${conversation.participants.length} members · Start the conversation`
+                : 'Start the conversation')}
           </ThemedText>
           {typeof conversation.unreadCount === 'number' && conversation.unreadCount > 0 ? (
             <View style={styles.unreadBadge}>

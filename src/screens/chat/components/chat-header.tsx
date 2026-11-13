@@ -11,6 +11,9 @@ import type { ChatParticipant, UserPresence } from '../types/message.types';
 import { getInitials } from '../utils/messages';
 
 type ChatHeaderProps = {
+  conversationName?: string | null;
+  isGroup: boolean;
+  participantCount: number;
   participant?: ChatParticipant;
   onBack: () => void;
   onDelete: () => void;
@@ -22,6 +25,9 @@ type ChatHeaderProps = {
 };
 
 export function ChatHeader({
+  conversationName,
+  isGroup,
+  participantCount,
   participant,
   onBack,
   onDelete,
@@ -33,22 +39,26 @@ export function ChatHeader({
 }: ChatHeaderProps) {
   const styles = useChatHeaderStyles();
   const [now, setNow] = useState(() => Date.now());
-  const name = participant?.isDeleted
-    ? 'Deleted user'
-    : participant?.displayName?.trim() || 'Language partner';
-  const presenceLabel = participant?.isDeleted
-    ? 'Account deleted'
-    : presencePending
-      ? 'Checking status…'
-      : presenceUnavailable
-        ? 'Presence unavailable'
-        : formatPresenceLabel(presence, now);
+  const name = isGroup
+    ? conversationName?.trim() || 'Group conversation'
+    : participant?.isDeleted
+      ? 'Deleted user'
+      : participant?.displayName?.trim() || 'Language partner';
+  const presenceLabel = isGroup
+    ? `${participantCount} ${participantCount === 1 ? 'member' : 'members'}`
+    : participant?.isDeleted
+      ? 'Account deleted'
+      : presencePending
+        ? 'Checking status…'
+        : presenceUnavailable
+          ? 'Presence unavailable'
+          : formatPresenceLabel(presence, now);
 
   useEffect(() => {
-    if (!presence || presence.isOnline) return;
+    if (isGroup || !presence || presence.isOnline) return;
     const interval = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(interval);
-  }, [presence]);
+  }, [isGroup, presence]);
 
   return (
     <View style={styles.header}>
@@ -68,13 +78,22 @@ export function ChatHeader({
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`View ${name}'s profile`}
-        disabled={!participant?.id}
+        accessibilityLabel={isGroup ? `View ${name} group info` : `View ${name}'s profile`}
+        disabled={!isGroup && !participant?.id}
         hitSlop={4}
         onPress={onOpenProfile}
         style={({ pressed }) => [styles.headerProfileButton, pressed && styles.pressed]}>
         <View style={styles.headerAvatarWrap}>
-          {participant?.avatarUrl ? (
+          {isGroup ? (
+            <View style={styles.groupAvatarPlaceholder}>
+              <SymbolView
+                name={{ ios: 'person.3.fill', android: 'group', web: 'group' }}
+                size={21}
+                weight="semibold"
+                tintColor={styles.groupAvatarIcon.color}
+              />
+            </View>
+          ) : participant?.avatarUrl ? (
             <Image
               source={{ uri: participant.avatarUrl }}
               contentFit="cover"
@@ -87,7 +106,7 @@ export function ChatHeader({
               </ThemedText>
             </View>
           )}
-          {participant?.country ? (
+          {!isGroup && participant?.country ? (
             <View style={styles.headerCountryBadge}>
               <CountryFlag country={participant.country} size={11} boxSize={16} />
             </View>
@@ -101,12 +120,15 @@ export function ChatHeader({
             accessibilityLabel={presenceLabel}
             accessibilityRole="text"
             style={styles.presenceRow}>
-            {presence?.isOnline && !participant?.isDeleted ? (
+            {!isGroup && presence?.isOnline && !participant?.isDeleted ? (
               <View style={styles.onlineDot} />
             ) : null}
             <ThemedText
               numberOfLines={1}
-              style={[styles.onlineText, presence?.isOnline && styles.onlineTextActive]}>
+              style={[
+                styles.onlineText,
+                !isGroup && presence?.isOnline && styles.onlineTextActive,
+              ]}>
               {presenceLabel}
             </ThemedText>
           </View>
@@ -115,7 +137,9 @@ export function ChatHeader({
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Delete conversation with ${name}`}
+        accessibilityLabel={
+          isGroup ? `Delete ${name} conversation` : `Delete conversation with ${name}`
+        }
         accessibilityState={{ busy: deletePending, disabled: deletePending }}
         disabled={deletePending}
         hitSlop={4}

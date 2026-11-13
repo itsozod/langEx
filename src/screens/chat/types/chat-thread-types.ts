@@ -52,7 +52,6 @@ export type ChatThreadMessaging = {
 
 export type ChatThreadPresentation = {
   theme: AppTheme;
-  topInset: number;
   typingUsers: string[];
 };
 

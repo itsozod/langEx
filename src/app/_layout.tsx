@@ -150,6 +150,7 @@ function ThemedAppShell() {
               <Stack.Screen name="account-auth" />
               <Stack.Screen name="profile" />
               <Stack.Screen name="chat/[id]" />
+              <Stack.Screen name="group" />
             </Stack.Protected>
 
             <Stack.Protected guard={!isSignedIn}>

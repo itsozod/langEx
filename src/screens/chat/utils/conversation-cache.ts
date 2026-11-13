@@ -204,3 +204,74 @@ export function markParticipantDeletedInCaches(conversationId: string, userId: s
         : windows,
   );
 }
+
+export function mergeConversationIntoCaches(next: Conversation) {
+  queryClient.setQueryData<ConversationsResponse>(chatQueryKeys.conversations(), (data) =>
+    data
+      ? {
+          conversations: data.conversations.map((conversation) =>
+            conversation.id === next.id ? { ...conversation, ...next } : conversation,
+          ),
+        }
+      : data,
+  );
+  updateWindows(next.id, (conversation) => ({ ...conversation, ...next }));
+}
+
+type GroupMembershipPatch = Pick<Conversation, 'participants' | 'adminIds'> & {
+  createdById: string | null;
+};
+
+export function updateGroupMembershipInCaches(conversationId: string, patch: GroupMembershipPatch) {
+  const update = <T extends Conversation>(conversation: T): T =>
+    conversation.id === conversationId ? ({ ...conversation, ...patch } as T) : conversation;
+
+  queryClient.setQueryData<ConversationsResponse>(chatQueryKeys.conversations(), (data) =>
+    data ? { conversations: data.conversations.map((conversation) => update(conversation)) } : data,
+  );
+  updateWindows(conversationId, update);
+}
+
+export function removeParticipantFromGroupCaches(conversationId: string, participantId: string) {
+  const update = <T extends Conversation>(conversation: T): T =>
+    conversation.id === conversationId
+      ? ({
+          ...conversation,
+          participants: conversation.participants.filter((item) => item.id !== participantId),
+          adminIds: conversation.adminIds?.filter((id) => id !== participantId),
+        } as T)
+      : conversation;
+
+  queryClient.setQueryData<ConversationsResponse>(chatQueryKeys.conversations(), (data) =>
+    data ? { conversations: data.conversations.map((conversation) => update(conversation)) } : data,
+  );
+  updateWindows(conversationId, update);
+}
+
+export function updateGroupRolesInCaches(
+  conversationId: string,
+  createdById: string,
+  adminIds: string[],
+) {
+  const update = <T extends Conversation>(conversation: T): T =>
+    conversation.id === conversationId
+      ? ({ ...conversation, createdById, adminIds } as T)
+      : conversation;
+
+  queryClient.setQueryData<ConversationsResponse>(chatQueryKeys.conversations(), (data) =>
+    data ? { conversations: data.conversations.map((conversation) => update(conversation)) } : data,
+  );
+  updateWindows(conversationId, update);
+}
+
+export function removeConversationFromListCache(conversationId: string) {
+  queryClient.setQueryData<ConversationsResponse>(chatQueryKeys.conversations(), (data) =>
+    data
+      ? {
+          conversations: data.conversations.filter(
+            (conversation) => conversation.id !== conversationId,
+          ),
+        }
+      : data,
+  );
+}
