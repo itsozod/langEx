@@ -6,8 +6,13 @@ import { AppVersion } from '@/screens/profile/components/app-version';
 import { SettingsHeader } from '@/screens/profile/components/settings-header';
 import { SettingsNavigationRow } from '@/screens/profile/components/settings-navigation-row';
 import GradientBackground from '@/shared/components/ui/gradient-background';
+import { useTranslation } from 'react-i18next';
+import { LANGUAGE_NATIVE_NAMES } from '@/shared/i18n/languages';
+import { useLanguageStore } from '@/shared/store/language-store';
 
 export default function ProfileSettingsScreen() {
+  const { t } = useTranslation('profile');
+  const language = useLanguageStore((state) => state.language);
   return (
     <GradientBackground>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -15,28 +20,36 @@ export default function ProfileSettingsScreen() {
           <View style={styles.content}>
             <SettingsHeader
               fallbackHref="/(tabs)/profile"
-              subtitle="Manage your profile preferences"
-              title="Profile settings"
+              subtitle={t('settings.subtitle')}
+              title={t('settings.title')}
             />
 
             <SettingsNavigationRow
-              accessibilityHint="Opens security and account deletion options"
+              accessibilityHint={t('settings.accountHint')}
               icon={{
                 ios: 'person.crop.circle',
                 android: 'account_circle',
                 web: 'account_circle',
               }}
               onPress={() => router.push('/profile/account')}
-              subtitle="Security and account deletion"
-              title="Account"
+              subtitle={t('settings.accountSubtitle')}
+              title={t('account.title')}
             />
 
             <SettingsNavigationRow
-              accessibilityHint="Opens theme choices"
+              accessibilityHint={t('settings.themeHint')}
               icon={{ ios: 'paintpalette', android: 'palette', web: 'palette' }}
               onPress={() => router.push('/profile/theme')}
-              subtitle="System, light, or dark appearance"
-              title="Theme"
+              subtitle={t('settings.themeSubtitle')}
+              title={t('theme.title')}
+            />
+
+            <SettingsNavigationRow
+              accessibilityHint={t('settings.languageHint')}
+              icon={{ ios: 'globe', android: 'public', web: 'public' }}
+              onPress={() => router.push('/profile/language')}
+              subtitle={LANGUAGE_NATIVE_NAMES[language]}
+              title={t('language.title')}
             />
 
             <AppVersion />

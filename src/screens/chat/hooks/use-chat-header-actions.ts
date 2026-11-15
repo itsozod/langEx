@@ -8,6 +8,7 @@ import {
   getActiveDeleteConversationVariables,
   useDeleteConversation,
 } from './use-delete-conversation';
+import i18n from '@/shared/i18n';
 
 type UseChatHeaderActionsOptions = {
   conversationId?: string;
@@ -50,23 +51,25 @@ export function useChatHeaderActions({
   const confirmDelete = useCallback(() => {
     if (!conversationId || deleteConversation.isPending) return;
     const name = isGroup
-      ? conversationName?.trim() || 'this group'
-      : participantName?.trim() || 'this language partner';
+      ? conversationName?.trim() || i18n.t('groups:alerts.thisGroup')
+      : participantName?.trim() || i18n.t('chat:deleteConversation.thisPartner');
 
     Alert.alert(
-      isGroup ? `Delete ${name}?` : `Delete conversation with ${name}?`,
       isGroup
-        ? 'This removes the group conversation from your account and can’t be undone. It does not remove other members.'
-        : `This removes the conversation from your account and can’t be undone. It does not unsend messages from ${name}’s account.`,
+        ? i18n.t('chat:deleteConversation.groupTitle', { name })
+        : i18n.t('chat:deleteConversation.directTitle', { name }),
+      isGroup
+        ? i18n.t('chat:deleteConversation.groupMessage')
+        : i18n.t('chat:deleteConversation.directMessage', { name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18n.t('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Delete conversation',
+          text: i18n.t('chat:deleteConversation.action'),
           style: 'destructive',
           onPress: () => {
             const variables = getActiveDeleteConversationVariables(conversationId);
             if (!variables) {
-              setSocketError('Your account session changed. Open the conversation and try again.');
+              setSocketError(i18n.t('chat:errors.sessionChanged'));
               return;
             }
 
@@ -82,9 +85,7 @@ export function useChatHeaderActions({
                   void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                 }
                 setSocketError(
-                  error instanceof Error
-                    ? error.message
-                    : 'Conversation could not be deleted. Try again.',
+                  error instanceof Error ? error.message : i18n.t('chat:errors.deleteFailed'),
                 );
               },
             });

@@ -2,9 +2,11 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export function AuthDivider() {
   const styles = useStyles();
+  const { t } = useTranslation('auth');
 
   return (
     <View
@@ -12,7 +14,7 @@ export function AuthDivider() {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants">
       <View style={styles.line} />
-      <ThemedText style={styles.label}>or continue with email</ThemedText>
+      <ThemedText style={styles.label}>{t('divider')}</ThemedText>
       <View style={styles.line} />
     </View>
   );

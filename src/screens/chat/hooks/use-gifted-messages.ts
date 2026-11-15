@@ -8,6 +8,7 @@ import type {
   MessageReply,
 } from '../types/message.types';
 import { getMessageImages } from '../utils/messages';
+import i18n from '@/shared/i18n';
 
 type ImageBearingMessage =
   | Pick<Message, 'image' | 'images'>
@@ -45,11 +46,12 @@ export function useGiftedMessages(
         ? participantById.get(message.replyTo.senderId)
         : undefined;
       const senderName =
-        sender?.displayName || (message.senderId === currentUserId ? 'You' : 'Partner');
+        sender?.displayName ||
+        (message.senderId === currentUserId ? i18n.t('chat:you') : i18n.t('chat:partner'));
       const senderAvatar = sender?.avatarUrl || undefined;
       const replySenderName = message.replyTo
         ? replySender?.displayName ||
-          (message.replyTo.senderId === currentUserId ? 'You' : 'Partner')
+          (message.replyTo.senderId === currentUserId ? i18n.t('chat:you') : i18n.t('chat:partner'))
         : '';
       const replySenderAvatar = replySender?.avatarUrl || undefined;
       const createdAtTime = Date.parse(message.createdAt);

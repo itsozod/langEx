@@ -6,6 +6,7 @@ import type {
   MessageSystemEvent,
   UnsentMessage,
 } from '../types/message.types';
+import i18n from '@/shared/i18n';
 
 type ImageBearingMessage =
   | Pick<Message, 'image' | 'images'>
@@ -19,7 +20,7 @@ export function getMessageImages(message?: ImageBearingMessage | null): MessageI
 }
 
 export function getInitials(name?: string | null) {
-  const value = name?.trim() || 'Language partner';
+  const value = name?.trim() || i18n.t('discover:fallbackName');
   return value
     .split(/\s+/)
     .slice(0, 2)
@@ -112,10 +113,16 @@ export function isSameSenderOnSameDay(first?: GiftedMessage, second?: GiftedMess
 }
 
 export function formatMessageTime(value: Date | number) {
-  return messageTimeFormatter.format(new Date(value));
+  return getMessageTimeFormatter(i18n.language).format(new Date(value));
 }
 
-const messageTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  hour: 'numeric',
-  minute: '2-digit',
-});
+const messageTimeFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function getMessageTimeFormatter(locale: string) {
+  let formatter = messageTimeFormatters.get(locale);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' });
+    messageTimeFormatters.set(locale, formatter);
+  }
+  return formatter;
+}

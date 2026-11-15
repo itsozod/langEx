@@ -1,26 +1,26 @@
 import { z } from 'zod';
 
 export const basicInfoSchema = z.object({
-  displayName: z.string().trim().min(1, 'Display name is required.'),
+  displayName: z.string().trim().min(1, 'onboarding:validation.displayNameRequired'),
 });
 
 export const countrySchema = z.object({
-  country: z.string().length(2, 'Choose your country.'),
+  country: z.string().length(2, 'onboarding:validation.countryRequired'),
 });
 
 export const languagesSchema = z
   .object({
-    nativeLanguage: z.string().min(1, 'Choose your native language.'),
-    learningLanguage: z.string().min(1, 'Choose the language you are learning.'),
+    nativeLanguage: z.string().min(1, 'onboarding:validation.nativeLanguageRequired'),
+    learningLanguage: z.string().min(1, 'onboarding:validation.learningLanguageRequired'),
     proficiencyLevel: z.enum(['beginner', 'intermediate', 'advanced']),
   })
   .refine(({ nativeLanguage, learningLanguage }) => nativeLanguage !== learningLanguage, {
-    message: 'Learning language must be different from your native language.',
+    message: 'onboarding:validation.languagesMustDiffer',
     path: ['learningLanguage'],
   });
 
 export const bioSchema = z.object({
-  bio: z.string().max(150, 'Bio must be 150 characters or fewer.'),
+  bio: z.string().max(150, 'onboarding:validation.bioTooLong'),
 });
 
 export type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;

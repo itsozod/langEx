@@ -8,6 +8,8 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useChatStyles } from '../styles/chat-styles';
 import type { GiftedReplyMessage } from '../types/message.types';
 import { ChatReplyPreview } from './chat-reply-preview';
+import { useTranslation } from 'react-i18next';
+import { COMPOSER_MIN_BOTTOM_PADDING } from '../hooks/use-composer-keyboard-offset';
 
 type ChatInputToolbarProps = {
   currentUserId?: string;
@@ -35,6 +37,7 @@ export function ChatInputToolbar({
   currentUserId,
 }: ChatInputToolbarProps) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
   const insets = useSafeAreaInsets();
 
   return (
@@ -47,14 +50,14 @@ export function ChatInputToolbar({
             tintColor={styles.editBannerTitle.color}
           />
           <View style={styles.editBannerCopy}>
-            <ThemedText style={styles.editBannerTitle}>Editing message</ThemedText>
+            <ThemedText style={styles.editBannerTitle}>{t('composer.editing')}</ThemedText>
             <ThemedText numberOfLines={1} style={styles.editBannerHint}>
-              Send to save your changes
+              {t('composer.editingHint')}
             </ThemedText>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Stop editing"
+            accessibilityLabel={t('composer.stopEditing')}
             hitSlop={8}
             onPress={onCancelEdit}
             style={({ pressed }) => [styles.editBannerClose, pressed && styles.pressed]}>
@@ -70,7 +73,7 @@ export function ChatInputToolbar({
         style={[
           styles.inputToolbar,
           isEditing && styles.inputToolbarJoined,
-          { paddingBottom: Math.max(insets.bottom, 8) },
+          { paddingBottom: Math.max(insets.bottom, COMPOSER_MIN_BOTTOM_PADDING) },
         ]}>
         {replyMessage ? (
           <ChatReplyPreview
@@ -96,11 +99,12 @@ export function ChatInputToolbar({
 
 function ChatImageAction({ onPress }: { onPress: () => void }) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Choose up to four photos"
+      accessibilityLabel={t('composer.choosePhotos')}
       hitSlop={4}
       onPress={onPress}
       style={({ pressed }) => [styles.imageAction, pressed && styles.pressed]}>
@@ -122,6 +126,7 @@ type ChatSendProps = {
 
 export function ChatSend({ isEditing, onSendText, onSubmitEdit, text }: ChatSendProps) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
   const trimmedText = text.trim();
   const isDisabled = !trimmedText;
   const icon = (
@@ -141,7 +146,7 @@ export function ChatSend({ isEditing, onSendText, onSubmitEdit, text }: ChatSend
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Save changes"
+        accessibilityLabel={t('composer.saveChanges')}
         disabled={isDisabled}
         onPress={() => onSubmitEdit?.(text)}
         style={styles.sendContainer}>
@@ -152,7 +157,7 @@ export function ChatSend({ isEditing, onSendText, onSubmitEdit, text }: ChatSend
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Send message"
+      accessibilityLabel={t('composer.send')}
       disabled={isDisabled}
       onPress={() => onSendText(trimmedText)}
       style={({ pressed }) => [styles.sendContainer, pressed && styles.pressed]}>

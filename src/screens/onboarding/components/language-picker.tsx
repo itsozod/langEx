@@ -1,10 +1,12 @@
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
-import { LANGUAGES } from '@/screens/onboarding/data';
+import { getLanguageLabel, getLocalizedLanguages } from '@/screens/onboarding/data';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import React, { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import { translateMessage } from '@/shared/i18n/translate-message';
 
 type LanguagePickerProps = {
   label: string;
@@ -24,15 +26,20 @@ export function LanguagePicker({
   onChange,
 }: LanguagePickerProps) {
   const styles = useStyles();
+  const { t, i18n } = useTranslation(['onboarding', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const localizedLanguages = useMemo(() => getLocalizedLanguages(i18n.language), [i18n.language]);
   const filteredLanguages = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return LANGUAGES.filter(
-      (language) =>
-        language !== excludedValue && (!query || language.toLowerCase().includes(query)),
+    return localizedLanguages.filter(
+      ({ value: language, label: languageLabel }) =>
+        language !== excludedValue &&
+        (!query ||
+          language.toLowerCase().includes(query) ||
+          languageLabel.toLowerCase().includes(query)),
     );
-  }, [excludedValue, search]);
+  }, [excludedValue, localizedLanguages, search]);
 
   const close = () => {
     setSearch('');
@@ -51,7 +58,7 @@ export function LanguagePicker({
           pressed && styles.pressed,
         ]}>
         <ThemedText style={[styles.triggerText, !value && styles.placeholder]}>
-          {value || placeholder}
+          {value ? getLanguageLabel(value) : placeholder}
         </ThemedText>
         <SymbolView
           name={{ ios: 'chevron.down', android: 'arrow_drop_down', web: 'arrow_drop_down' }}
@@ -59,7 +66,7 @@ export function LanguagePicker({
           tintColor={styles.icon.color}
         />
       </Pressable>
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={styles.error}>{translateMessage(t, error)}</ThemedText> : null}
 
       <Modal
         visible={isOpen}
@@ -72,7 +79,7 @@ export function LanguagePicker({
               {label}
             </ThemedText>
             <Pressable onPress={close} hitSlop={10}>
-              <ThemedText style={styles.done}>Done</ThemedText>
+              <ThemedText style={styles.done}>{t('common:actions.done')}</ThemedText>
             </Pressable>
           </View>
           <View style={styles.searchWrapper}>
@@ -85,7 +92,7 @@ export function LanguagePicker({
               autoFocus
               value={search}
               onChangeText={setSearch}
-              placeholder="Search languages"
+              placeholder={t('pickers.searchLanguages')}
               placeholderTextColor={styles.placeholder.color}
               autoCapitalize="none"
               autoCorrect={false}
@@ -94,20 +101,20 @@ export function LanguagePicker({
           </View>
           <FlatList
             data={filteredLanguages}
-            keyExtractor={(item) => item}
+            keyExtractor={(item) => item.value}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
               <ThemedText themeColor="textSecondary" style={styles.emptyText}>
-                No languages found.
+                {t('pickers.noLanguages')}
               </ThemedText>
             }
             renderItem={({ item }) => {
-              const selected = item === value;
+              const selected = item.value === value;
               return (
                 <Pressable
                   onPress={() => {
-                    onChange(item);
+                    onChange(item.value);
                     close();
                   }}
                   style={({ pressed }) => [
@@ -115,7 +122,7 @@ export function LanguagePicker({
                     selected && styles.languageRowSelected,
                     pressed && styles.pressed,
                   ]}>
-                  <ThemedText style={styles.languageText}>{item}</ThemedText>
+                  <ThemedText style={styles.languageText}>{item.label}</ThemedText>
                   {selected ? (
                     <SymbolView
                       name={{ ios: 'checkmark', android: 'check', web: 'check' }}

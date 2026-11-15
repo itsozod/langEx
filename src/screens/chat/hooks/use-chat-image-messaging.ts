@@ -17,6 +17,7 @@ import type {
 import { upsertMessageInLatestWindow } from '../utils/conversation-cache';
 import { isMessage } from '../utils/messages';
 import { optimizeChatImages } from '../utils/optimize-chat-images';
+import i18n from '@/shared/i18n';
 
 const MAX_GALLERY_IMAGES = 4;
 
@@ -124,7 +125,7 @@ export function useChatImageMessaging({
           replyToId: pending.optimisticMessage.replyTo?.id,
         });
         if (!delivery.conversationId || !isMessage(delivery.message)) {
-          throw new Error('The server returned an invalid gallery message.');
+          throw new Error(i18n.t('chat:errors.invalidGallery'));
         }
         if (useAuthStore.getState().activeAccountId !== currentUserId) return true;
 
@@ -140,7 +141,7 @@ export function useChatImageMessaging({
         if (!conversationId) onConversationCreated({ ...delivery, message: confirmed });
       } catch (error) {
         if (useAuthStore.getState().activeAccountId !== currentUserId) return true;
-        const message = error instanceof Error ? error.message : 'Photos could not be sent.';
+        const message = error instanceof Error ? error.message : i18n.t('chat:errors.photosFailed');
         useChatStore.getState().replaceMessage({
           ...pending.optimisticMessage,
           deliveryStatus: 'failed',
@@ -158,7 +159,7 @@ export function useChatImageMessaging({
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      onError('Photo access is required to send pictures.');
+      onError(i18n.t('chat:errors.photoPermission'));
       return;
     }
 

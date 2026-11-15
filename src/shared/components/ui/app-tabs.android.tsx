@@ -8,6 +8,7 @@ import { Colors } from '@/shared/constants/theme';
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
 
 import { SymbolView, type SymbolViewProps } from './symbol-view';
+import { useTranslation } from 'react-i18next';
 
 const TAB_BAR_HEIGHT = 68;
 
@@ -31,6 +32,7 @@ function TabIcon({ color, focused, name }: TabIconProps) {
 }
 
 export default function AppTabs() {
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const colors = Colors[scheme];
   const insets = useSafeAreaInsets();
@@ -70,9 +72,9 @@ export default function AppTabs() {
       <Tabs.Screen
         name="chats"
         options={{
-          title: 'Chats',
+          title: t('tabs.chats'),
           tabBarAccessibilityLabel:
-            unreadCount > 0 ? `Chats, ${unreadCount} unread messages` : 'Chats',
+            unreadCount > 0 ? t('tabs.chatsUnread', { count: unreadCount }) : t('tabs.chats'),
           tabBarBadge: unreadCount > 0 ? unreadBadge : undefined,
           tabBarBadgeStyle: styles.badge,
           tabBarIcon: ({ color, focused }) => (
@@ -87,7 +89,7 @@ export default function AppTabs() {
       <Tabs.Screen
         name="discover"
         options={{
-          title: 'Discover',
+          title: t('tabs.discover'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon color={color} focused={focused} name={{ ios: 'safari', android: 'explore' }} />
           ),
@@ -96,7 +98,7 @@ export default function AppTabs() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon
               color={color}

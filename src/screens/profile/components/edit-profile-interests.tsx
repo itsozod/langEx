@@ -5,6 +5,8 @@ import { InterestIcon, getInterestLabel } from '@/shared/components/ui/interest-
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useEditProfileStyles } from '../styles/edit-profile-styles';
+import { useTranslation } from 'react-i18next';
+import { translateMessage } from '@/shared/i18n/translate-message';
 
 type EditProfileInterestsProps = {
   disabled: boolean;
@@ -22,13 +24,14 @@ export function EditProfileInterests({
   value,
 }: EditProfileInterestsProps) {
   const styles = useEditProfileStyles();
+  const { t } = useTranslation('profile');
 
   return (
     <View style={styles.field}>
       <View style={styles.labelRow}>
-        <ThemedText style={styles.label}>Interests</ThemedText>
+        <ThemedText style={styles.label}>{t('sections.interests')}</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.characterCount}>
-          {value.length} selected · 3 minimum
+          {t('edit.interestsCounter', { count: value.length, minimum: 3 })}
         </ThemedText>
       </View>
 
@@ -65,7 +68,7 @@ export function EditProfileInterests({
         })}
       </View>
 
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={styles.error}>{translateMessage(t, error)}</ThemedText> : null}
     </View>
   );
 }

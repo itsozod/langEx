@@ -24,6 +24,7 @@ import { subscribeToOutboxDelivery } from '../utils/outbox-events';
 import { seedNewConversation } from '../utils/seed-new-conversation';
 import { useChatImageMessaging } from './use-chat-image-messaging';
 import { useGiftedMessages } from './use-gifted-messages';
+import i18n from '@/shared/i18n';
 
 type UseChatMessagingOptions = {
   conversation?: Conversation;
@@ -239,7 +240,9 @@ export function useChatMessaging({
         void queryClient.invalidateQueries({
           queryKey: chatQueryKeys.conversation(conversationId),
         });
-        setSocketError(error instanceof ApiError ? error.message : 'Message could not be edited.');
+        setSocketError(
+          error instanceof ApiError ? error.message : i18n.t('chat:errors.editFailed'),
+        );
       }
     },
     [conversationId, replaceMessage, setSocketError],
@@ -267,7 +270,9 @@ export function useChatMessaging({
         void queryClient.invalidateQueries({
           queryKey: chatQueryKeys.conversation(conversationId),
         });
-        setSocketError(error instanceof ApiError ? error.message : 'Message could not be unsent.');
+        setSocketError(
+          error instanceof ApiError ? error.message : i18n.t('chat:errors.unsendFailed'),
+        );
       }
     },
     [addMessage, conversationId, discardMessage, replaceMessage, setSocketError],

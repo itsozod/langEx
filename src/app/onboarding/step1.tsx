@@ -19,8 +19,10 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { useOnboardingStore } from '@/shared/store/onboarding-store';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function OnboardingStepOne() {
+  const { t } = useTranslation('onboarding');
   const theme = useTheme();
   const styles = useStyles();
   const displayName = useOnboardingStore((state) => state.displayName);
@@ -43,7 +45,7 @@ export default function OnboardingStepOne() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
-      setAvatarError('Photo access is required to choose an avatar.');
+      setAvatarError(t('step1.photoPermission'));
       return;
     }
 
@@ -64,7 +66,7 @@ export default function OnboardingStepOne() {
       update({ avatarUrl: response.avatarUrl });
     } catch (error) {
       setPreviewUri(null);
-      setAvatarError(error instanceof Error ? error.message : 'Unable to upload the photo.');
+      setAvatarError(error instanceof Error ? error.message : t('step1.uploadFailed'));
     }
   };
 
@@ -89,14 +91,14 @@ export default function OnboardingStepOne() {
   return (
     <OnboardingScreen
       step={1}
-      title="Let’s start with you"
-      subtitle="Add the name people will see and an optional profile photo."
+      title={t('step1.title')}
+      subtitle={t('step1.subtitle')}
       onBack={onBack}>
       <OnboardingCard>
         <View style={styles.avatarSection}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Choose profile photo"
+            accessibilityLabel={t('step1.choosePhoto')}
             disabled={avatarMutation.isPending}
             onPress={() => void chooseAvatar()}
             style={({ pressed }) => [styles.avatarButton, pressed && styles.pressed]}>
@@ -126,16 +128,16 @@ export default function OnboardingStepOne() {
             </View>
           </Pressable>
           <View style={styles.avatarCopy}>
-            <ThemedText type="bold">Profile photo</ThemedText>
+            <ThemedText type="bold">{t('step1.photo')}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.avatarHint}>
-              Optional · tap to choose
+              {t('step1.photoHint')}
             </ThemedText>
           </View>
         </View>
 
         {avatarError ? <ThemedText style={styles.error}>{avatarError}</ThemedText> : null}
 
-        <AuthFormField label="Display name" error={errors.displayName?.message}>
+        <AuthFormField label={t('step1.displayName')} error={errors.displayName?.message}>
           <Controller
             control={control}
             name="displayName"
@@ -147,7 +149,7 @@ export default function OnboardingStepOne() {
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
-                placeholder="What should we call you?"
+                placeholder={t('step1.displayNamePlaceholder')}
                 autoCapitalize="words"
                 autoComplete="name"
                 textContentType="name"
@@ -158,7 +160,7 @@ export default function OnboardingStepOne() {
           />
         </AuthFormField>
 
-        <AuthPrimaryButton label="Next" pending={avatarMutation.isPending} onPress={submit} />
+        <AuthPrimaryButton label={t('next')} pending={avatarMutation.isPending} onPress={submit} />
       </OnboardingCard>
     </OnboardingScreen>
   );

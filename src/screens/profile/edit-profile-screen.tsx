@@ -21,14 +21,17 @@ import { editProfileSchema, type EditProfileFormValues } from '@/screens/profile
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { LEVELS } from '@/shared/constants/language-levels';
+import { getLevelLabel, LEVELS } from '@/shared/constants/language-levels';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { useUserStore } from '@/shared/store/user.store';
 import { useEditProfileStyles } from './styles/edit-profile-styles';
+import { useTranslation } from 'react-i18next';
+import { translateMessage } from '@/shared/i18n/translate-message';
 
 export default function EditProfile() {
   const themeColors = useTheme();
   const styles = useEditProfileStyles();
+  const { t } = useTranslation(['profile', 'onboarding']);
   const user = useUserStore((state) => state.user);
   const updateMutation = useUpdateProfileMutation();
   const {
@@ -64,7 +67,7 @@ export default function EditProfile() {
     } catch (error) {
       setError('root.server', {
         type: 'server',
-        message: error instanceof Error ? error.message : 'Unable to save your profile.',
+        message: error instanceof Error ? error.message : t('edit.saveFailed'),
       });
     }
   };
@@ -84,7 +87,7 @@ export default function EditProfile() {
               <View style={styles.header}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Cancel editing"
+                  accessibilityLabel={t('edit.cancel')}
                   disabled={updateMutation.isPending}
                   hitSlop={10}
                   onPress={leave}
@@ -98,17 +101,19 @@ export default function EditProfile() {
                 </Pressable>
                 <View style={styles.headerCopy}>
                   <ThemedText type="bold" style={styles.headerTitle}>
-                    Edit profile
+                    {t('edit.title')}
                   </ThemedText>
                   <ThemedText themeColor="textSecondary" style={styles.headerSubtitle}>
-                    Keep your details fresh
+                    {t('edit.subtitle')}
                   </ThemedText>
                 </View>
                 <View style={styles.headerSpacer} />
               </View>
 
               <View style={styles.formCard}>
-                <AuthFormField label="Display name" error={errors.displayName?.message}>
+                <AuthFormField
+                  label={t('onboarding:step1.displayName')}
+                  error={errors.displayName?.message}>
                   <Controller
                     control={control}
                     name="displayName"
@@ -123,7 +128,7 @@ export default function EditProfile() {
                           onChange(text);
                           clearErrors('root.server');
                         }}
-                        placeholder="Your display name"
+                        placeholder={t('edit.displayNamePlaceholder')}
                         autoCapitalize="words"
                         disabled={updateMutation.isPending}
                       />
@@ -133,7 +138,7 @@ export default function EditProfile() {
 
                 <View style={styles.field}>
                   <View style={styles.labelRow}>
-                    <ThemedText style={styles.label}>Bio</ThemedText>
+                    <ThemedText style={styles.label}>{t('onboarding:step5.bio')}</ThemedText>
                     <Controller
                       control={control}
                       name="bio"
@@ -158,7 +163,7 @@ export default function EditProfile() {
                         editable={!updateMutation.isPending}
                         multiline
                         maxLength={150}
-                        placeholder="Tell people a little about yourself…"
+                        placeholder={t('edit.bioPlaceholder')}
                         placeholderTextColor={styles.placeholder.color}
                         textAlignVertical="top"
                         style={[styles.textArea, errors.bio && styles.inputError]}
@@ -166,7 +171,9 @@ export default function EditProfile() {
                     )}
                   />
                   {errors.bio?.message ? (
-                    <ThemedText style={styles.error}>{errors.bio.message}</ThemedText>
+                    <ThemedText style={styles.error}>
+                      {translateMessage(t, errors.bio.message)}
+                    </ThemedText>
                   ) : null}
                 </View>
 
@@ -175,8 +182,8 @@ export default function EditProfile() {
                   name="nativeLanguage"
                   render={({ field: { onChange, value } }) => (
                     <LanguagePicker
-                      label="Native language"
-                      placeholder="Select your native language"
+                      label={t('onboarding:step3.nativeLanguage')}
+                      placeholder={t('onboarding:step3.nativeLanguagePlaceholder')}
                       value={value}
                       error={errors.nativeLanguage?.message}
                       onChange={(language) => {
@@ -192,8 +199,8 @@ export default function EditProfile() {
                   name="learningLanguage"
                   render={({ field: { onChange, value } }) => (
                     <LanguagePicker
-                      label="Learning language"
-                      placeholder="Select a language to learn"
+                      label={t('onboarding:step3.learningLanguage')}
+                      placeholder={t('onboarding:step3.learningLanguagePlaceholder')}
                       value={value}
                       error={errors.learningLanguage?.message}
                       onChange={(language) => {
@@ -205,7 +212,7 @@ export default function EditProfile() {
                 />
 
                 <View style={styles.field}>
-                  <ThemedText style={styles.label}>Proficiency level</ThemedText>
+                  <ThemedText style={styles.label}>{t('edit.proficiency')}</ThemedText>
                   <Controller
                     control={control}
                     name="proficiencyLevel"
@@ -228,7 +235,7 @@ export default function EditProfile() {
                               ]}>
                               <ThemedText
                                 style={[styles.levelText, selected && styles.levelTextSelected]}>
-                                {level.label}
+                                {getLevelLabel(level.value)}
                               </ThemedText>
                             </Pressable>
                           );
@@ -264,7 +271,7 @@ export default function EditProfile() {
                 ) : null}
 
                 <AuthPrimaryButton
-                  label={updateMutation.isPending ? 'Saving…' : 'Save changes'}
+                  label={updateMutation.isPending ? t('edit.saving') : t('edit.save')}
                   pending={updateMutation.isPending}
                   onPress={() => void handleSubmit(onSave)()}
                 />

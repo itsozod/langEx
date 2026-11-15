@@ -20,6 +20,7 @@ import {
   upsertMessageInLatestWindow,
 } from '../utils/conversation-cache';
 import { isMessage, isUnsentMessage } from '../utils/messages';
+import i18n from '@/shared/i18n';
 
 type UseChatRoomOptions = {
   conversationId?: string;
@@ -116,7 +117,7 @@ export function useChatRoom({
 
     const joinRoom = () => {
       socket.emit('join_room', conversationId, (response) => {
-        if (!response.ok) setSocketError(response.error ?? 'Unable to join this chat.');
+        if (!response.ok) setSocketError(response.error ?? i18n.t('chat:errors.joinFailed'));
       });
     };
     const handleMessage = (message: Message) => {

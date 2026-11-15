@@ -1,0 +1,29 @@
+{
+  "title": "Discover",
+  "subtitle": "Find your next language partner",
+  "openSearch": "Search users by username",
+  "filters": {
+    "all": "All"
+  },
+  "loadFailed": "Couldn’t load partners",
+  "empty": {
+    "title": "No partners yet",
+    "message": "No language partners found. Try changing your languages in your profile."
+  },
+  "fallbackName": "Language partner",
+  "viewProfile": "View {{name}}’s profile",
+  "search": {
+    "label": "Search by username",
+    "placeholder": "Enter a display name",
+    "clear": "Clear search",
+    "close": "Close search",
+    "idleTitle": "Find someone you know",
+    "idleMessage": "Type at least two letters from their display name.",
+    "unavailable": "Search is unavailable",
+    "noMatch": "No match for “{{query}}”",
+    "noMatchMessage": "Check the spelling or try a shorter name.",
+    "openHint": "Opens full-screen people search",
+    "resultsLabel_one": "{{count}} person",
+    "resultsLabel_other": "{{count}} people"
+  }
+}

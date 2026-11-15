@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useAppTheme } from '@/providers/theme-provider';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useTranslation } from 'react-i18next';
 
 type SettingsHeaderProps = {
   fallbackHref: Href;
@@ -14,6 +15,7 @@ type SettingsHeaderProps = {
 export function SettingsHeader({ fallbackHref, subtitle, title }: SettingsHeaderProps) {
   const { theme } = useAppTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -24,7 +26,7 @@ export function SettingsHeader({ fallbackHref, subtitle, title }: SettingsHeader
     <View style={styles.header}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Go back"
+        accessibilityLabel={t('actions.goBack')}
         hitSlop={10}
         onPress={goBack}
         style={({ pressed }) => [

@@ -6,16 +6,18 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
+import { useTranslation } from 'react-i18next';
 
 export function ChatLoadingState() {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
 
   return (
     <GradientBackground>
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" color="#6654C7" />
         <ThemedText themeColor="textSecondary" style={styles.loadingText}>
-          Loading messages…
+          {t('status.loadingMessages')}
         </ThemedText>
       </SafeAreaView>
     </GradientBackground>
@@ -24,18 +26,19 @@ export function ChatLoadingState() {
 
 export function ChatErrorState({ error, onBack }: { error: unknown; onBack: () => void }) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
 
   return (
     <GradientBackground>
       <SafeAreaView style={styles.centered}>
         <ThemedText type="bold" style={styles.errorTitle}>
-          Couldn&apos;t open this chat
+          {t('status.openFailed')}
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.errorMessage}>
-          {error instanceof Error ? error.message : 'This conversation is unavailable.'}
+          {error instanceof Error ? error.message : t('status.unavailable')}
         </ThemedText>
         <Pressable onPress={onBack} style={styles.errorButton}>
-          <ThemedText style={styles.errorButtonText}>Back to chats</ThemedText>
+          <ThemedText style={styles.errorButtonText}>{t('backToChats')}</ThemedText>
         </Pressable>
       </SafeAreaView>
     </GradientBackground>

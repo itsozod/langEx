@@ -12,6 +12,7 @@ import type {
   UserPresence,
   UserPresenceResponse,
 } from '../types/message.types';
+import i18n from '@/shared/i18n';
 
 type ConversationWindows = InfiniteData<ConversationResponse, ConversationWindowParams>;
 type WindowConversation = ConversationResponse['conversation'];
@@ -167,7 +168,7 @@ function markDeletedParticipant<T extends Conversation>(conversation: T, userId:
       participant.id === userId
         ? {
             ...participant,
-            displayName: 'Deleted user',
+            displayName: i18n.t('common:deletedUser'),
             avatarUrl: null,
             country: null,
             isDeleted: true,

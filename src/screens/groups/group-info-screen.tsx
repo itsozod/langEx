@@ -19,11 +19,13 @@ import { useGroupManagementActions } from './hooks/use-group-management-actions'
 import { useGroupManagementStyles } from './styles/group-management-styles';
 import { useGroupStyles } from './styles/group-styles';
 import type { GroupRole } from './types';
+import { useTranslation } from 'react-i18next';
 
 export default function GroupInfoScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const conversationId = firstParam(params.id);
   const styles = useGroupStyles();
+  const { t } = useTranslation('groups');
   const { styles: managementStyles } = useGroupManagementStyles();
   const currentUserId = useUserStore((state) => state.user?.id);
   const query = useConversation(conversationId);
@@ -73,15 +75,15 @@ export default function GroupInfoScreen() {
         (viewerRole === 'owner' || (viewerRole === 'admin' && role !== 'owner'));
       const roleLabel = isCurrentUser
         ? role === 'owner'
-          ? 'You · Owner'
+          ? t('roles.youOwner')
           : role === 'admin'
-            ? 'You · Admin'
-            : 'You'
+            ? t('roles.youAdmin')
+            : t('roles.you')
         : role === 'owner'
-          ? 'Owner'
+          ? t('roles.owner')
           : role === 'admin'
-            ? 'Admin'
-            : 'Member';
+            ? t('roles.admin')
+            : t('roles.member');
 
       return (
         <GroupPersonRow
@@ -93,13 +95,13 @@ export default function GroupInfoScreen() {
         />
       );
     },
-    [adminIds, conversation?.createdById, currentUserId, openMemberActions, viewerRole],
+    [adminIds, conversation?.createdById, currentUserId, openMemberActions, t, viewerRole],
   );
 
   return (
     <GradientBackground>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <GroupScreenHeader onBack={() => router.back()} title="Group info" />
+        <GroupScreenHeader onBack={() => router.back()} title={t('info.title')} />
         <FlatList
           contentContainerStyle={styles.listContent}
           data={participants}
@@ -108,19 +110,15 @@ export default function GroupInfoScreen() {
           ListEmptyComponent={
             query.isPending ? (
               <GroupListState
-                message="Loading the group’s members."
-                title="Loading group…"
+                message={t('info.loadingMessage')}
+                title={t('info.loadingTitle')}
                 type="loading"
               />
             ) : (
               <GroupListState
-                message={
-                  query.error instanceof Error
-                    ? query.error.message
-                    : 'This group is no longer available.'
-                }
+                message={query.error instanceof Error ? query.error.message : t('info.unavailable')}
                 onRetry={() => void query.refetch()}
-                title="Couldn’t load the group"
+                title={t('loadGroupFailed')}
                 type="error"
               />
             )
@@ -131,10 +129,10 @@ export default function GroupInfoScreen() {
                 <View style={styles.intro}>
                   <GroupAvatar size="large" />
                   <ThemedText type="bold" style={styles.introTitle}>
-                    {conversation.name?.trim() || 'Group conversation'}
+                    {conversation.name?.trim() || t('fallbackName')}
                   </ThemedText>
                   <ThemedText themeColor="textSecondary" style={styles.memberSummary}>
-                    {participants.length} {participants.length === 1 ? 'member' : 'members'}
+                    {t('info.memberCount', { count: participants.length })}
                   </ThemedText>
                 </View>
                 {canAddPeople ? (
@@ -154,20 +152,20 @@ export default function GroupInfoScreen() {
                       tintColor="#FFFFFF"
                     />
                     <ThemedText type="bold" style={styles.addPeopleText}>
-                      Add people
+                      {t('addPeople')}
                     </ThemedText>
                   </Pressable>
                 ) : null}
                 {query.isError ? (
                   <View accessibilityRole="alert" style={styles.inlineError}>
                     <ThemedText selectable style={styles.inlineErrorText}>
-                      Group details could not be refreshed. Showing saved information.
+                      {t('info.refreshFailed')}
                     </ThemedText>
                   </View>
                 ) : null}
                 <View style={styles.sectionHeader}>
                   <ThemedText type="bold" style={styles.sectionTitle}>
-                    Members
+                    {t('info.members')}
                   </ThemedText>
                   <ThemedText style={styles.sectionCount}>{participants.length}/50</ThemedText>
                 </View>
@@ -186,7 +184,7 @@ export default function GroupInfoScreen() {
                 ) : null}
                 {viewerRole === 'owner' ? (
                   <ThemedText themeColor="textSecondary" style={managementStyles.ownerNotice}>
-                    Transfer ownership to another member before leaving this group.
+                    {t('info.ownerNotice')}
                   </ThemedText>
                 ) : (
                   <Pressable
@@ -213,7 +211,7 @@ export default function GroupInfoScreen() {
                       />
                     )}
                     <ThemedText type="bold" style={managementStyles.leaveText}>
-                      Leave group
+                      {t('actions.leave')}
                     </ThemedText>
                   </Pressable>
                 )}

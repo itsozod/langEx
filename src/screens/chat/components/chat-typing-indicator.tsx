@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useChatThreadStyles } from '../styles/chat-thread-styles';
+import { useTranslation } from 'react-i18next';
 
 const DOT_COUNT = 3;
 const DOT_STAGGER_MS = 120;
@@ -22,10 +23,11 @@ const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1);
 
 export function ChatTypingIndicator() {
   const styles = useChatThreadStyles();
+  const { t } = useTranslation('chat');
 
   return (
     <View
-      accessibilityLabel="Partner is typing"
+      accessibilityLabel={t('typing')}
       accessibilityLiveRegion="polite"
       accessible
       style={styles.typingIndicator}>

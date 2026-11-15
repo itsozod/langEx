@@ -4,12 +4,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/providers/theme-provider';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { getCountryName } from '@/screens/onboarding/data';
+import { getCountryName, getLanguageLabel } from '@/screens/onboarding/data';
 import { getLanguageFlag } from '@/screens/profile/utils/language-flags';
 import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import type { DiscoverUser } from './types';
+import { useTranslation } from 'react-i18next';
+import { getLevelLabel } from '@/shared/constants/language-levels';
 
 const initialsFor = (name?: string | null) => {
   const parts = name?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -21,17 +23,16 @@ const initialsFor = (name?: string | null) => {
     : '?';
 };
 
-const titleCase = (value: string) => value[0].toUpperCase() + value.slice(1);
-
 export function UserCard({ user }: { user: DiscoverUser }) {
   const styles = useStyles();
+  const { t } = useTranslation('discover');
   const visibleInterests = user.sharedInterests.slice(0, 3);
   const remainingInterests = user.sharedInterests.length - visibleInterests.length;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`View ${user.displayName ?? 'language partner'}'s profile`}
+      accessibilityLabel={t('viewProfile', { name: user.displayName || t('fallbackName') })}
       onPress={() => router.push({ pathname: '/profile/[id]', params: { id: user.id } })}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
       <View style={styles.avatarColumn}>
@@ -54,7 +55,7 @@ export function UserCard({ user }: { user: DiscoverUser }) {
       <View style={styles.details}>
         <View style={styles.nameRow}>
           <ThemedText type="bold" numberOfLines={1} style={styles.name}>
-            {user.displayName || 'Language partner'}
+            {user.displayName || t('fallbackName')}
           </ThemedText>
           {user.country ? (
             <ThemedText numberOfLines={1} style={styles.country}>
@@ -65,15 +66,18 @@ export function UserCard({ user }: { user: DiscoverUser }) {
 
         <View style={styles.languageRow}>
           <ThemedText style={styles.languageText}>
-            {getLanguageFlag(user.nativeLanguage)} {user.nativeLanguage || '—'}
+            {getLanguageFlag(user.nativeLanguage)} {getLanguageLabel(user.nativeLanguage) || '—'}
           </ThemedText>
           <ThemedText style={styles.arrow}>⇄</ThemedText>
           <ThemedText style={styles.languageText}>
-            {getLanguageFlag(user.learningLanguage)} {user.learningLanguage || '—'}
+            {getLanguageFlag(user.learningLanguage)}{' '}
+            {getLanguageLabel(user.learningLanguage) || '—'}
           </ThemedText>
           {user.proficiencyLevel ? (
             <View style={styles.levelPill}>
-              <ThemedText style={styles.levelText}>{titleCase(user.proficiencyLevel)}</ThemedText>
+              <ThemedText style={styles.levelText}>
+                {getLevelLabel(user.proficiencyLevel)}
+              </ThemedText>
             </View>
           ) : null}
         </View>

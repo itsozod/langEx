@@ -8,6 +8,7 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useGroupStyles } from '../styles/group-styles';
+import { useTranslation } from 'react-i18next';
 type GroupPersonRowProps = {
   candidate: ChatParticipant;
   disabled?: boolean;
@@ -28,14 +29,21 @@ export const GroupPersonRow = memo(function GroupPersonRow({
   selectionMode,
 }: GroupPersonRowProps) {
   const styles = useGroupStyles();
+  const { t } = useTranslation(['groups', 'common', 'discover']);
   const name = candidate.isDeleted
-    ? 'Deleted user'
-    : candidate.displayName?.trim() || 'Language partner';
+    ? t('common:deletedUser')
+    : candidate.displayName?.trim() || t('discover:fallbackName');
 
   return (
     <Pressable
       accessibilityRole={selectionMode ? 'checkbox' : 'button'}
-      accessibilityLabel={selectionMode ? `${selected ? 'Remove' : 'Add'} ${name}` : `View ${name}`}
+      accessibilityLabel={
+        selectionMode
+          ? selected
+            ? t('person.deselect', { name })
+            : t('person.select', { name })
+          : t('person.view', { name })
+      }
       accessibilityState={selectionMode ? { checked: selected, disabled } : { disabled }}
       disabled={disabled}
       onPress={onPress}
@@ -72,9 +80,9 @@ export const GroupPersonRow = memo(function GroupPersonRow({
         <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.personMeta}>
           {selectionMode
             ? candidate.isOnline
-              ? 'Online'
-              : 'From your chats'
-            : (roleLabel ?? 'Member')}
+              ? t('common:status.online')
+              : t('person.fromChats')
+            : (roleLabel ?? t('roles.member'))}
         </ThemedText>
       </View>
       {selectionMode ? (

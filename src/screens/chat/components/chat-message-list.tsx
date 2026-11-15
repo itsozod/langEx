@@ -13,8 +13,10 @@ import {
   type RefObject,
 } from 'react';
 import { Platform, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { Day, type MessageProps, type User } from 'react-native-gifted-chat';
+import { type MessageProps, type User } from 'react-native-gifted-chat';
 
+import { ChatDaySeparator } from './chat-day-separator';
+import { ChatKeyboardScrollView } from './chat-keyboard-scroll-view';
 import { useChatStyles } from '../styles/chat-styles';
 import type { GiftedMessage } from '../types/message.types';
 import { ChatEmptyState } from './chat-thread-states';
@@ -98,7 +100,7 @@ function ChatMessageListComponent({
     ({ item, index }) => {
       const previousMessage = messages[index - 1];
       const daySeparator = !isSameMessageDay(item, previousMessage) ? (
-        <Day createdAt={item.createdAt} />
+        <ChatDaySeparator createdAt={item.createdAt} />
       ) : null;
 
       if (item.kind !== 'CHAT') {
@@ -178,6 +180,7 @@ function ChatMessageListComponent({
       onStartReached={hasOlderMessages ? onLoadOlderMessages : undefined}
       onStartReachedThreshold={0.2}
       renderItem={renderItem}
+      renderScrollComponent={ChatKeyboardScrollView}
       scrollEventThrottle={16}
       showsVerticalScrollIndicator={false}
       style={styles.messagesContainer}

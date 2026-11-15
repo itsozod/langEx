@@ -5,6 +5,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useChatSystemMessageStyles } from '../styles/chat-system-message-styles';
 import type { GiftedMessage } from '../types/message.types';
 import { formatMessageSystemEvent } from '../utils/system-events';
+import { useTranslation } from 'react-i18next';
 
 type ChatSystemMessageProps = {
   currentUserId: string;
@@ -13,6 +14,8 @@ type ChatSystemMessageProps = {
 
 export function ChatSystemMessage({ currentUserId, message }: ChatSystemMessageProps) {
   const styles = useChatSystemMessageStyles();
+  // Subscribe to language changes; the formatter reads the active language.
+  useTranslation();
   const text = formatMessageSystemEvent(message.systemEvent, currentUserId);
 
   if (!text) return null;

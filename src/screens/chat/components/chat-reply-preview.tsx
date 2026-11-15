@@ -7,6 +7,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
 import type { GiftedReplyMessage } from '../types/message.types';
+import { useTranslation } from 'react-i18next';
 
 export function ChatReplyPreview({
   replyMessage,
@@ -14,30 +15,31 @@ export function ChatReplyPreview({
   currentUserId,
 }: ReplyPreviewProps & { currentUserId?: string }) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
   const galleryReply = replyMessage as GiftedReplyMessage;
   const images = galleryReply.chatImages ?? [];
   const thumbnail = images[0]?.thumbnailUrl ?? replyMessage.image;
-  const replyAuthor =
-    String(replyMessage.user._id) === String(currentUserId)
-      ? 'yourself'
-      : replyMessage.user.name || 'your partner';
+  const isOwnReply = String(replyMessage.user._id) === String(currentUserId);
+  const replyTitle = isOwnReply
+    ? t('reply.toYourself')
+    : t('reply.to', { name: replyMessage.user.name || t('reply.yourPartner') });
 
   return (
     <View style={styles.replyPreview}>
       <View style={styles.replyPreviewAccent} />
       <View style={styles.replyPreviewCopy}>
         <ThemedText type="bold" numberOfLines={1} style={styles.replyPreviewTitle}>
-          Replying to {replyAuthor}
+          {replyTitle}
         </ThemedText>
         <ThemedText numberOfLines={1} style={styles.replyPreviewText}>
           {replyMessage.text ||
-            (thumbnail ? (images.length > 1 ? `${images.length} photos` : 'Photo') : 'Message')}
+            (thumbnail ? t('photoCount', { count: Math.max(images.length, 1) }) : t('message'))}
         </ThemedText>
       </View>
       {thumbnail ? (
         <View style={styles.replyThumbnailWrap}>
           <Image
-            accessibilityLabel="Photo being replied to"
+            accessibilityLabel={t('reply.previewPhoto')}
             cachePolicy="memory-disk"
             contentFit="cover"
             recyclingKey={`composer-reply-${String(replyMessage._id)}`}
@@ -54,7 +56,7 @@ export function ChatReplyPreview({
       ) : null}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Cancel reply"
+        accessibilityLabel={t('reply.cancel')}
         hitSlop={8}
         onPress={onClearReply}
         style={({ pressed }) => [styles.replyPreviewClose, pressed && styles.pressed]}>

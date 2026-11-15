@@ -12,6 +12,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatImageDismiss } from '../hooks/use-chat-image-dismiss';
 import type { MessageImage } from '../types/message.types';
+import i18n from '@/shared/i18n';
 
 type ChatImageViewerProps = {
   images: MessageImage[];
@@ -54,8 +55,8 @@ function ZoomableChatImage({
   return (
     <Zoom doubleTapConfig={DOUBLE_TAP_CONFIG} maxScale={5} onZoomStateChange={onZoomStateChange}>
       <Image
-        accessibilityHint="Pinch or double-tap to zoom"
-        accessibilityLabel={`Chat photo ${index + 1} of ${imageCount}`}
+        accessibilityHint={i18n.t('chat:viewer.zoomHint')}
+        accessibilityLabel={i18n.t('chat:viewer.photoOf', { index: index + 1, total: imageCount })}
         source={{ uri: image.url }}
         cachePolicy="memory-disk"
         contentFit="contain"
@@ -144,7 +145,7 @@ function VisibleChatImageViewer({
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Close full-screen photos"
+                accessibilityLabel={i18n.t('chat:viewer.close')}
                 hitSlop={12}
                 onPress={onClose}
                 style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}>

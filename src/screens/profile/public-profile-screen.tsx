@@ -8,7 +8,7 @@ import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-bu
 import { useFindDirectConversation } from '@/screens/chat/hooks';
 import { usePublicUser } from '@/screens/discover/hooks';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { getCountryName } from '@/screens/onboarding/data';
+import { getCountryName, getLanguageLabel } from '@/screens/onboarding/data';
 import { LanguageFlag } from '@/screens/profile/components/language-flag';
 import { getInitials } from '@/screens/profile/utils/language-flags';
 import GradientBackground from '@/shared/components/ui/gradient-background';
@@ -17,8 +17,8 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useUserStore } from '@/shared/store/user.store';
 
 import { usePublicProfileStyles } from './styles/public-profile-styles';
-
-const titleCase = (value: string) => value[0].toUpperCase() + value.slice(1);
+import { useTranslation } from 'react-i18next';
+import { getLevelLabel } from '@/shared/constants/language-levels';
 
 export default function PublicProfile() {
   const params = useLocalSearchParams<{
@@ -30,6 +30,7 @@ export default function PublicProfile() {
     ? params.returnToConversationId[0]
     : params.returnToConversationId;
   const styles = usePublicProfileStyles();
+  const { t } = useTranslation(['profile', 'common']);
   const currentUser = useUserStore((state) => state.user);
   const query = usePublicUser(id);
   const findConversation = useFindDirectConversation();
@@ -46,7 +47,7 @@ export default function PublicProfile() {
         <SafeAreaView style={styles.centered}>
           <ActivityIndicator size="large" color="#6654C7" />
           <ThemedText themeColor="textSecondary" style={styles.loadingText}>
-            Loading profile…
+            {t('public.loading')}
           </ThemedText>
         </SafeAreaView>
       </GradientBackground>
@@ -58,13 +59,13 @@ export default function PublicProfile() {
       <GradientBackground>
         <SafeAreaView style={styles.centered}>
           <ThemedText type="bold" style={styles.errorTitle}>
-            Couldn&apos;t load this profile
+            {t('public.loadFailed')}
           </ThemedText>
           <ThemedText themeColor="textSecondary" style={styles.errorMessage}>
-            {query.error instanceof Error ? query.error.message : 'This user may no longer exist.'}
+            {query.error instanceof Error ? query.error.message : t('public.mayNotExist')}
           </ThemedText>
           <Pressable onPress={goBack} style={styles.errorButton}>
-            <ThemedText style={styles.errorButtonText}>Back to discover</ThemedText>
+            <ThemedText style={styles.errorButtonText}>{t('public.backToDiscover')}</ThemedText>
           </Pressable>
         </SafeAreaView>
       </GradientBackground>
@@ -77,13 +78,13 @@ export default function PublicProfile() {
       <GradientBackground>
         <SafeAreaView style={styles.centered}>
           <ThemedText type="bold" style={styles.errorTitle}>
-            User deleted
+            {t('public.deletedTitle')}
           </ThemedText>
           <ThemedText themeColor="textSecondary" style={styles.errorMessage}>
-            This account no longer exists. Previous conversations and messages remain available.
+            {t('public.deletedMessage')}
           </ThemedText>
           <Pressable accessibilityRole="button" onPress={goBack} style={styles.errorButton}>
-            <ThemedText style={styles.errorButtonText}>Go back</ThemedText>
+            <ThemedText style={styles.errorButtonText}>{t('common:actions.goBack')}</ThemedText>
           </Pressable>
         </SafeAreaView>
       </GradientBackground>
@@ -101,7 +102,7 @@ export default function PublicProfile() {
             <View style={styles.header}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Back"
+                accessibilityLabel={t('common:actions.back')}
                 hitSlop={10}
                 onPress={goBack}
                 style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
@@ -113,7 +114,7 @@ export default function PublicProfile() {
                 />
               </Pressable>
               <ThemedText type="bold" style={styles.headerTitle}>
-                {isOwnProfile ? 'Your profile' : 'Partner profile'}
+                {isOwnProfile ? t('public.yourProfile') : t('public.partnerProfile')}
               </ThemedText>
               <View style={styles.headerSpacer} />
             </View>
@@ -129,7 +130,7 @@ export default function PublicProfile() {
                 </View>
               )}
               <ThemedText type="title" style={styles.displayName}>
-                {user.displayName || 'Language partner'}
+                {user.displayName || t('public.fallbackName')}
               </ThemedText>
               {user.country ? (
                 <View style={styles.countryRow}>
@@ -141,14 +142,14 @@ export default function PublicProfile() {
 
             <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
               <ThemedText type="bold" style={styles.sectionTitle}>
-                Languages
+                {t('sections.languages')}
               </ThemedText>
               <View style={styles.languageRow}>
                 <LanguageFlag language={user.nativeLanguage} />
                 <View style={styles.languageCopy}>
-                  <ThemedText style={styles.eyebrow}>Native language</ThemedText>
+                  <ThemedText style={styles.eyebrow}>{t('sections.nativeLanguage')}</ThemedText>
                   <ThemedText type="bold" style={styles.languageName}>
-                    {user.nativeLanguage || 'Not added'}
+                    {getLanguageLabel(user.nativeLanguage) || t('sections.notAdded')}
                   </ThemedText>
                 </View>
               </View>
@@ -156,15 +157,15 @@ export default function PublicProfile() {
               <View style={styles.languageRow}>
                 <LanguageFlag language={user.learningLanguage} />
                 <View style={styles.languageCopy}>
-                  <ThemedText style={styles.eyebrow}>Learning</ThemedText>
+                  <ThemedText style={styles.eyebrow}>{t('sections.learning')}</ThemedText>
                   <ThemedText type="bold" style={styles.languageName}>
-                    {user.learningLanguage || 'Not added'}
+                    {getLanguageLabel(user.learningLanguage) || t('sections.notAdded')}
                   </ThemedText>
                 </View>
                 {user.proficiencyLevel ? (
                   <View style={styles.levelPill}>
                     <ThemedText style={styles.levelText}>
-                      {titleCase(user.proficiencyLevel)}
+                      {getLevelLabel(user.proficiencyLevel)}
                     </ThemedText>
                   </View>
                 ) : null}
@@ -174,7 +175,7 @@ export default function PublicProfile() {
             {user.interests.length ? (
               <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
                 <ThemedText type="bold" style={styles.sectionTitle}>
-                  Interests
+                  {t('sections.interests')}
                 </ThemedText>
                 <View style={styles.interests}>
                   {user.interests.map((interest) => {
@@ -200,7 +201,7 @@ export default function PublicProfile() {
                 </View>
                 <View style={styles.legendRow}>
                   <View style={styles.legendDot} />
-                  <ThemedText style={styles.legendText}>Shared with you</ThemedText>
+                  <ThemedText style={styles.legendText}>{t('public.sharedWithYou')}</ThemedText>
                 </View>
               </View>
             ) : null}
@@ -208,7 +209,7 @@ export default function PublicProfile() {
             {user.bio ? (
               <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
                 <ThemedText type="bold" style={styles.sectionTitle}>
-                  About
+                  {t('public.about')}
                 </ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.bio}>
                   {user.bio}
@@ -219,7 +220,7 @@ export default function PublicProfile() {
             {!isOwnProfile ? (
               <>
                 <AuthPrimaryButton
-                  label="Send Message"
+                  label={t('public.sendMessage')}
                   pending={findConversation.isPending}
                   onPress={() =>
                     findConversation.mutate(user.id, {
@@ -247,7 +248,7 @@ export default function PublicProfile() {
                   <ThemedText style={styles.startChatError}>
                     {findConversation.error instanceof Error
                       ? findConversation.error.message
-                      : 'Could not open this conversation.'}
+                      : t('public.openConversationFailed')}
                   </ThemedText>
                 ) : null}
               </>

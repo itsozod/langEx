@@ -6,6 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 import type { OneTapSuccessData } from 'react-native-nitro-google-signin';
 import { AuthDivider } from './auth-divider';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/shared/i18n';
 
 type GoogleAuthSdk = typeof import('react-native-nitro-google-signin');
 
@@ -14,22 +16,23 @@ const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const isConfigured = Boolean(webClientId && (Platform.OS !== 'ios' || iosClientId));
 
 function readableGoogleError(error: unknown) {
-  if (!(error instanceof Error)) return 'Could not sign in with Google.';
+  if (!(error instanceof Error)) return i18n.t('auth:google.failed');
 
   if (error.message.includes('SIGN_IN_CANCELLED')) return null;
   if (error.message.includes('PLAY_SERVICES_NOT_AVAILABLE')) {
-    return 'Google Play services are unavailable or need to be updated.';
+    return i18n.t('auth:google.playServices');
   }
   if (error.message.includes('DEVELOPER_ERROR')) {
-    return 'Google sign-in is not configured for this app build.';
+    return i18n.t('auth:google.notConfigured');
   }
 
-  return error.message || 'Could not sign in with Google.';
+  return error.message || i18n.t('auth:google.failed');
 }
 
 export function GoogleAuthOption() {
   const { theme } = useAppTheme();
   const styles = useStyles();
+  const { t } = useTranslation('auth');
   const mutation = useGoogleAuthMutation();
   const [sdk, setSdk] = useState<GoogleAuthSdk | null>(null);
   const [nativeError, setNativeError] = useState<string | null>(null);
@@ -66,7 +69,7 @@ export function GoogleAuthOption() {
 
   const submitIdentity = (identity: OneTapSuccessData) => {
     if (!identity.idToken) {
-      setNativeError('Google did not return an identity token.');
+      setNativeError(t('google.noToken'));
       return;
     }
 
@@ -100,7 +103,7 @@ export function GoogleAuthOption() {
   return (
     <View style={styles.section}>
       <Pressable
-        accessibilityLabel="Continue with Google"
+        accessibilityLabel={t('google.continue')}
         accessibilityRole="button"
         accessibilityState={{ busy: isPending, disabled: isPending }}
         disabled={isPending}
@@ -118,7 +121,7 @@ export function GoogleAuthOption() {
             maxFontSizeMultiplier={1.4}
             numberOfLines={1}
             style={styles.googleButtonLabel}>
-            {isPending ? 'Signing in…' : 'Continue with Google'}
+            {isPending ? t('signingIn') : t('google.continue')}
           </ThemedText>
         </View>
         {isPending ? (

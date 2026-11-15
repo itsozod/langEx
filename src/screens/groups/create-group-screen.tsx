@@ -15,11 +15,14 @@ import { useCreateGroup, useGroupCandidates } from './hooks';
 import { useGroupStyles } from './styles/group-styles';
 import type { GroupCandidate } from './types';
 import { getGroupNameError, normalizeGroupName } from './utils/group-name';
+import { useTranslation } from 'react-i18next';
+import { translateMessage } from '@/shared/i18n/translate-message';
 
 const MAX_SELECTED_PARTICIPANTS = 49;
 
 export default function CreateGroupScreen() {
   const styles = useGroupStyles();
+  const { t } = useTranslation(['groups', 'common']);
   const candidatesQuery = useGroupCandidates();
   const createGroup = useCreateGroup();
   const [name, setName] = useState('');
@@ -93,17 +96,17 @@ export default function CreateGroupScreen() {
       <View style={styles.intro}>
         <GroupAvatar size="large" />
         <ThemedText type="bold" style={styles.introTitle}>
-          Bring your partners together
+          {t('create.introTitle')}
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.introMessage}>
-          Choose people from your existing chats. You can add more later.
+          {t('create.introMessage')}
         </ThemedText>
       </View>
       <ThemedText type="bold" style={styles.fieldLabel}>
-        Group name
+        {t('create.nameLabel')}
       </ThemedText>
       <TextInput
-        accessibilityLabel="Group name"
+        accessibilityLabel={t('create.nameLabel')}
         autoCapitalize="sentences"
         autoCorrect
         enterKeyHint="done"
@@ -112,7 +115,7 @@ export default function CreateGroupScreen() {
           setName(value);
         }}
         onSubmitEditing={submit}
-        placeholder="English practice"
+        placeholder={t('create.namePlaceholder')}
         placeholderTextColor={styles.disclosureIcon.color}
         returnKeyType="done"
         style={[styles.nameField, showNameError && nameError && styles.nameFieldError]}
@@ -120,7 +123,7 @@ export default function CreateGroupScreen() {
       />
       <View style={styles.fieldFooter}>
         <ThemedText accessibilityLiveRegion="polite" style={styles.fieldError}>
-          {showNameError ? nameError : ''}
+          {showNameError && nameError ? translateMessage(t, nameError) : ''}
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.counter}>
           {Array.from(normalizeGroupName(name)).length}/80
@@ -129,25 +132,23 @@ export default function CreateGroupScreen() {
       {createGroup.error ? (
         <View accessibilityRole="alert" style={styles.inlineError}>
           <ThemedText selectable style={styles.inlineErrorText}>
-            {createGroup.error instanceof Error
-              ? createGroup.error.message
-              : 'The group could not be created. Try again.'}
+            {createGroup.error instanceof Error ? createGroup.error.message : t('create.failed')}
           </ThemedText>
         </View>
       ) : null}
       {candidates.length > 0 && candidatesQuery.isError ? (
         <View accessibilityRole="alert" style={styles.inlineError}>
           <ThemedText selectable style={styles.inlineErrorText}>
-            People could not be refreshed. Showing the most recent list.
+            {t('peopleRefreshFailed')}
           </ThemedText>
         </View>
       ) : null}
       <View style={styles.sectionHeader}>
         <ThemedText type="bold" style={styles.sectionTitle}>
-          Add people
+          {t('addPeople')}
         </ThemedText>
         <ThemedText style={styles.sectionCount}>
-          {selectedIds.size}/{MAX_SELECTED_PARTICIPANTS} selected
+          {t('selectedOf', { count: selectedIds.size, total: MAX_SELECTED_PARTICIPANTS })}
         </ThemedText>
       </View>
     </View>
@@ -158,11 +159,11 @@ export default function CreateGroupScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <GroupScreenHeader
           actionDisabled={!canSubmit}
-          actionLabel="Create"
+          actionLabel={t('create.action')}
           actionPending={createGroup.isPending}
           onAction={submit}
           onBack={() => router.back()}
-          title="New group"
+          title={t('create.title')}
         />
         <FlatList
           contentContainerStyle={styles.listContent}
@@ -174,8 +175,8 @@ export default function CreateGroupScreen() {
           ListEmptyComponent={
             candidatesQuery.isPending ? (
               <GroupListState
-                message="Loading people from your conversations."
-                title="Finding partners…"
+                message={t('create.loadingMessage')}
+                title={t('create.loadingTitle')}
                 type="loading"
               />
             ) : candidatesQuery.isError ? (
@@ -183,16 +184,16 @@ export default function CreateGroupScreen() {
                 message={
                   candidatesQuery.error instanceof Error
                     ? candidatesQuery.error.message
-                    : 'Please check your connection.'
+                    : t('common:errors.checkConnection')
                 }
                 onRetry={() => void candidatesQuery.refetch()}
-                title="Couldn’t load people"
+                title={t('create.loadFailed')}
                 type="error"
               />
             ) : (
               <GroupListState
-                message="Start a direct conversation first, then return here to create a group."
-                title="No one to add yet"
+                message={t('create.emptyMessage')}
+                title={t('create.emptyTitle')}
                 type="empty"
               />
             )

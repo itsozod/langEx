@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatThreadStyles } from '../styles/chat-thread-styles';
+import { useTranslation } from 'react-i18next';
 
 type ChatMessageLoadStatusProps = {
   failed: boolean;
@@ -12,13 +13,14 @@ type ChatMessageLoadStatusProps = {
 
 export function ChatMessageLoadStatus({ failed, loading, onRetry }: ChatMessageLoadStatusProps) {
   const styles = useChatThreadStyles();
+  const { t } = useTranslation('chat');
 
   if (failed) {
     return (
       <View style={styles.messageLoadStatusLayer}>
         <Pressable
-          accessibilityHint="Attempts to load the replied-to message again"
-          accessibilityLabel="Message couldn't load. Tap to retry."
+          accessibilityHint={t('loadStatus.retryHint')}
+          accessibilityLabel={t('loadStatus.failed')}
           accessibilityRole="button"
           onPress={onRetry}
           style={({ pressed }) => [
@@ -38,13 +40,13 @@ export function ChatMessageLoadStatus({ failed, loading, onRetry }: ChatMessageL
   return (
     <View pointerEvents="none" style={styles.messageLoadStatusLayer}>
       <View
-        accessibilityLabel="Loading replied-to message"
+        accessibilityLabel={t('loadStatus.loadingLabel')}
         accessibilityLiveRegion="polite"
         accessibilityRole="progressbar"
         accessible
         style={styles.messageLoadStatus}>
         <ActivityIndicator color="#7460D3" size="small" />
-        <ThemedText style={styles.messageLoadStatusText}>Loading message…</ThemedText>
+        <ThemedText style={styles.messageLoadStatusText}>{t('loadStatus.loading')}</ThemedText>
       </View>
     </View>
   );

@@ -1,6 +1,7 @@
 import { useAppTheme, type ThemePreference } from '@/providers/theme-provider';
 import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-view';
 import { Pressable, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const ICONS: Record<ThemePreference, SymbolViewProps['name']> = {
   system: { ios: 'circle.lefthalf.filled', android: 'contrast', web: 'contrast' },
@@ -8,20 +9,21 @@ const ICONS: Record<ThemePreference, SymbolViewProps['name']> = {
   dark: { ios: 'moon.fill', android: 'dark_mode', web: 'dark_mode' },
 };
 
-const LABELS: Record<ThemePreference, string> = {
-  system: 'System theme',
-  light: 'Light theme',
-  dark: 'Dark theme',
-};
+const LABEL_KEYS = {
+  system: 'themeToggle.system',
+  light: 'themeToggle.light',
+  dark: 'themeToggle.dark',
+} as const satisfies Record<ThemePreference, string>;
 
 export function ThemeToggle() {
   const { preference, theme, cyclePreference } = useAppTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${LABELS[preference]}. Tap to change theme.`}
+      accessibilityLabel={t('themeToggle.label', { theme: t(LABEL_KEYS[preference]) })}
       hitSlop={8}
       onPress={cyclePreference}
       style={({ pressed }) => [

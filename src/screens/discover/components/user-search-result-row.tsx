@@ -9,6 +9,9 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useUserSearchStyles } from '../styles/user-search-styles';
 import type { UserSearchResult } from '../types';
+import { useTranslation } from 'react-i18next';
+import { getLanguageLabel } from '@/screens/onboarding/data';
+import { leaveSearch } from '@/shared/components/search-overlay/search-overlay';
 
 type UserSearchResultRowProps = {
   user: UserSearchResult;
@@ -16,17 +19,15 @@ type UserSearchResultRowProps = {
 
 export function UserSearchResultRow({ user }: UserSearchResultRowProps) {
   const styles = useUserSearchStyles();
-  const name = user.displayName || 'Language partner';
+  const { t } = useTranslation(['discover', 'profile']);
+  const name = user.displayName || t('fallbackName');
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`View ${name}'s profile`}
+      accessibilityLabel={t('viewProfile', { name })}
       onPress={() =>
-        router.push({
-          pathname: '/profile/[id]',
-          params: { id: user.id },
-        })
+        leaveSearch(() => router.push({ pathname: '/profile/[id]', params: { id: user.id } }))
       }
       style={({ pressed }) => [styles.resultRow, pressed && styles.resultRowPressed]}>
       <View style={styles.avatarWrap}>
@@ -50,11 +51,13 @@ export function UserSearchResultRow({ user }: UserSearchResultRowProps) {
         </ThemedText>
         <View style={styles.languageLine}>
           <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.languageText}>
-            {getLanguageFlag(user.nativeLanguage)} {user.nativeLanguage || 'Not added'}
+            {getLanguageFlag(user.nativeLanguage)}{' '}
+            {getLanguageLabel(user.nativeLanguage) || t('profile:sections.notAdded')}
           </ThemedText>
           <ThemedText style={styles.arrow}>→</ThemedText>
           <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.languageText}>
-            {getLanguageFlag(user.learningLanguage)} {user.learningLanguage || 'Not added'}
+            {getLanguageFlag(user.learningLanguage)}{' '}
+            {getLanguageLabel(user.learningLanguage) || t('profile:sections.notAdded')}
           </ThemedText>
         </View>
       </View>

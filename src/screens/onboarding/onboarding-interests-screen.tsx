@@ -11,9 +11,11 @@ import { useOnboardingStore } from '@/shared/store/onboarding-store';
 import { OnboardingCard } from './components/onboarding-card';
 import { OnboardingScreen } from './components/onboarding-screen';
 import { INTERESTS } from './data';
+import { useTranslation } from 'react-i18next';
 
 export default function OnboardingInterestsScreen() {
   const styles = useStyles();
+  const { t } = useTranslation('onboarding');
   const interests = useOnboardingStore((state) => state.interests);
   const toggleInterest = useOnboardingStore((state) => state.toggleInterest);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function OnboardingInterestsScreen() {
 
   const onNext = () => {
     if (interests.length < 3) {
-      setError('Choose at least 3 interests to continue.');
+      setError(t('step4.minimum', { count: 3 }));
       return;
     }
     router.push('/onboarding/step5');
@@ -35,14 +37,14 @@ export default function OnboardingInterestsScreen() {
   return (
     <OnboardingScreen
       step={4}
-      title="What are you into?"
-      subtitle="Pick at least three so we can personalize your community."
+      title={t('step4.title')}
+      subtitle={t('step4.subtitle')}
       onBack={() => router.back()}>
       <OnboardingCard>
         <View style={styles.selectionHeader}>
-          <ThemedText style={styles.label}>Select your interests</ThemedText>
+          <ThemedText style={styles.label}>{t('step4.selectInterests')}</ThemedText>
           <ThemedText style={[styles.counter, interests.length >= 3 && styles.counterReady]}>
-            {interests.length} selected
+            {t('step4.selected', { count: interests.length })}
           </ThemedText>
         </View>
 
@@ -74,7 +76,7 @@ export default function OnboardingInterestsScreen() {
         </View>
 
         {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
-        <AuthPrimaryButton label="Next" onPress={onNext} />
+        <AuthPrimaryButton label={t('next')} onPress={onNext} />
       </OnboardingCard>
     </OnboardingScreen>
   );

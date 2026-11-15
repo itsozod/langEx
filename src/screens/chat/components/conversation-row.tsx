@@ -8,9 +8,11 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useChatsStyles } from '../styles/chats-styles';
 import type { ChatParticipant, Conversation } from '../types/message.types';
 import { formatMessageSystemEvent } from '../utils/system-events';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/shared/i18n';
 
 function initials(name?: string | null) {
-  const value = name?.trim() || 'Language partner';
+  const value = name?.trim() || i18n.t('discover:fallbackName');
   return value
     .split(/\s+/)
     .slice(0, 2)
@@ -30,8 +32,8 @@ function formatTimestamp(value?: string | null) {
     date.getDate() === now.getDate();
 
   return isToday
-    ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    : date.toLocaleDateString([], {
+    ? date.toLocaleTimeString(i18n.language, { hour: 'numeric', minute: '2-digit' })
+    : date.toLocaleDateString(i18n.language, {
         month: 'short',
         day: 'numeric',
         year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric',
@@ -61,11 +63,12 @@ export function ConversationRow({
   onPress,
 }: ConversationRowProps) {
   const styles = useChatsStyles();
+  const { t } = useTranslation(['chat', 'discover', 'groups']);
   const isGroup = conversation.type === 'GROUP';
   const name = isGroup
-    ? conversation.name?.trim() || 'Group conversation'
-    : participant?.displayName?.trim() || 'Language partner';
-  const onlineLabel = !isGroup && participant?.isOnline ? ', online' : '';
+    ? conversation.name?.trim() || t('groups:fallbackName')
+    : participant?.displayName?.trim() || t('discover:fallbackName');
+  const isOnline = !isGroup && Boolean(participant?.isOnline);
   const systemPreview =
     conversation.lastMessageKind === 'GROUP_MEMBER_ADDED'
       ? formatMessageSystemEvent(conversation.lastMessageSystemEvent, currentUserId)
@@ -74,13 +77,17 @@ export function ConversationRow({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Open chat with ${name}${onlineLabel}`}
+      accessibilityLabel={isOnline ? t('row.openOnline', { name }) : t('row.open', { name })}
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={
-          isGroup ? `View ${name} group info` : `View ${name}'s profile${onlineLabel}`
+          isGroup
+            ? t('header.viewGroup', { name })
+            : isOnline
+              ? t('row.viewProfileOnline', { name })
+              : t('discover:viewProfile', { name })
         }
         disabled={!isGroup && !participant?.id}
         hitSlop={5}
@@ -109,7 +116,7 @@ export function ConversationRow({
         )}
         {!isGroup && participant?.isOnline ? (
           <View
-            accessibilityLabel={`${name} is online`}
+            accessibilityLabel={t('row.isOnline', { name })}
             accessibilityRole="image"
             style={styles.onlineDot}
           />
@@ -135,8 +142,8 @@ export function ConversationRow({
             {systemPreview ||
               conversation.lastMessagePreview ||
               (isGroup
-                ? `${conversation.participants.length} members · Start the conversation`
-                : 'Start the conversation')}
+                ? t('row.groupStart', { count: conversation.participants.length })
+                : t('row.start'))}
           </ThemedText>
           {typeof conversation.unreadCount === 'number' && conversation.unreadCount > 0 ? (
             <View style={styles.unreadBadge}>

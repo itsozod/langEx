@@ -11,8 +11,11 @@ import { useCompleteProfileMutation } from '@/screens/onboarding/hooks';
 import { bioSchema, type BioFormValues } from '@/screens/onboarding/schemas';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useOnboardingStore } from '@/shared/store/onboarding-store';
+import { useTranslation } from 'react-i18next';
+import { translateMessage } from '@/shared/i18n/translate-message';
 
 export default function OnboardingStepFive() {
+  const { t } = useTranslation('onboarding');
   const styles = useStyles();
   const bio = useOnboardingStore((state) => state.bio);
   const update = useOnboardingStore((state) => state.update);
@@ -50,7 +53,7 @@ export default function OnboardingStepFive() {
     } catch (error) {
       setError('root.server', {
         type: 'server',
-        message: error instanceof Error ? error.message : 'Unable to finish your profile.',
+        message: error instanceof Error ? error.message : t('step5.failed'),
       });
     }
   };
@@ -65,8 +68,8 @@ export default function OnboardingStepFive() {
   return (
     <OnboardingScreen
       step={5}
-      title="Introduce yourself"
-      subtitle="A short bio makes it easier to find the right language partners."
+      title={t('step5.title')}
+      subtitle={t('step5.subtitle')}
       onBack={onBack}
       headerAction={
         <Pressable
@@ -74,13 +77,13 @@ export default function OnboardingStepFive() {
           disabled={profileMutation.isPending}
           onPress={skip}
           style={({ pressed }) => [styles.skipButton, pressed && styles.pressed]}>
-          <ThemedText style={styles.skipText}>Skip</ThemedText>
+          <ThemedText style={styles.skipText}>{t('step5.skip')}</ThemedText>
         </Pressable>
       }>
       <OnboardingCard>
         <View style={styles.field}>
           <View style={styles.labelRow}>
-            <ThemedText style={styles.label}>Bio</ThemedText>
+            <ThemedText style={styles.label}>{t('step5.bio')}</ThemedText>
             <Controller
               control={control}
               name="bio"
@@ -105,7 +108,7 @@ export default function OnboardingStepFive() {
                 editable={!profileMutation.isPending}
                 multiline
                 maxLength={150}
-                placeholder="Share what you enjoy, why you're learning, or what you'd love to talk about…"
+                placeholder={t('step5.bioPlaceholder')}
                 placeholderTextColor={styles.placeholder.color}
                 textAlignVertical="top"
                 style={[styles.textArea, errors.bio && styles.textAreaError]}
@@ -113,7 +116,7 @@ export default function OnboardingStepFive() {
             )}
           />
           {errors.bio?.message ? (
-            <ThemedText style={styles.error}>{errors.bio.message}</ThemedText>
+            <ThemedText style={styles.error}>{translateMessage(t, errors.bio.message)}</ThemedText>
           ) : null}
         </View>
 
@@ -124,7 +127,7 @@ export default function OnboardingStepFive() {
         ) : null}
 
         <AuthPrimaryButton
-          label={profileMutation.isPending ? 'Finishing…' : 'Finish'}
+          label={profileMutation.isPending ? t('step5.finishing') : t('step5.finish')}
           pending={profileMutation.isPending}
           onPress={() => void handleSubmit(({ bio: nextBio }) => finish(nextBio))()}
         />

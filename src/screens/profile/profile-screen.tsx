@@ -24,10 +24,12 @@ import {
   useRemoveAvatarMutation,
 } from './hooks';
 import { useProfileStyles } from './styles/profile-styles';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileScreen() {
   const styles = useProfileStyles();
   const { theme } = useAppTheme();
+  const { t } = useTranslation(['profile', 'common', 'onboarding']);
   const user = useUserStore((state) => state.user);
   const users = useUserStore((state) => state.users);
   const activeAccountId = useAuthStore((state) => state.activeAccountId);
@@ -45,7 +47,7 @@ export default function ProfileScreen() {
     setAvatarError(null);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setAvatarError('Photo access is required to choose an avatar.');
+      setAvatarError(t('onboarding:step1.photoPermission'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -60,7 +62,7 @@ export default function ProfileScreen() {
     try {
       await changeAvatar.mutateAsync(result.assets[0]);
     } catch (error) {
-      setAvatarError(error instanceof Error ? error.message : 'Unable to update your photo.');
+      setAvatarError(error instanceof Error ? error.message : t('photo.updateFailed'));
     } finally {
       setPreviewUri(null);
     }
@@ -72,7 +74,7 @@ export default function ProfileScreen() {
       await removeAvatar.mutateAsync();
       setPreviewUri(null);
     } catch (error) {
-      setAvatarError(error instanceof Error ? error.message : 'Unable to remove your photo.');
+      setAvatarError(error instanceof Error ? error.message : t('photo.removeFailed'));
     }
   };
 
@@ -81,8 +83,8 @@ export default function ProfileScreen() {
       await refreshProfile.mutateAsync();
     } catch (error) {
       Alert.alert(
-        'Could not refresh profile',
-        error instanceof Error ? error.message : 'Try again.',
+        t('refreshFailed'),
+        error instanceof Error ? error.message : t('common:errors.tryAgain'),
       );
     }
   };
@@ -101,14 +103,10 @@ export default function ProfileScreen() {
   };
 
   const confirmLogout = () => {
-    Alert.alert(
-      'Log out of this account?',
-      'Other saved accounts will stay signed in on this device.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Log out', style: 'destructive', onPress: () => void logout() },
-      ],
-    );
+    Alert.alert(t('logout.confirmTitle'), t('logout.confirmMessage'), [
+      { text: t('common:actions.cancel'), style: 'cancel' },
+      { text: t('logout.action'), style: 'destructive', onPress: () => void logout() },
+    ]);
   };
 
   return (
@@ -131,15 +129,15 @@ export default function ProfileScreen() {
             <View style={styles.titleRow}>
               <View style={styles.titleCopy}>
                 <ThemedText type="title" style={styles.screenTitle}>
-                  My profile
+                  {t('title')}
                 </ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.screenSubtitle}>
-                  Your language exchange identity
+                  {t('subtitle')}
                 </ThemedText>
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Open profile settings"
+                accessibilityLabel={t('openSettings')}
                 hitSlop={8}
                 onPress={() => router.push('/profile/settings')}
                 style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}>
@@ -170,7 +168,7 @@ export default function ProfileScreen() {
             <ProfileDetails user={user} />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Log out"
+              accessibilityLabel={t('logout.action')}
               onPress={confirmLogout}
               style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
               <SymbolView
@@ -183,7 +181,7 @@ export default function ProfileScreen() {
                 weight="semibold"
                 tintColor={styles.logoutText.color}
               />
-              <ThemedText style={styles.logoutText}>Log out</ThemedText>
+              <ThemedText style={styles.logoutText}>{t('logout.action')}</ThemedText>
             </Pressable>
           </View>
         </SafeAreaView>

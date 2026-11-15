@@ -4,6 +4,7 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
+import { useTranslation } from 'react-i18next';
 
 export function OlderMessagesLoader({ isLoading, onPress, hasError }: MessagePageLoaderProps) {
   return (
@@ -35,12 +36,15 @@ function MessagePageLoader({
   showIdleAction = false,
 }: MessagePageLoaderProps & { direction: 'newer' | 'older'; showIdleAction?: boolean }) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
 
   if (isLoading) {
     return (
       <View style={styles.olderMessagesLoader}>
         <ActivityIndicator size="small" color={styles.olderMessagesAccent.color} />
-        <ThemedText style={styles.olderMessagesText}>{`Loading ${direction} messages…`}</ThemedText>
+        <ThemedText style={styles.olderMessagesText}>
+          {t(`pageLoader.${direction}.loading`)}
+        </ThemedText>
       </View>
     );
   }
@@ -51,7 +55,7 @@ function MessagePageLoader({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
-        hasError ? `Retry loading ${direction} messages` : `Load ${direction} messages`
+        hasError ? t(`pageLoader.${direction}.retry`) : t(`pageLoader.${direction}.load`)
       }
       onPress={onPress}
       style={({ pressed }) => [styles.olderMessagesLoader, pressed && styles.pressed]}>
@@ -61,9 +65,7 @@ function MessagePageLoader({
         tintColor={styles.olderMessagesAccent.color}
       />
       <ThemedText style={styles.olderMessagesText}>
-        {hasError
-          ? `Couldn’t load ${direction} messages — tap to retry`
-          : `Load ${direction} messages`}
+        {hasError ? t(`pageLoader.${direction}.failed`) : t(`pageLoader.${direction}.load`)}
       </ThemedText>
     </Pressable>
   );

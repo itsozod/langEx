@@ -15,11 +15,13 @@ import { GroupScreenHeader } from './components/group-screen-header';
 import { useAddGroupParticipants, useGroupCandidates } from './hooks';
 import { useGroupStyles } from './styles/group-styles';
 import type { GroupCandidate } from './types';
+import { useTranslation } from 'react-i18next';
 
 export default function AddGroupPeopleScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const conversationId = firstParam(params.id);
   const styles = useGroupStyles();
+  const { t } = useTranslation('groups');
   const currentUserId = useUserStore((state) => state.user?.id);
   const conversationQuery = useConversation(conversationId);
   const candidatesQuery = useGroupCandidates();
@@ -103,11 +105,11 @@ export default function AddGroupPeopleScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <GroupScreenHeader
           actionDisabled={!canManage || selectedIds.size === 0}
-          actionLabel="Add"
+          actionLabel={t('add.action')}
           actionPending={addParticipants.isPending}
           onAction={submit}
           onBack={() => router.back()}
-          title="Add people"
+          title={t('addPeople')}
         />
         <FlatList
           contentContainerStyle={styles.listContent}
@@ -117,36 +119,36 @@ export default function AddGroupPeopleScreen() {
           ListEmptyComponent={
             isLoading ? (
               <GroupListState
-                message="Checking the group and your available conversations."
-                title="Loading people…"
+                message={t('add.loadingMessage')}
+                title={t('add.loadingTitle')}
                 type="loading"
               />
             ) : error || !conversation ? (
               <GroupListState
-                message={error instanceof Error ? error.message : 'The group could not be loaded.'}
+                message={error instanceof Error ? error.message : t('add.loadFailedMessage')}
                 onRetry={() => {
                   void conversationQuery.refetch();
                   void candidatesQuery.refetch();
                 }}
-                title="Couldn’t load the group"
+                title={t('loadGroupFailed')}
                 type="error"
               />
             ) : hasInvalidAccess ? (
               <GroupListState
-                message="Only the group owner or an admin can add members."
-                title="Manager access required"
+                message={t('add.noAccessMessage')}
+                title={t('add.noAccessTitle')}
                 type="empty"
               />
             ) : remainingSlots === 0 ? (
               <GroupListState
-                message="This group has reached the 50-member limit."
-                title="The group is full"
+                message={t('add.fullMessage', { limit: 50 })}
+                title={t('add.fullTitle')}
                 type="empty"
               />
             ) : (
               <GroupListState
-                message="Everyone from your eligible direct chats is already in this group."
-                title="No one else to add"
+                message={t('add.emptyMessage')}
+                title={t('add.emptyTitle')}
                 type="empty"
               />
             )
@@ -156,10 +158,10 @@ export default function AddGroupPeopleScreen() {
               <View>
                 <View style={styles.sectionHeader}>
                   <ThemedText type="bold" style={styles.sectionTitle}>
-                    Available partners
+                    {t('add.available')}
                   </ThemedText>
                   <ThemedText style={styles.sectionCount}>
-                    {selectedIds.size}/{remainingSlots} selected
+                    {t('selectedOf', { count: selectedIds.size, total: remainingSlots })}
                   </ThemedText>
                 </View>
                 {addParticipants.error || error ? (
@@ -168,8 +170,8 @@ export default function AddGroupPeopleScreen() {
                       {addParticipants.error instanceof Error
                         ? addParticipants.error.message
                         : error
-                          ? 'People could not be refreshed. Showing the most recent list.'
-                          : 'People could not be added. Try again.'}
+                          ? t('peopleRefreshFailed')
+                          : t('add.failed')}
                     </ThemedText>
                   </View>
                 ) : null}

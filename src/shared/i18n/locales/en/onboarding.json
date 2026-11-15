@@ -1,0 +1,69 @@
+{
+  "next": "Next",
+  "stepOf": "Step {{step}} of {{total}}",
+  "closeSetup": {
+    "label": "Close account setup",
+    "failedTitle": "Could not close setup",
+    "accountUnavailable": "The previous account is no longer available."
+  },
+  "step1": {
+    "title": "Let’s start with you",
+    "subtitle": "Add the name people will see and an optional profile photo.",
+    "choosePhoto": "Choose profile photo",
+    "photo": "Profile photo",
+    "photoHint": "Optional · tap to choose",
+    "photoPermission": "Photo access is required to choose an avatar.",
+    "uploadFailed": "Unable to upload the photo.",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "What should we call you?"
+  },
+  "step2": {
+    "title": "Where are you from?",
+    "subtitle": "Choose your country so partners can learn a little more about you."
+  },
+  "step3": {
+    "title": "Choose your languages",
+    "subtitle": "Tell us what you speak and what you want to practice.",
+    "nativeLanguage": "Native language",
+    "nativeLanguagePlaceholder": "Select your native language",
+    "learningLanguage": "Learning language",
+    "learningLanguagePlaceholder": "Select a language to learn",
+    "level": "Your current level"
+  },
+  "step4": {
+    "title": "What are you into?",
+    "subtitle": "Pick at least three so we can personalize your community.",
+    "selectInterests": "Select your interests",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "minimum_one": "Choose at least {{count}} interest to continue.",
+    "minimum_other": "Choose at least {{count}} interests to continue."
+  },
+  "step5": {
+    "title": "Introduce yourself",
+    "subtitle": "A short bio makes it easier to find the right language partners.",
+    "skip": "Skip",
+    "bio": "Bio",
+    "bioPlaceholder": "Share what you enjoy, why you're learning, or what you'd love to talk about…",
+    "failed": "Unable to finish your profile.",
+    "finish": "Finish",
+    "finishing": "Finishing…"
+  },
+  "pickers": {
+    "country": "Country",
+    "chooseCountry": "Choose your country",
+    "selectCountry": "Select country",
+    "searchCountries": "Search countries",
+    "noCountries": "No countries found.",
+    "searchLanguages": "Search languages",
+    "noLanguages": "No languages found."
+  },
+  "validation": {
+    "displayNameRequired": "Display name is required.",
+    "countryRequired": "Choose your country.",
+    "nativeLanguageRequired": "Choose your native language.",
+    "learningLanguageRequired": "Choose the language you are learning.",
+    "languagesMustDiffer": "Learning language must be different from your native language.",
+    "bioTooLong": "Bio must be 150 characters or fewer."
+  }
+}

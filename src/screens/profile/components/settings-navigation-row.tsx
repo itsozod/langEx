@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useAppTheme } from '@/providers/theme-provider';
 import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useTranslation } from 'react-i18next';
 
 type SettingsNavigationRowProps = {
   accessibilityHint: string;
@@ -21,11 +22,12 @@ export function SettingsNavigationRow({
 }: SettingsNavigationRowProps) {
   const { theme } = useAppTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation('profile');
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title} settings`}
+      accessibilityLabel={t('settings.rowLabel', { title })}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
       style={({ pressed }) => [

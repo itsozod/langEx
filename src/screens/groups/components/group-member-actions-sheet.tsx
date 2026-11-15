@@ -8,6 +8,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useGroupManagementStyles } from '../styles/group-management-styles';
 import type { GroupManagementAction, GroupRole } from '../types';
+import { useTranslation } from 'react-i18next';
 
 type GroupMemberActionsSheetProps = {
   adminLimitReached: boolean;
@@ -42,7 +43,8 @@ export function GroupMemberActionsSheet({
 }: GroupMemberActionsSheetProps) {
   const { colorScheme, containerColor, styles } = useGroupManagementStyles();
   const { width: windowWidth } = useWindowDimensions();
-  const name = member?.displayName?.trim() || 'Group member';
+  const { t } = useTranslation('groups');
+  const name = member?.displayName?.trim() || t('roles.groupMember');
   const isPending = Boolean(pendingAction);
   const canChangeAdmin = viewerRole === 'owner' && role !== 'owner';
   const canRemove = role !== 'owner' && (viewerRole === 'owner' || viewerRole === 'admin');
@@ -63,7 +65,7 @@ export function GroupMemberActionsSheet({
               {name}
             </ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.sheetSubtitle}>
-              {role === 'admin' ? 'Group admin' : 'Group member'}
+              {role === 'admin' ? t('roles.groupAdmin') : t('roles.groupMember')}
             </ThemedText>
           </View>
           {errorMessage ? (
@@ -77,7 +79,7 @@ export function GroupMemberActionsSheet({
             action="profile"
             disabled={isPending}
             icon={{ ios: 'person.crop.circle', android: 'person', web: 'person' }}
-            label="View profile"
+            label={t('actions.viewProfile')}
             onPress={onViewProfile}
             pendingAction={pendingAction}
           />
@@ -86,7 +88,7 @@ export function GroupMemberActionsSheet({
               action="revoke"
               disabled={isPending}
               icon={{ ios: 'shield.slash', android: 'shield_person', web: 'shield_person' }}
-              label="Remove admin role"
+              label={t('actions.removeAdmin')}
               onPress={onRevoke}
               pendingAction={pendingAction}
             />
@@ -100,7 +102,7 @@ export function GroupMemberActionsSheet({
                 android: 'verified_user',
                 web: 'verified_user',
               }}
-              label={adminLimitReached ? 'Admin limit reached' : 'Make admin'}
+              label={adminLimitReached ? t('actions.adminLimit') : t('actions.makeAdmin')}
               onPress={onPromote}
               pendingAction={pendingAction}
             />
@@ -110,7 +112,7 @@ export function GroupMemberActionsSheet({
               action="transfer"
               disabled={isPending}
               icon={{ ios: 'crown.fill', android: 'crown', web: 'crown' }}
-              label="Transfer ownership"
+              label={t('actions.transferOwnership')}
               onPress={onTransfer}
               pendingAction={pendingAction}
             />
@@ -121,7 +123,7 @@ export function GroupMemberActionsSheet({
               danger
               disabled={isPending}
               icon={{ ios: 'person.badge.minus', android: 'person_remove', web: 'person_remove' }}
-              label="Remove from group"
+              label={t('actions.removeFromGroup')}
               onPress={onRemove}
               pendingAction={pendingAction}
             />

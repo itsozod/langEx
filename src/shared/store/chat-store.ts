@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { Conversation, Message, UserPresence } from '@/screens/chat/types/message.types';
 import { formatMessageSystemEvent } from '@/screens/chat/utils/system-events';
 import { useAuthStore } from '@/shared/store/auth-store';
+import i18n from '@/shared/i18n';
 
 type ChatState = {
   conversations: Conversation[];
@@ -86,11 +87,9 @@ export const useChatStore = create<ChatState>((set) => ({
                 useAuthStore.getState().activeAccountId ?? undefined,
               )
             : message.content ||
-              (message.images && message.images.length > 1
-                ? `${message.images.length} photos`
-                : message.images?.length || message.image
-                  ? 'Photo'
-                  : ''),
+              (message.images?.length || message.image
+                ? i18n.t('chat:photoCount', { count: Math.max(message.images?.length ?? 0, 1) })
+                : ''),
         lastMessageSystemEvent: message.systemEvent ?? null,
         lastMessageTimestamp: message.createdAt,
       };

@@ -8,11 +8,13 @@ import { SettingsHeader } from '@/screens/profile/components/settings-header';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useTranslation } from 'react-i18next';
 
 export default function AccountSettingsScreen() {
   const { theme } = useAppTheme();
   const isDark = theme === 'dark';
   const deleteAccount = useDeleteAccountMutation();
+  const { t } = useTranslation(['profile', 'common']);
 
   const deleteAccountPermanently = async () => {
     try {
@@ -20,33 +22,29 @@ export default function AccountSettingsScreen() {
       await removeActiveAccount();
     } catch (error) {
       Alert.alert(
-        'Could not delete account',
-        error instanceof Error ? error.message : 'Please try again.',
+        t('account.deleteFailed'),
+        error instanceof Error ? error.message : t('common:errors.tryAgain'),
       );
     }
   };
 
   const confirmDeleteAccount = () => {
-    Alert.alert(
-      'Delete this account?',
-      'Your profile and access will be permanently removed. People you messaged will still see the conversation history under “Deleted user.”',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Continue',
-          style: 'destructive',
-          onPress: () =>
-            Alert.alert('Permanently delete account?', 'This cannot be undone.', [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Delete account',
-                style: 'destructive',
-                onPress: () => void deleteAccountPermanently(),
-              },
-            ]),
-        },
-      ],
-    );
+    Alert.alert(t('account.confirmTitle'), t('account.confirmMessage'), [
+      { text: t('common:actions.cancel'), style: 'cancel' },
+      {
+        text: t('common:actions.continue'),
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert(t('account.finalConfirmTitle'), t('account.finalConfirmMessage'), [
+            { text: t('common:actions.cancel'), style: 'cancel' },
+            {
+              text: t('account.delete'),
+              style: 'destructive',
+              onPress: () => void deleteAccountPermanently(),
+            },
+          ]),
+      },
+    ]);
   };
 
   return (
@@ -56,24 +54,23 @@ export default function AccountSettingsScreen() {
           <View style={styles.content}>
             <SettingsHeader
               fallbackHref="/profile/settings"
-              subtitle="Security and account access"
-              title="Account"
+              subtitle={t('account.subtitle')}
+              title={t('account.title')}
             />
             <View
               style={[styles.dangerCard, isDark ? styles.dangerCardDark : styles.dangerCardLight]}>
               <View style={styles.copy}>
                 <ThemedText type="bold" style={styles.title}>
-                  Delete account
+                  {t('account.delete')}
                 </ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.description}>
-                  Permanently remove this profile and its access. Your previous conversations remain
-                  visible to the people you messaged.
+                  {t('account.deleteDescription')}
                 </ThemedText>
               </View>
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Permanently delete account"
+                accessibilityLabel={t('account.deleteLabel')}
                 accessibilityState={{ disabled: deleteAccount.isPending }}
                 disabled={deleteAccount.isPending}
                 onPress={confirmDeleteAccount}
@@ -93,7 +90,7 @@ export default function AccountSettingsScreen() {
                   />
                 )}
                 <ThemedText style={[styles.deleteText, isDark && styles.deleteTextDark]}>
-                  {deleteAccount.isPending ? 'Deleting account…' : 'Delete account'}
+                  {deleteAccount.isPending ? t('account.deleting') : t('account.delete')}
                 </ThemedText>
               </Pressable>
             </View>

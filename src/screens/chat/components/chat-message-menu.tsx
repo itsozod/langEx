@@ -7,6 +7,7 @@ import { useChatStyles } from '../styles/chat-styles';
 import type { GiftedMessage } from '../types/message.types';
 import { findMessageLinks } from '../utils/links';
 import type { MessageAnchor } from './chat-message';
+import { useTranslation } from 'react-i18next';
 
 const MENU_WIDTH = 208;
 const MENU_ITEM_HEIGHT = 50;
@@ -52,6 +53,7 @@ export function ChatMessageMenu({
   togglePinPending,
 }: ChatMessageMenuProps) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
 
   if (!target) return null;
@@ -78,7 +80,11 @@ export function ChatMessageMenu({
 
   return (
     <Modal transparent statusBarTranslucent animationType="fade" onRequestClose={onClose}>
-      <Pressable accessibilityLabel="Close menu" style={styles.menuBackdrop} onPress={onClose} />
+      <Pressable
+        accessibilityLabel={t('menu.close')}
+        style={styles.menuBackdrop}
+        onPress={onClose}
+      />
       <View style={[styles.menuCard, { top, left, width: MENU_WIDTH }]}>
         <Pressable
           accessibilityRole="button"
@@ -89,7 +95,7 @@ export function ChatMessageMenu({
             size={18}
             tintColor={styles.menuIcon.color}
           />
-          <ThemedText style={styles.menuLabel}>Reply</ThemedText>
+          <ThemedText style={styles.menuLabel}>{t('menu.reply')}</ThemedText>
         </Pressable>
         {canPin ? (
           <View>
@@ -108,7 +114,9 @@ export function ChatMessageMenu({
                 size={18}
                 tintColor={styles.menuIcon.color}
               />
-              <ThemedText style={styles.menuLabel}>{targetIsPinned ? 'Unpin' : 'Pin'}</ThemedText>
+              <ThemedText style={styles.menuLabel}>
+                {targetIsPinned ? t('menu.unpin') : t('menu.pin')}
+              </ThemedText>
             </Pressable>
           </View>
         ) : null}
@@ -124,7 +132,7 @@ export function ChatMessageMenu({
                 size={18}
                 tintColor={styles.menuIcon.color}
               />
-              <ThemedText style={styles.menuLabel}>Copy</ThemedText>
+              <ThemedText style={styles.menuLabel}>{t('menu.copy')}</ThemedText>
             </Pressable>
           </View>
         ) : null}
@@ -133,7 +141,7 @@ export function ChatMessageMenu({
             <View style={styles.menuDivider} />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Copy the link ${link.url}`}
+              accessibilityLabel={t('menu.copyLinkLabel', { url: link.url })}
               onPress={() => onCopyLink(link.url)}
               style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
               <SymbolView
@@ -142,7 +150,9 @@ export function ChatMessageMenu({
                 tintColor={styles.menuIcon.color}
               />
               <ThemedText numberOfLines={1} style={styles.menuLabel}>
-                {links.length > 1 ? `Copy ${link.label}` : 'Copy link'}
+                {links.length > 1
+                  ? t('menu.copyNamedLink', { label: link.label })
+                  : t('menu.copyLink')}
               </ThemedText>
             </Pressable>
           </View>
@@ -161,7 +171,7 @@ export function ChatMessageMenu({
                     size={18}
                     tintColor={styles.menuIcon.color}
                   />
-                  <ThemedText style={styles.menuLabel}>Edit</ThemedText>
+                  <ThemedText style={styles.menuLabel}>{t('menu.edit')}</ThemedText>
                 </Pressable>
                 <View style={styles.menuDivider} />
               </View>
@@ -176,7 +186,7 @@ export function ChatMessageMenu({
                 tintColor={styles.menuIconDestructive.color}
               />
               <ThemedText style={[styles.menuLabel, styles.menuLabelDestructive]}>
-                Unsend
+                {t('menu.unsend')}
               </ThemedText>
             </Pressable>
           </View>

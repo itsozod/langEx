@@ -13,6 +13,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 // Space below the final focused field must include the forgot/helper row, a two-line dynamic
 // server error, form gaps, the complete 54dp action, and breathing room above tall Android
@@ -29,6 +30,7 @@ type AuthScreenProps = {
 const AuthScreen = ({ title, subtitle, children, dismissible = false }: AuthScreenProps) => {
   const theme = useTheme();
   const modalHeaderStyles = useModalHeaderStyles();
+  const { t } = useTranslation('auth');
 
   return (
     <GradientBackground>
@@ -40,7 +42,7 @@ const AuthScreen = ({ title, subtitle, children, dismissible = false }: AuthScre
               <AppLogo />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Close add account"
+                accessibilityLabel={t('closeAddAccount')}
                 hitSlop={12}
                 onPress={() => router.dismissTo('/(tabs)/profile')}
                 style={({ pressed }) => [

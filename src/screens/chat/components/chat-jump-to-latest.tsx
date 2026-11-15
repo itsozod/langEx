@@ -6,6 +6,7 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 
 import { useChatStyles } from '../styles/chat-styles';
 import { useChatThreadStyles } from '../styles/chat-thread-styles';
+import { useTranslation } from 'react-i18next';
 
 type ChatJumpToLatestProps = {
   isAlwaysVisible: boolean;
@@ -26,12 +27,13 @@ export function ChatJumpToLatest({
 }: ChatJumpToLatestProps) {
   const styles = useChatStyles();
   const threadStyles = useChatThreadStyles();
+  const { t } = useTranslation('chat');
 
   if (!isAlwaysVisible && !isScrolledAway && newMessageCount === 0) return null;
 
   const accessibilityLabel = newMessageCount
-    ? `${newMessageCount} new ${newMessageCount === 1 ? 'message' : 'messages'}. Jump to latest.`
-    : 'Jump to the latest messages';
+    ? t('jump.newMessages', { count: newMessageCount })
+    : t('jump.latest');
   const badgeLabel = newMessageCount > 9 ? '9+' : String(newMessageCount);
 
   return (

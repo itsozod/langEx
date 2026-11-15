@@ -7,7 +7,6 @@ import { useAppTheme } from '@/providers/theme-provider';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { useChatStore } from '@/shared/store/chat-store';
 import { useUserStore } from '@/shared/store/user.store';
 
 import {
@@ -15,26 +14,33 @@ import {
   ConversationSkeleton,
   getOtherParticipant,
 } from './components/conversation-row';
+import { ChatListFilterEmptyState, ChatListFilters } from './components/chat-list-filters';
 import { useConversations } from './hooks';
+import { useChatListFilters } from './hooks/use-chat-list-filters';
+import { useChatSearchStore } from './store/chat-search-store';
 import { useChatsStyles } from './styles/chats-styles';
 import type { Conversation } from './types/message.types';
+import { useTranslation } from 'react-i18next';
 
 export default function ChatsScreen() {
   const styles = useChatsStyles();
+  const { t } = useTranslation(['chat', 'common']);
   const { theme } = useAppTheme();
   const userId = useUserStore((state) => state.user?.id);
-  const conversations = useChatStore((state) => state.conversations);
   const query = useConversations();
+  const filters = useChatListFilters();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const openSearch = useChatSearchStore((state) => state.open);
+  const isSearchOpen = useChatSearchStore((state) => state.isOpen);
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await query.refetch();
+      await (filters.isFiltering ? filters.filteredQuery.refetch() : query.refetch());
     } finally {
       setIsRefreshing(false);
     }
-  }, [query]);
+  }, [filters.filteredQuery, filters.isFiltering, query]);
 
   const renderConversation: ListRenderItem<Conversation> = ({ item }) => {
     const participant = getOtherParticipant(item, userId);
@@ -58,6 +64,17 @@ export default function ChatsScreen() {
   };
 
   const emptyContent = (() => {
+    if (filters.filter) {
+      return (
+        <ChatListFilterEmptyState
+          filter={filters.filter}
+          isError={filters.filteredQuery.isError}
+          isPending={filters.isFilterPending}
+          onRetry={() => void filters.filteredQuery.refetch()}
+        />
+      );
+    }
+
     if (query.isPending) {
       return (
         <View style={styles.skeletonList}>
@@ -79,13 +96,13 @@ export default function ChatsScreen() {
             />
           </View>
           <ThemedText type="bold" style={styles.stateTitle}>
-            Couldn&apos;t load chats
+            {t('list.loadFailed')}
           </ThemedText>
           <ThemedText themeColor="textSecondary" style={styles.stateMessage}>
-            {query.error instanceof Error ? query.error.message : 'Please try again.'}
+            {query.error instanceof Error ? query.error.message : t('common:errors.tryAgain')}
           </ThemedText>
           <Pressable onPress={() => void query.refetch()} style={styles.retryButton}>
-            <ThemedText style={styles.retryText}>Try again</ThemedText>
+            <ThemedText style={styles.retryText}>{t('common:actions.tryAgain')}</ThemedText>
           </Pressable>
         </View>
       );
@@ -105,13 +122,13 @@ export default function ChatsScreen() {
           />
         </View>
         <ThemedText type="bold" style={styles.stateTitle}>
-          No conversations yet
+          {t('list.emptyTitle')}
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.stateMessage}>
-          Find a language partner in Discover!
+          {t('list.emptyMessage')}
         </ThemedText>
         <Pressable onPress={() => router.push('/(tabs)/discover')} style={styles.retryButton}>
-          <ThemedText style={styles.retryText}>Open Discover</ThemedText>
+          <ThemedText style={styles.retryText}>{t('list.openDiscover')}</ThemedText>
         </Pressable>
       </View>
     );
@@ -121,44 +138,55 @@ export default function ChatsScreen() {
     <GradientBackground>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <FlatList
-          data={conversations}
+          data={filters.visibleConversations}
           keyExtractor={(item) => item.id}
           renderItem={renderConversation}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListHeaderComponent={
-            <View style={styles.header}>
-              <View>
-                <ThemedText type="title" style={styles.title}>
-                  Chats
-                </ThemedText>
-                <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-                  Keep the conversation going
-                </ThemedText>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Create a group"
-                hitSlop={5}
-                onPress={() => router.push('/group/new')}
-                style={({ pressed }) => [styles.headerBadge, pressed && styles.headerBadgePressed]}>
-                <SymbolView
-                  name={{
-                    ios: 'person.3.fill',
-                    android: 'group',
-                    web: 'group',
-                  }}
-                  size={22}
-                  tintColor="#FFFFFF"
-                />
-                <View style={styles.headerBadgePlus}>
-                  <SymbolView
-                    name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={11}
-                    weight="bold"
-                    tintColor="#6654C7"
-                  />
+            <View>
+              <View style={styles.header}>
+                <View>
+                  <ThemedText type="title" style={styles.title}>
+                    {t('list.title')}
+                  </ThemedText>
+                  <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+                    {t('list.subtitle')}
+                  </ThemedText>
                 </View>
-              </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('list.createGroup')}
+                  hitSlop={5}
+                  onPress={() => router.push('/group/new')}
+                  style={({ pressed }) => [
+                    styles.headerBadge,
+                    pressed && styles.headerBadgePressed,
+                  ]}>
+                  <SymbolView
+                    name={{
+                      ios: 'person.3.fill',
+                      android: 'group',
+                      web: 'group',
+                    }}
+                    size={22}
+                    tintColor="#FFFFFF"
+                  />
+                  <View style={styles.headerBadgePlus}>
+                    <SymbolView
+                      name={{ ios: 'plus', android: 'add', web: 'add' }}
+                      size={11}
+                      weight="bold"
+                      tintColor="#6654C7"
+                    />
+                  </View>
+                </Pressable>
+              </View>
+              <ChatListFilters
+                filter={filters.filter}
+                isSearchTriggerHidden={isSearchOpen}
+                onOpenSearch={openSearch}
+                onToggleFilter={filters.toggleFilter}
+              />
             </View>
           }
           ListEmptyComponent={emptyContent}

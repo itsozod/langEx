@@ -1,0 +1,40 @@
+{
+  "actions": {
+    "back": "Back",
+    "goBack": "Go back",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "delete": "Delete",
+    "done": "Done",
+    "tryAgain": "Try again"
+  },
+  "errors": {
+    "tryAgain": "Please try again.",
+    "checkConnection": "Please check your connection."
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "deletedUser": "Deleted user",
+  "session": {
+    "checking": "Checking your session…"
+  },
+  "tabs": {
+    "chats": "Chats",
+    "chatsUnread_one": "Chats, {{count}} unread message",
+    "chatsUnread_other": "Chats, {{count}} unread messages",
+    "discover": "Discover",
+    "profile": "Profile"
+  },
+  "themeToggle": {
+    "label": "{{theme}}. Tap to change theme.",
+    "system": "System theme",
+    "light": "Light theme",
+    "dark": "Dark theme"
+  },
+  "accountSwitch": {
+    "title": "Switching to {{name}}",
+    "subtitle": "Bringing your conversations with you…"
+  }
+}

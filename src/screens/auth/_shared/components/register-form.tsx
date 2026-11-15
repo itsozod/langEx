@@ -15,10 +15,12 @@ import AuthFormField from './auth-form-field';
 import AuthPrimaryButton from './auth-primary-button';
 import { GoogleAuthOption } from './google-auth-option';
 import PasswordInput from './password-input';
+import { useTranslation } from 'react-i18next';
 
 const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
   const theme = useTheme();
   const styles = useStyles();
+  const { t } = useTranslation('auth');
   const registerMutation = useRegisterMutation();
   const {
     control,
@@ -41,7 +43,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
     } catch (error) {
       setError('root.server', {
         type: 'server',
-        message: error instanceof Error ? error.message : 'Unable to create your account.',
+        message: error instanceof Error ? error.message : t('register.failed'),
       });
     }
   };
@@ -54,7 +56,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
         <Form style={styles.form}>
           <GoogleAuthOption />
           <View style={styles.fields}>
-            <AuthFormField label="Email address" error={errors.email?.message}>
+            <AuthFormField label={t('fields.email')} error={errors.email?.message}>
               <Controller
                 control={control}
                 name="email"
@@ -69,7 +71,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
                       onChange(text);
                       clearErrors('root.server');
                     }}
-                    placeholder="you@example.com"
+                    placeholder={t('fields.emailPlaceholder')}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -82,7 +84,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
               />
             </AuthFormField>
 
-            <AuthFormField label="Password" error={errors.password?.message}>
+            <AuthFormField label={t('fields.password')} error={errors.password?.message}>
               <Controller
                 control={control}
                 name="password"
@@ -96,7 +98,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
                       clearErrors('confirmPassword');
                       clearErrors('root.server');
                     }}
-                    placeholder="Create a password"
+                    placeholder={t('fields.createPasswordPlaceholder')}
                     autoCapitalize="none"
                     autoComplete="new-password"
                     textContentType="newPassword"
@@ -107,7 +109,9 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
               />
             </AuthFormField>
 
-            <AuthFormField label="Confirm password" error={errors.confirmPassword?.message}>
+            <AuthFormField
+              label={t('fields.confirmPassword')}
+              error={errors.confirmPassword?.message}>
               <Controller
                 control={control}
                 name="confirmPassword"
@@ -120,7 +124,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
                       onChange(text);
                       clearErrors('root.server');
                     }}
-                    placeholder="Repeat your password"
+                    placeholder={t('fields.confirmPasswordPlaceholder')}
                     autoCapitalize="none"
                     autoComplete="new-password"
                     textContentType="newPassword"
@@ -140,7 +144,7 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
           ) : null}
 
           <AuthPrimaryButton
-            label={registerMutation.isPending ? 'Creating account…' : 'Create account'}
+            label={registerMutation.isPending ? t('register.submitting') : t('register.submit')}
             pending={registerMutation.isPending}
             onPress={() => void submit()}
           />
@@ -149,13 +153,13 @@ const RegisterForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }
 
       <View style={styles.footer}>
         <ThemedText themeColor="textSecondary" style={styles.footerText}>
-          Already have an account?
+          {t('register.haveAccount')}
         </ThemedText>
         <Link
           href={isAddingAccount ? '/account-auth/login' : '/login'}
           replace
           style={styles.footerLink}>
-          Sign in
+          {t('login.submit')}
         </Link>
       </View>
     </View>

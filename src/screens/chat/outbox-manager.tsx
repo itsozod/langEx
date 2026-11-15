@@ -13,6 +13,7 @@ import type { OutboxMessage, SocketAcknowledgement } from './types/message.types
 import { upsertMessageInLatestWindow } from './utils/conversation-cache';
 import { isMessage } from './utils/messages';
 import { publishOutboxDelivery } from './utils/outbox-events';
+import i18n from '@/shared/i18n';
 
 const ACK_TIMEOUT_MS = 15_000;
 const MAX_AUTOMATIC_ATTEMPTS = 5;
@@ -33,7 +34,7 @@ function emitOutboxMessage(message: OutboxMessage) {
     let settled = false;
     const timer = setTimeout(() => {
       settled = true;
-      reject(new Error('Message acknowledgement timed out.'));
+      reject(new Error(i18n.t('chat:errors.ackTimeout')));
     }, ACK_TIMEOUT_MS);
 
     socket.emit(
@@ -125,7 +126,7 @@ export function OutboxManager() {
             if (currentSession.token !== token || currentSession.activeAccountId !== userId) return;
 
             if (!response.ok || !response.message || !isMessage(response.message)) {
-              const error = response.error ?? 'Message could not be sent.';
+              const error = response.error ?? i18n.t('chat:errors.sendFailed');
               const attemptCount = message.attemptCount + 1;
               if (isPermanentSendError(error) || attemptCount >= MAX_AUTOMATIC_ATTEMPTS) {
                 useOutboxStore.getState().markFailed(message.clientMessageId, error);
@@ -145,7 +146,7 @@ export function OutboxManager() {
             if (!conversationId) {
               useOutboxStore
                 .getState()
-                .markFailed(message.clientMessageId, 'The server did not return a conversation.');
+                .markFailed(message.clientMessageId, i18n.t('chat:errors.noConversation'));
               return;
             }
 
@@ -165,7 +166,8 @@ export function OutboxManager() {
           })
           .catch((error: unknown) => {
             const attemptCount = message.attemptCount + 1;
-            const errorMessage = error instanceof Error ? error.message : 'Connection interrupted.';
+            const errorMessage =
+              error instanceof Error ? error.message : i18n.t('chat:errors.connectionInterrupted');
             if (attemptCount >= MAX_AUTOMATIC_ATTEMPTS) {
               useOutboxStore.getState().markFailed(message.clientMessageId, errorMessage);
             } else {

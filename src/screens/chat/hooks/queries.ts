@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/store/auth-store';
 
@@ -8,7 +8,7 @@ import {
   getConversations,
   getConversationsUnreadCount,
 } from '../api';
-import type { ConversationWindowParams } from '../api';
+import type { ConversationListFilter, ConversationWindowParams } from '../api';
 
 /** Keep chat memory bounded while still retaining several screens around the reader. */
 const MAX_CONVERSATION_WINDOW_PAGES = 5;
@@ -17,6 +17,15 @@ export const chatQueryKeys = {
   all: ['chats'] as const,
   conversations: (accountId = useAuthStore.getState().activeAccountId ?? '') =>
     ['chats', 'conversations', accountId] as const,
+  /**
+   * Nested under `conversations` so every existing invalidation of the conversation list also
+   * refreshes filtered results after new messages, reads, and presence-driven refetches.
+   */
+  filteredConversations: (
+    accountId: string,
+    search: string,
+    filter: ConversationListFilter | null,
+  ) => ['chats', 'conversations', accountId, 'filtered', search, filter ?? 'all'] as const,
   unreadCounts: () => ['chats', 'unread-count'] as const,
   unreadCount: (accountId: string) => ['chats', 'unread-count', accountId] as const,
   presence: (accountId: string, userId: string) =>
@@ -52,9 +61,24 @@ export function useConversations() {
 
   return useQuery({
     queryKey: chatQueryKeys.conversations(accountId ?? ''),
-    queryFn: getConversations,
+    queryFn: () => getConversations(),
     enabled: Boolean(accountId && token),
     refetchOnWindowFocus: 'always',
+  });
+}
+
+/** Server-side search/filter of the chat list; disabled while neither is active. */
+export function useFilteredConversations(search: string, filter: ConversationListFilter | null) {
+  const accountId = useAuthStore((state) => state.activeAccountId);
+  const token = useAuthStore((state) => state.token);
+  const isActive = Boolean(search || filter);
+
+  return useQuery({
+    queryKey: chatQueryKeys.filteredConversations(accountId ?? '', search, filter),
+    queryFn: () => getConversations({ search: search || undefined, filter: filter ?? undefined }),
+    enabled: Boolean(accountId && token && isActive),
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
   });
 }
 

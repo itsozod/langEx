@@ -5,6 +5,7 @@ import { Alert, Clipboard } from 'react-native';
 import type { MessageAnchor } from '../components/chat-message';
 import type { MessageMenuTarget } from '../components/chat-message-menu';
 import type { GiftedMessage, GiftedReplyMessage } from '../types/message.types';
+import i18n from '@/shared/i18n';
 
 type UseChatMessageActionsOptions = {
   currentUserId?: string;
@@ -79,10 +80,10 @@ export function useChatMessageActions({
   const unsendFromMenu = useCallback(
     (message: GiftedMessage) => {
       setMenuTarget(null);
-      Alert.alert('Unsend message?', 'This removes it for everyone in the chat.', [
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert(i18n.t('chat:unsendTitle'), i18n.t('chat:removesForEveryone'), [
+        { text: i18n.t('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Unsend',
+          text: i18n.t('chat:menu.unsend'),
           style: 'destructive',
           onPress: () => onUnsendMessage(String(message._id)),
         },

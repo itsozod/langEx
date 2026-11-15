@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, useWindowDimensions, View } f
 import type { GiftedMessage, MessageImage } from '../types/message.types';
 import { createGalleryCells } from '../utils/gallery-layout';
 import { ChatImageViewer } from './chat-image-viewer';
+import i18n from '@/shared/i18n';
 
 type ChatMessageImageProps = {
   images: MessageImage[];
@@ -37,7 +38,10 @@ export function ChatMessageImage({ images, message, onLongPress }: ChatMessageIm
           <Pressable
             key={`${image.url}-${index}`}
             accessibilityRole="imagebutton"
-            accessibilityLabel={`Open photo ${index + 1} of ${images.length} full screen`}
+            accessibilityLabel={i18n.t('chat:viewer.open', {
+              index: index + 1,
+              total: images.length,
+            })}
             onLongPress={onLongPress}
             onPress={() => setViewerIndex(index)}
             style={({ pressed }) => [styles.cell, cells[index], pressed && styles.pressed]}>

@@ -22,6 +22,7 @@ import { useUserPresence } from './hooks/use-user-presence';
 import { useChatStyles } from './styles/chat-styles';
 import type { ChatThreadProps } from './types/chat-thread-types';
 import type { ChatParticipant, UserPresence } from './types/message.types';
+import i18n from '@/shared/i18n';
 
 export default function ChatScreen() {
   const params = useLocalSearchParams<{
@@ -189,7 +190,7 @@ export default function ChatScreen() {
 
   if (isLoading) return <ChatLoadingState />;
   if (isError || !conversation) {
-    const error = hasValidTarget ? loadError : new Error('The conversation link is invalid.');
+    const error = hasValidTarget ? loadError : new Error(i18n.t('chat:errors.invalidLink'));
     return <ChatErrorState error={error} onBack={goBack} />;
   }
 

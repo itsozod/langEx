@@ -3,8 +3,10 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useConversationsUnreadCount } from '@/screens/chat/hooks';
 import { Colors } from '@/shared/constants/theme';
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
+import { useTranslation } from 'react-i18next';
 
 export default function AppTabs() {
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const colors = Colors[scheme];
   const { data } = useConversationsUnreadCount();
@@ -22,8 +24,10 @@ export default function AppTabs() {
       labelStyle={{ default: { color: colors.textSecondary }, selected: { color: colors.text } }}>
       <NativeTabs.Trigger
         name="chats"
-        accessibilityLabel={unreadCount > 0 ? `Chats, ${unreadCount} unread messages` : 'Chats'}>
-        <NativeTabs.Trigger.Label>Chats</NativeTabs.Trigger.Label>
+        accessibilityLabel={
+          unreadCount > 0 ? t('tabs.chatsUnread', { count: unreadCount }) : t('tabs.chats')
+        }>
+        <NativeTabs.Trigger.Label>{t('tabs.chats')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{
             default: 'bubble.left.and.bubble.right',
@@ -37,14 +41,14 @@ export default function AppTabs() {
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="discover">
-        <NativeTabs.Trigger.Label>Discover</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('tabs.discover')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'safari', selected: 'safari.fill' }}
           md={{ default: 'explore', selected: 'explore' }}
         />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
-        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('tabs.profile')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }}
           md={{ default: 'person_outline', selected: 'person' }}

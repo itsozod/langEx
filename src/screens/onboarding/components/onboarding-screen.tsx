@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 type OnboardingScreenProps = {
   step: 1 | 2 | 3 | 4 | 5;
@@ -35,6 +36,7 @@ export function OnboardingScreen({
   headerAction,
 }: OnboardingScreenProps) {
   const styles = useStyles();
+  const { t } = useTranslation(['common', 'onboarding']);
   const returnAccountId = useOnboardingStore((state) => state.returnAccountId);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -48,9 +50,12 @@ export function OnboardingScreen({
         router.replace('/(tabs)/profile');
         return;
       }
-      Alert.alert('Could not close setup', 'The previous account is no longer available.');
+      Alert.alert(
+        t('onboarding:closeSetup.failedTitle'),
+        t('onboarding:closeSetup.accountUnavailable'),
+      );
     } catch {
-      Alert.alert('Could not close setup', 'Please try again.');
+      Alert.alert(t('onboarding:closeSetup.failedTitle'), t('errors.tryAgain'));
     } finally {
       setIsExiting(false);
     }
@@ -59,7 +64,7 @@ export function OnboardingScreen({
   const exitAction = returnAccountId ? (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Close account setup"
+      accessibilityLabel={t('onboarding:closeSetup.label')}
       accessibilityState={{ disabled: isExiting }}
       disabled={isExiting}
       hitSlop={10}
@@ -92,7 +97,7 @@ export function OnboardingScreen({
                 {onBack ? (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Go back"
+                    accessibilityLabel={t('actions.goBack')}
                     hitSlop={10}
                     onPress={onBack}
                     style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
@@ -107,7 +112,7 @@ export function OnboardingScreen({
                   <View style={styles.backPlaceholder} />
                 )}
                 <ThemedText themeColor="textSecondary" style={styles.stepLabel}>
-                  Step {step} of 5
+                  {t('onboarding:stepOf', { step, total: 5 })}
                 </ThemedText>
                 <View style={styles.actionSlot}>{exitAction}</View>
               </View>

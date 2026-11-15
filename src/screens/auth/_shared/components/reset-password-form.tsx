@@ -9,20 +9,22 @@ import { Form } from 'tamagui';
 import AuthFormCard from './auth-form-card';
 import AuthFormField from './auth-form-field';
 import AuthPrimaryButton from './auth-primary-button';
+import { useTranslation } from 'react-i18next';
 
 const ResetPasswordForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
   const theme = useTheme();
   const styles = useStyles();
+  const { t } = useTranslation('auth');
 
   return (
     <View style={styles.wrapper}>
       <AuthFormCard>
         <Form style={styles.form}>
-          <AuthFormField label="Email address">
+          <AuthFormField label={t('fields.email')}>
             <InputWithIcon
               icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
               iconColor={theme.textSecondary}
-              placeholder="you@example.com"
+              placeholder={t('fields.emailPlaceholder')}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -32,9 +34,9 @@ const ResetPasswordForm = ({ isAddingAccount = false }: { isAddingAccount?: bool
             />
           </AuthFormField>
           <ThemedText themeColor="textSecondary" style={styles.helperText}>
-            We’ll send reset instructions if an account exists for this email.
+            {t('resetPassword.helper')}
           </ThemedText>
-          <AuthPrimaryButton label="Send reset instructions" />
+          <AuthPrimaryButton label={t('resetPassword.submit')} />
         </Form>
       </AuthFormCard>
 
@@ -43,7 +45,7 @@ const ResetPasswordForm = ({ isAddingAccount = false }: { isAddingAccount?: bool
           href={isAddingAccount ? '/account-auth/login' : '/login'}
           replace
           style={styles.footerLink}>
-          Back to sign in
+          {t('resetPassword.backToSignIn')}
         </Link>
       </View>
     </View>

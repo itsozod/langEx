@@ -2,6 +2,8 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import React, { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { translateMessage } from '@/shared/i18n/translate-message';
 
 type AuthFormFieldProps = {
   label: string;
@@ -11,12 +13,13 @@ type AuthFormFieldProps = {
 
 const AuthFormField = ({ label, error, children }: AuthFormFieldProps) => {
   const styles = useStyles();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.field}>
       <ThemedText style={styles.label}>{label}</ThemedText>
       {children}
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={styles.error}>{translateMessage(t, error)}</ThemedText> : null}
     </View>
   );
 };

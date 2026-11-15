@@ -14,10 +14,12 @@ import AuthFormField from './auth-form-field';
 import { GoogleAuthOption } from './google-auth-option';
 import { LoginPrimaryButton } from './login-primary-button';
 import PasswordInput from './password-input';
+import { useTranslation } from 'react-i18next';
 
 const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
   const theme = useTheme();
   const styles = useStyles();
+  const { t } = useTranslation('auth');
   const loginMutation = useLoginMutation();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
@@ -37,7 +39,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
     try {
       await loginMutation.mutateAsync(values);
     } catch (error) {
-      setServerError(error instanceof Error ? error.message : 'Unable to log in.');
+      setServerError(error instanceof Error ? error.message : t('login.failed'));
     }
   };
 
@@ -50,7 +52,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
         <View style={styles.form}>
           <GoogleAuthOption />
           <View style={styles.fields}>
-            <AuthFormField label="Email address" error={errors.email?.message}>
+            <AuthFormField label={t('fields.email')} error={errors.email?.message}>
               <Controller
                 control={control}
                 name="email"
@@ -66,7 +68,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
                       clearErrors('email');
                       setServerError(null);
                     }}
-                    placeholder="you@example.com"
+                    placeholder={t('fields.emailPlaceholder')}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -79,7 +81,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
               />
             </AuthFormField>
 
-            <AuthFormField label="Password" error={errors.password?.message}>
+            <AuthFormField label={t('fields.password')} error={errors.password?.message}>
               <Controller
                 control={control}
                 name="password"
@@ -93,7 +95,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
                       clearErrors('password');
                       setServerError(null);
                     }}
-                    placeholder="Enter your password"
+                    placeholder={t('fields.passwordPlaceholder')}
                     autoCapitalize="none"
                     autoComplete="current-password"
                     textContentType="password"
@@ -109,7 +111,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
               <Link
                 href={isAddingAccount ? '/account-auth/reset-password' : '/reset-password'}
                 style={styles.forgotPassword}>
-                Forgot password?
+                {t('login.forgotPassword')}
               </Link>
             </View>
           </View>
@@ -121,7 +123,7 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
           ) : null}
 
           <LoginPrimaryButton
-            label={isPending ? 'Signing in…' : 'Sign in'}
+            label={isPending ? t('signingIn') : t('login.submit')}
             pending={isPending}
             onPress={submit}
           />
@@ -130,13 +132,13 @@ const LoginForm = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) =
 
       <View style={styles.footer}>
         <ThemedText themeColor="textSecondary" style={styles.footerText}>
-          New to LangEx?
+          {t('login.newHere')}
         </ThemedText>
         <Link
           href={isAddingAccount ? '/account-auth/register' : '/register'}
           replace
           style={styles.footerLink}>
-          Create an account
+          {t('login.createAccount')}
         </Link>
       </View>
     </View>

@@ -1,0 +1,209 @@
+{
+  "you": "You",
+  "photo": "Photo",
+  "message": "Message",
+  "photoCount_one": "Photo",
+  "photoCount_other": "{{count}} photos",
+  "backToChats": "Back to chats",
+  "swipeToClose": "Swipe down to close",
+  "removesForEveryone": "This removes it for everyone in the chat.",
+  "unsendTitle": "Unsend message?",
+  "day": {
+    "today": "Today"
+  },
+  "list": {
+    "title": "Chats",
+    "subtitle": "Keep the conversation going",
+    "createGroup": "Create a group",
+    "loadFailed": "Couldn’t load chats",
+    "emptyTitle": "No conversations yet",
+    "emptyMessage": "Find a language partner in Discover!",
+    "openDiscover": "Open Discover"
+  },
+  "row": {
+    "open": "Open chat with {{name}}",
+    "openOnline": "Open chat with {{name}}, online",
+    "viewProfileOnline": "View {{name}}’s profile, online",
+    "isOnline": "{{name}} is online",
+    "start": "Start the conversation",
+    "groupStart_one": "{{count}} member · Start the conversation",
+    "groupStart_other": "{{count}} members · Start the conversation"
+  },
+  "header": {
+    "viewGroup": "View {{name}} group info",
+    "deleteGroup": "Delete {{name}} conversation",
+    "deleteDirect": "Delete conversation with {{name}}"
+  },
+  "presence": {
+    "accountDeleted": "Account deleted",
+    "checking": "Checking status…",
+    "unavailable": "Presence unavailable",
+    "justNow": "Last seen just now",
+    "minutesAgo_one": "Last seen {{count}}m ago",
+    "minutesAgo_other": "Last seen {{count}}m ago",
+    "today": "Last seen today at {{time}}",
+    "yesterday": "Last seen yesterday at {{time}}",
+    "date": "Last seen {{date}}"
+  },
+  "status": {
+    "loadingMessages": "Loading messages…",
+    "openFailed": "Couldn’t open this chat",
+    "unavailable": "This conversation is unavailable.",
+    "read": "Read",
+    "sent": "Sent",
+    "failed": "Failed · Retry",
+    "failedLabel": "Message failed to send. Retry",
+    "waiting": "Waiting"
+  },
+  "empty": {
+    "title": "Say hello 👋",
+    "message": "Send the first message to start your conversation."
+  },
+  "deletedUser": {
+    "title": "User is deleted",
+    "message": "You can still view your message history, but this conversation is read-only."
+  },
+  "composer": {
+    "placeholder": "Write a message…",
+    "editing": "Editing message",
+    "editingHint": "Send to save your changes",
+    "stopEditing": "Stop editing",
+    "choosePhotos": "Choose up to four photos",
+    "saveChanges": "Save changes",
+    "send": "Send message"
+  },
+  "menu": {
+    "close": "Close menu",
+    "reply": "Reply",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "copy": "Copy",
+    "copyLink": "Copy link",
+    "copyNamedLink": "Copy {{label}}",
+    "copyLinkLabel": "Copy the link {{url}}",
+    "edit": "Edit",
+    "unsend": "Unsend"
+  },
+  "reply": {
+    "goTo": "Go to the message from {{author}}",
+    "photo": "Replied-to photo",
+    "previewPhoto": "Photo being replied to",
+    "cancel": "Cancel reply",
+    "to": "Replying to {{name}}",
+    "toYourself": "Replying to yourself",
+    "yourPartner": "your partner"
+  },
+  "pinned": {
+    "title": "Pinned messages",
+    "single": "Pinned Message",
+    "position": "Pinned Message {{index}} of {{total}}",
+    "positionLabel": "Pinned message {{index}} of {{total}}",
+    "bannerHint": "Jumps to this message and selects the next pinned message",
+    "openAll_one": "Open {{count}} pinned message",
+    "openAll_other": "Open all {{count}} pinned messages",
+    "close": "Close pinned messages",
+    "savedCount_one": "{{count}} message saved in this chat",
+    "savedCount_other": "{{count}} messages saved in this chat",
+    "itemHint": "Tap to jump to this message. Touch and hold for actions",
+    "closeActions": "Close message actions",
+    "actionsTitle": "Message actions",
+    "deleteTitle": "Delete message?"
+  },
+  "images": {
+    "cancel": "Cancel sending photos",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "selectedPhoto": "Selected photo {{index}} of {{total}}",
+    "remove": "Remove photo {{index}}",
+    "send_one": "Send {{count}} photo",
+    "send_other": "Send {{count}} photos"
+  },
+  "viewer": {
+    "zoomHint": "Pinch or double-tap to zoom",
+    "photoOf": "Chat photo {{index}} of {{total}}",
+    "open": "Open photo {{index}} of {{total}} full screen",
+    "close": "Close full-screen photos"
+  },
+  "jump": {
+    "latest": "Jump to the latest messages",
+    "newMessages_one": "{{count}} new message. Jump to latest.",
+    "newMessages_other": "{{count}} new messages. Jump to latest."
+  },
+  "typing": "Partner is typing",
+  "loadStatus": {
+    "retryHint": "Attempts to load the replied-to message again",
+    "failed": "Message couldn’t load. Tap to retry.",
+    "loadingLabel": "Loading replied-to message",
+    "loading": "Loading message…"
+  },
+  "pageLoader": {
+    "older": {
+      "loading": "Loading older messages…",
+      "retry": "Retry loading older messages",
+      "load": "Load older messages",
+      "failed": "Couldn’t load older messages — tap to retry"
+    },
+    "newer": {
+      "loading": "Loading newer messages…",
+      "retry": "Retry loading newer messages",
+      "load": "Load newer messages",
+      "failed": "Couldn’t load newer messages — tap to retry"
+    }
+  },
+  "system": {
+    "someone": "Someone",
+    "aMember": "a member",
+    "youObject": "you",
+    "memberAdded": "{{actor}} added {{subject}}"
+  },
+  "deleteConversation": {
+    "action": "Delete conversation",
+    "thisPartner": "this language partner",
+    "groupTitle": "Delete {{name}}?",
+    "directTitle": "Delete conversation with {{name}}?",
+    "groupMessage": "This removes the group conversation from your account and can’t be undone. It does not remove other members.",
+    "directMessage": "This removes the conversation from your account and can’t be undone. It does not unsend messages from {{name}}’s account."
+  },
+  "errors": {
+    "pinWithoutConversation": "Open the conversation before pinning a message.",
+    "pinFailed": "The pinned message could not be updated.",
+    "invalidGallery": "The server returned an invalid gallery message.",
+    "photosFailed": "Photos could not be sent.",
+    "photoPermission": "Photo access is required to send pictures.",
+    "ackTimeout": "Message acknowledgement timed out.",
+    "sendFailed": "Message could not be sent.",
+    "noConversation": "The server did not return a conversation.",
+    "connectionInterrupted": "Connection interrupted.",
+    "photoCount": "Choose between one and four photos.",
+    "invalidLink": "The conversation link is invalid.",
+    "editFailed": "Message could not be edited.",
+    "unsendFailed": "Message could not be unsent.",
+    "joinFailed": "Unable to join this chat.",
+    "sessionChanged": "Your account session changed. Open the conversation and try again.",
+    "deleteFailed": "Conversation could not be deleted. Try again."
+  },
+  "chatPartner": "Chat partner",
+  "partner": "Partner",
+  "filters": {
+    "searchLabel": "Search your chats",
+    "searchPlaceholder": "Search people in your chats",
+    "clearSearch": "Clear search",
+    "chipHint": "Tap again to show all chats",
+    "online": "Online",
+    "unread": "Unread",
+    "noSearchResults": "No chats match “{{query}}”",
+    "noSearchResultsMessage": "Try another name or clear the search.",
+    "noOnline": "No one is online",
+    "noOnlineMessage": "Partners from your chats will appear here when they come online.",
+    "noUnread": "You’re all caught up",
+    "noUnreadMessage": "Chats with unread messages will appear here."
+  },
+  "search": {
+    "openHint": "Opens full-screen search",
+    "close": "Close search",
+    "idleTitle": "Search your chats",
+    "idleMessage": "Find people and groups you’ve already talked to, then open the chat or their profile.",
+    "resultsLabel_one": "{{count}} chat",
+    "resultsLabel_other": "{{count}} chats"
+  }
+}

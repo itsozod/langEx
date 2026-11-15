@@ -20,11 +20,13 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAccountTransitionStore } from '@/shared/store/account-transition-store';
 import { useUserStore } from '@/shared/store/user.store';
+import { useTranslation } from 'react-i18next';
 
 const ORBIT_RADIUS = 61;
 
 export function AccountTransitionOverlay() {
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const targetAccountId = useAccountTransitionStore((state) => state.targetAccountId);
   const targetUser = useUserStore((state) =>
@@ -77,7 +79,7 @@ export function AccountTransitionOverlay() {
 
   return (
     <Animated.View
-      accessibilityLabel={`Switching to ${displayName}`}
+      accessibilityLabel={t('accountSwitch.title', { name: displayName })}
       accessibilityLiveRegion="polite"
       accessibilityRole="progressbar"
       accessibilityViewIsModal
@@ -123,10 +125,10 @@ export function AccountTransitionOverlay() {
 
       <View style={styles.copy}>
         <ThemedText type="title" style={styles.title}>
-          Switching to {displayName}
+          {t('accountSwitch.title', { name: displayName })}
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-          Bringing your conversations with you…
+          {t('accountSwitch.subtitle')}
         </ThemedText>
       </View>
     </Animated.View>

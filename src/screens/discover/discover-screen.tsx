@@ -15,24 +15,24 @@ import { useAppTheme } from '@/providers/theme-provider';
 import { useDiscoverUsers } from '@/screens/discover/hooks';
 import type { DiscoverUser, ProficiencyLevel } from '@/screens/discover/types';
 import { UserCard, UserCardSkeleton } from '@/screens/discover/user-card';
-import UserSearchScreen from '@/screens/discover/user-search-screen';
+import { useUserSearchStore } from '@/screens/discover/store/user-search-store';
+import { SearchTrigger } from '@/shared/components/search-overlay/search-trigger';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useTranslation } from 'react-i18next';
+import { getLevelLabel } from '@/shared/constants/language-levels';
 
 type Filter = 'all' | ProficiencyLevel;
 
-const FILTERS: { label: string; value: Filter }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Beginner', value: 'beginner' },
-  { label: 'Intermediate', value: 'intermediate' },
-  { label: 'Advanced', value: 'advanced' },
-];
+const FILTERS: Filter[] = ['all', 'beginner', 'intermediate', 'advanced'];
 
 export default function Discover() {
   const styles = useStyles();
   const { theme } = useAppTheme();
+  const { t } = useTranslation(['discover', 'common']);
   const [filter, setFilter] = useState<Filter>('all');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const isSearchOpen = useUserSearchStore((state) => state.isOpen);
+  const openSearch = useUserSearchStore((state) => state.open);
   const query = useDiscoverUsers(filter === 'all' ? undefined : filter);
   const users = useMemo(() => query.data?.pages.flatMap((page) => page.users) ?? [], [query.data]);
 
@@ -47,45 +47,41 @@ export default function Discover() {
       <View style={styles.titleRow}>
         <View style={styles.titleCopy}>
           <ThemedText type="title" style={styles.title}>
-            Discover
+            {t('title')}
           </ThemedText>
           <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-            Find your next language partner
+            {t('subtitle')}
           </ThemedText>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Search users by username"
-          onPress={() => setIsSearchOpen(true)}
-          style={({ pressed }) => [styles.searchButton, pressed && styles.pressed]}>
-          <SymbolView
-            name={{ ios: 'plus', android: 'add', web: 'add' }}
-            size={25}
-            weight="semibold"
-            tintColor="#FFFFFF"
-          />
-        </Pressable>
       </View>
+
+      <SearchTrigger
+        accessibilityHint={t('search.openHint')}
+        accessibilityLabel={t('openSearch')}
+        hidden={isSearchOpen}
+        onOpen={openSearch}
+        placeholder={t('search.placeholder')}
+      />
 
       <ScrollView
         horizontal
         contentContainerStyle={styles.filters}
         showsHorizontalScrollIndicator={false}>
         {FILTERS.map((item) => {
-          const selected = filter === item.value;
+          const selected = filter === item;
           return (
             <Pressable
-              key={item.value}
+              key={item}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              onPress={() => setFilter(item.value)}
+              onPress={() => setFilter(item)}
               style={({ pressed }) => [
                 styles.filterPill,
                 selected && styles.filterPillSelected,
                 pressed && styles.pressed,
               ]}>
               <ThemedText style={[styles.filterText, selected && styles.filterTextSelected]}>
-                {item.label}
+                {item === 'all' ? t('filters.all') : getLevelLabel(item)}
               </ThemedText>
             </Pressable>
           );
@@ -110,13 +106,13 @@ export default function Discover() {
         />
       </View>
       <ThemedText type="bold" style={styles.stateTitle}>
-        Couldn&apos;t load partners
+        {t('loadFailed')}
       </ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.stateMessage}>
-        {query.error instanceof Error ? query.error.message : 'Please try again.'}
+        {query.error instanceof Error ? query.error.message : t('common:errors.tryAgain')}
       </ThemedText>
       <Pressable onPress={() => void query.refetch()} style={styles.retryButton}>
-        <ThemedText style={styles.retryText}>Try again</ThemedText>
+        <ThemedText style={styles.retryText}>{t('common:actions.tryAgain')}</ThemedText>
       </Pressable>
     </View>
   ) : (
@@ -129,10 +125,10 @@ export default function Discover() {
         />
       </View>
       <ThemedText type="bold" style={styles.stateTitle}>
-        No partners yet
+        {t('empty.title')}
       </ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.stateMessage}>
-        No language partners found. Try changing your languages in your profile.
+        {t('empty.message')}
       </ThemedText>
     </View>
   );
@@ -168,7 +164,6 @@ export default function Discover() {
           />
         </SafeAreaView>
       </GradientBackground>
-      {isSearchOpen ? <UserSearchScreen onClose={() => setIsSearchOpen(false)} /> : null}
     </View>
   );
 }
@@ -193,16 +188,6 @@ const useStyles = () => {
     titleCopy: { flex: 1, minWidth: 0, paddingRight: 12 },
     title: { fontSize: 32, lineHeight: 39 },
     subtitle: { fontSize: 13, lineHeight: 20, marginTop: 3 },
-    searchButton: {
-      width: 48,
-      height: 48,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 17,
-      borderCurve: 'continuous',
-      backgroundColor: '#6B57CA',
-      boxShadow: '0 8px 18px rgba(82,61,173,0.28)',
-    },
     filters: { gap: 9, paddingRight: 8 },
     filterPill: {
       borderRadius: 999,

@@ -8,8 +8,10 @@ import { OnboardingCard } from '@/screens/onboarding/components/onboarding-card'
 import { OnboardingScreen } from '@/screens/onboarding/components/onboarding-screen';
 import { countrySchema, type CountryFormValues } from '@/screens/onboarding/schemas';
 import { useOnboardingStore } from '@/shared/store/onboarding-store';
+import { useTranslation } from 'react-i18next';
 
 export default function OnboardingStepTwo() {
+  const { t } = useTranslation('onboarding');
   const country = useOnboardingStore((state) => state.country);
   const update = useOnboardingStore((state) => state.update);
   const {
@@ -35,8 +37,8 @@ export default function OnboardingStepTwo() {
   return (
     <OnboardingScreen
       step={2}
-      title="Where are you from?"
-      subtitle="Choose your country so partners can learn a little more about you."
+      title={t('step2.title')}
+      subtitle={t('step2.subtitle')}
       onBack={onBack}>
       <OnboardingCard>
         <Controller
@@ -47,7 +49,7 @@ export default function OnboardingStepTwo() {
           )}
         />
 
-        <AuthPrimaryButton label="Next" onPress={() => void handleSubmit(onNext)()} />
+        <AuthPrimaryButton label={t('next')} onPress={() => void handleSubmit(onNext)()} />
       </OnboardingCard>
     </OnboardingScreen>
   );

@@ -1,12 +1,14 @@
 import React from 'react';
 import AuthScreen from './_shared/components/auth-screen';
 import LoginForm from './_shared/components/login-form';
+import { useTranslation } from 'react-i18next';
 
 const LoginScreen = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
+  const { t } = useTranslation('auth');
   return (
     <AuthScreen
-      title="Welcome back"
-      subtitle="Sign in to continue your language journey."
+      title={t('login.title')}
+      subtitle={t('login.subtitle')}
       dismissible={isAddingAccount}>
       <LoginForm isAddingAccount={isAddingAccount} />
     </AuthScreen>

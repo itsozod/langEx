@@ -1,6 +1,6 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
+import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 import { getDiscoverUsers, getPublicUser, searchUsers } from './api';
@@ -35,17 +35,6 @@ export function usePublicUser(id?: string) {
   });
 }
 
-function useDebouncedValue(value: string, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timeout);
-  }, [delay, value]);
-
-  return debouncedValue;
-}
-
 export function useUserSearch(query: string) {
   const token = useAuthStore((state) => state.token);
   const normalizedQuery = query.trim();
@@ -57,6 +46,8 @@ export function useUserSearch(query: string) {
       queryKey: discoverQueryKeys.search(debouncedQuery.toLocaleLowerCase()),
       queryFn: () => searchUsers(debouncedQuery),
       enabled: Boolean(token && debouncedQuery.length >= 2),
+      // Keep the last results on screen while the next query loads, so the list never flashes.
+      placeholderData: keepPreviousData,
       staleTime: 30_000,
     }),
   };

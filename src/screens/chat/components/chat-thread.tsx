@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
-import { View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { StyleSheet, View } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 import { useChatAutoscroll } from '../hooks/use-chat-autoscroll';
 import { useChatComposer } from '../hooks/use-chat-composer';
@@ -12,6 +12,7 @@ import { useChatPins } from '../hooks/use-chat-pins';
 import { useChatReadOnly } from '../hooks/use-chat-read-only';
 import { useChatScrollState } from '../hooks/use-chat-scroll-state';
 import { useChatUnseenMessages } from '../hooks/use-chat-unseen-messages';
+import { useComposerKeyboardOffset } from '../hooks/use-composer-keyboard-offset';
 import { useChatStyles } from '../styles/chat-styles';
 import type { ChatThreadProps } from '../types/chat-thread-types';
 import { ChatInputToolbar } from './chat-composer';
@@ -22,8 +23,10 @@ import { ChatMessageLoadStatus } from './chat-message-load-status';
 import { ChatMessageMenu } from './chat-message-menu';
 import { ChatPinnedMessages } from './chat-pinned-messages';
 import { DeletedUserNotice } from './chat-thread-states';
+import i18n from '@/shared/i18n';
 
 export function ChatThread({ conversation, history, messaging, presentation }: ChatThreadProps) {
+  const composerKeyboardOffset = useComposerKeyboardOffset();
   const {
     id: conversationId,
     currentUser,
@@ -209,7 +212,9 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
         unpinPending={pinMutationPending}
       />
       <View style={styles.threadViewport}>
-        <KeyboardAvoidingView automaticOffset behavior="translate-with-padding" style={styles.chat}>
+        {/* The list lifts its messages itself (ChatKeyboardScrollView); the composer and the
+            jump button ride on the keyboard. Nothing here measures its position on screen. */}
+        <View style={styles.chat}>
           <View style={styles.messagesContainer}>
             <ChatMessageList
               hasNewerMessages={hasNewerMessages}
@@ -232,39 +237,46 @@ export function ChatThread({ conversation, history, messaging, presentation }: C
               typing={typingUsers.length > 0}
               user={giftedUser}
             />
-            <ChatJumpToLatest
-              isAlwaysVisible={isHistoricalWindow}
-              isScrolledAway={isScrolledAway}
-              newMessageCount={unseenMessageCount}
-              onPress={jumpToLatest}
-            />
+            <KeyboardStickyView
+              offset={{ opened: composerKeyboardOffset }}
+              pointerEvents="box-none"
+              style={StyleSheet.absoluteFill}>
+              <ChatJumpToLatest
+                isAlwaysVisible={isHistoricalWindow}
+                isScrolledAway={isScrolledAway}
+                newMessageCount={unseenMessageCount}
+                onPress={jumpToLatest}
+              />
+            </KeyboardStickyView>
           </View>
           {isReadOnly ? (
             <DeletedUserNotice />
           ) : (
-            <ChatInputToolbar
-              currentUserId={currentUserId}
-              isEditing={editing !== null}
-              onCancelEdit={stopEditingAndResetComposer}
-              onChooseImages={handleChooseImages}
-              onClearReply={() => setReplyingTo(null)}
-              onSendText={sendComposerText}
-              onSubmitEdit={submitEdit}
-              replyMessage={replyingTo}
-              text={composerText}
-              textInputProps={{
-                keyboardAppearance: theme,
-                multiline: true,
-                onContentSizeChange: handleContentSizeChange,
-                onChangeText: handleInputChange,
-                placeholder: 'Write a message…',
-                placeholderTextColor: styles.placeholder.color,
-                scrollEnabled: isComposerScrollable,
-                style: [styles.composer, { height: composerHeight }],
-              }}
-            />
+            <KeyboardStickyView offset={{ opened: composerKeyboardOffset }}>
+              <ChatInputToolbar
+                currentUserId={currentUserId}
+                isEditing={editing !== null}
+                onCancelEdit={stopEditingAndResetComposer}
+                onChooseImages={handleChooseImages}
+                onClearReply={() => setReplyingTo(null)}
+                onSendText={sendComposerText}
+                onSubmitEdit={submitEdit}
+                replyMessage={replyingTo}
+                text={composerText}
+                textInputProps={{
+                  keyboardAppearance: theme,
+                  multiline: true,
+                  onContentSizeChange: handleContentSizeChange,
+                  onChangeText: handleInputChange,
+                  placeholder: i18n.t('chat:composer.placeholder'),
+                  placeholderTextColor: styles.placeholder.color,
+                  scrollEnabled: isComposerScrollable,
+                  style: [styles.composer, { height: composerHeight }],
+                }}
+              />
+            </KeyboardStickyView>
           )}
-        </KeyboardAvoidingView>
+        </View>
         <ChatMessageLoadStatus
           failed={messageLoadFailed}
           loading={messageLoading}

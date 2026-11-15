@@ -1,0 +1,99 @@
+{
+  "title": "My profile",
+  "subtitle": "Your language exchange identity",
+  "openSettings": "Open profile settings",
+  "refreshFailed": "Could not refresh profile",
+  "logout": {
+    "action": "Log out",
+    "confirmTitle": "Log out of this account?",
+    "confirmMessage": "Other saved accounts will stay signed in on this device."
+  },
+  "photo": {
+    "updateFailed": "Unable to update your photo.",
+    "removeFailed": "Unable to remove your photo."
+  },
+  "header": {
+    "changePhoto": "Change profile photo",
+    "removePhoto": "Remove photo",
+    "editProfile": "Edit Profile"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "fallbackName": "LangEx account",
+    "add": "Add account"
+  },
+  "sections": {
+    "languages": "Languages",
+    "nativeLanguage": "Native language",
+    "learning": "Learning",
+    "notAdded": "Not added",
+    "interests": "Interests",
+    "aboutMe": "About me"
+  },
+  "edit": {
+    "title": "Edit profile",
+    "subtitle": "Keep your details fresh",
+    "cancel": "Cancel editing",
+    "displayNamePlaceholder": "Your display name",
+    "bioPlaceholder": "Tell people a little about yourself…",
+    "proficiency": "Proficiency level",
+    "interestsCounter_one": "{{count}} selected · {{minimum}} minimum",
+    "interestsCounter_other": "{{count}} selected · {{minimum}} minimum",
+    "interestsMinimum": "Choose at least 3 interests.",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saveFailed": "Unable to save your profile."
+  },
+  "public": {
+    "loading": "Loading profile…",
+    "loadFailed": "Couldn’t load this profile",
+    "mayNotExist": "This user may no longer exist.",
+    "backToDiscover": "Back to discover",
+    "deletedTitle": "User deleted",
+    "deletedMessage": "This account no longer exists. Previous conversations and messages remain available.",
+    "yourProfile": "Your profile",
+    "partnerProfile": "Partner profile",
+    "fallbackName": "Language partner",
+    "sharedWithYou": "Shared with you",
+    "about": "About",
+    "sendMessage": "Send Message",
+    "openConversationFailed": "Could not open this conversation."
+  },
+  "settings": {
+    "title": "Profile settings",
+    "subtitle": "Manage your profile preferences",
+    "rowLabel": "{{title}} settings",
+    "accountHint": "Opens security and account deletion options",
+    "accountSubtitle": "Security and account deletion",
+    "themeHint": "Opens theme choices",
+    "themeSubtitle": "System, light, or dark appearance",
+    "languageHint": "Opens app language choices"
+  },
+  "account": {
+    "title": "Account",
+    "subtitle": "Security and account access",
+    "delete": "Delete account",
+    "deleting": "Deleting account…",
+    "deleteLabel": "Permanently delete account",
+    "deleteDescription": "Permanently remove this profile and its access. Your previous conversations remain visible to the people you messaged.",
+    "deleteFailed": "Could not delete account",
+    "confirmTitle": "Delete this account?",
+    "confirmMessage": "Your profile and access will be permanently removed. People you messaged will still see the conversation history under “Deleted user.”",
+    "finalConfirmTitle": "Permanently delete account?",
+    "finalConfirmMessage": "This cannot be undone."
+  },
+  "theme": {
+    "title": "Theme",
+    "subtitle": "Choose how LangEx looks",
+    "description": "Choose how LangEx looks on this device.",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
+    "optionLabel": "{{option}} theme"
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "Choose the app language",
+    "description": "Choose the language LangEx uses on this device."
+  }
+}

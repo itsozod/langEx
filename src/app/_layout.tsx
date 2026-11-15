@@ -22,6 +22,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { TamaguiProvider } from 'tamagui';
 
+import '@/shared/i18n';
 import { QueryProvider } from '@/providers/query-provider';
 import { ThemeProvider, useAppTheme } from '@/providers/theme-provider';
 import { switchToSavedAccount } from '@/screens/auth/_shared/utils/session-transition';
@@ -41,11 +42,14 @@ import { useAuthHydration, useAuthStore } from '@/shared/store/auth-store';
 import { useUserHydration } from '@/shared/store/user.store';
 
 import tamaguiConfig from '../../tamagui.config';
+import { useTranslation } from 'react-i18next';
+import { useLanguageHydration } from '@/shared/store/language-store';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function ThemedAppShell() {
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
   const rootNavigationState = useRootNavigationState();
   const token = useAuthStore((state) => state.token);
   const [notificationTarget, setNotificationTarget] =
@@ -136,7 +140,7 @@ function ThemedAppShell() {
           <View style={[styles.loadingScreen, theme === 'dark' && styles.loadingScreenDark]}>
             <ActivityIndicator size="large" color="#6654C7" />
             <ThemedText themeColor="textSecondary" style={styles.loadingText}>
-              Checking your session…
+              {t('session.checking')}
             </ThemedText>
           </View>
         ) : (
@@ -185,6 +189,7 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   const authHydrated = useAuthHydration();
   const usersHydrated = useUserHydration();
+  const languageHydrated = useLanguageHydration();
   const [fontsLoaded] = useFonts({
     Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
@@ -195,12 +200,12 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded && authHydrated && usersHydrated) {
+    if (fontsLoaded && authHydrated && usersHydrated && languageHydrated) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [authHydrated, fontsLoaded, usersHydrated]);
+  }, [authHydrated, fontsLoaded, languageHydrated, usersHydrated]);
 
-  if (!fontsLoaded || !authHydrated || !usersHydrated) {
+  if (!fontsLoaded || !authHydrated || !usersHydrated || !languageHydrated) {
     return null;
   }
 

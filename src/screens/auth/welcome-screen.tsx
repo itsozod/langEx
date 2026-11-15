@@ -10,9 +10,11 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from 'tamagui';
 import AuthPrimaryButton from './_shared/components/auth-primary-button';
+import { useTranslation } from 'react-i18next';
 
 const WelcomeScreen = () => {
   const styles = useStyles();
+  const { t } = useTranslation('auth');
 
   return (
     <GradientBackground>
@@ -27,14 +29,13 @@ const WelcomeScreen = () => {
             <View style={styles.heroCopy}>
               <View style={styles.eyebrow}>
                 <View style={styles.eyebrowDot} />
-                <ThemedText style={styles.eyebrowText}>LANGUAGE EXCHANGE, REIMAGINED</ThemedText>
+                <ThemedText style={styles.eyebrowText}>{t('welcome.eyebrow')}</ThemedText>
               </View>
               <ThemedText type="title" style={styles.title}>
-                Speak more.{`\n`}Connect for real.
+                {t('welcome.title')}
               </ThemedText>
               <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-                Practice with real people, build confidence, and turn every conversation into
-                progress.
+                {t('welcome.subtitle')}
               </ThemedText>
             </View>
 
@@ -53,15 +54,13 @@ const WelcomeScreen = () => {
               />
               <View style={styles.progressPill}>
                 <View style={styles.onlineDot} />
-                <ThemedText style={styles.progressText}>
-                  Real conversations. Real progress.
-                </ThemedText>
+                <ThemedText style={styles.progressText}>{t('welcome.progress')}</ThemedText>
               </View>
             </View>
 
             <View style={styles.actions}>
               <AuthPrimaryButton
-                label="Create your account"
+                label={t('welcome.createAccount')}
                 onPress={() => router.push('/register')}
               />
               <Button
@@ -72,13 +71,13 @@ const WelcomeScreen = () => {
                 pressStyle={{ opacity: 0.72, scale: 0.99 }}
                 onPress={() => router.push('/login')}>
                 <ThemedText type="bold" style={styles.secondaryButtonText}>
-                  I already have an account
+                  {t('welcome.haveAccount')}
                 </ThemedText>
               </Button>
             </View>
 
             <ThemedText themeColor="textSecondary" style={styles.footerText}>
-              Learn together. Grow together.
+              {t('welcome.footer')}
             </ThemedText>
           </View>
         </SafeAreaView>

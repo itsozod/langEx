@@ -10,10 +10,12 @@ import { OnboardingCard } from '@/screens/onboarding/components/onboarding-card'
 import { OnboardingScreen } from '@/screens/onboarding/components/onboarding-screen';
 import { languagesSchema, type LanguagesFormValues } from '@/screens/onboarding/schemas';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { LEVELS } from '@/shared/constants/language-levels';
+import { getLevelLabel, LEVELS } from '@/shared/constants/language-levels';
 import { useOnboardingStore } from '@/shared/store/onboarding-store';
+import { useTranslation } from 'react-i18next';
 
 export default function OnboardingStepThree() {
+  const { t } = useTranslation('onboarding');
   const styles = useStyles();
   const update = useOnboardingStore((state) => state.update);
   const nativeLanguage = useOnboardingStore((state) => state.nativeLanguage);
@@ -44,8 +46,8 @@ export default function OnboardingStepThree() {
   return (
     <OnboardingScreen
       step={3}
-      title="Choose your languages"
-      subtitle="Tell us what you speak and what you want to practice."
+      title={t('step3.title')}
+      subtitle={t('step3.subtitle')}
       onBack={onBack}>
       <OnboardingCard>
         <Controller
@@ -53,8 +55,8 @@ export default function OnboardingStepThree() {
           name="nativeLanguage"
           render={({ field: { onChange, value } }) => (
             <LanguagePicker
-              label="Native language"
-              placeholder="Select your native language"
+              label={t('step3.nativeLanguage')}
+              placeholder={t('step3.nativeLanguagePlaceholder')}
               value={value}
               excludedValue={selectedLearningLanguage}
               error={errors.nativeLanguage?.message}
@@ -68,8 +70,8 @@ export default function OnboardingStepThree() {
           name="learningLanguage"
           render={({ field: { onChange, value } }) => (
             <LanguagePicker
-              label="Learning language"
-              placeholder="Select a language to learn"
+              label={t('step3.learningLanguage')}
+              placeholder={t('step3.learningLanguagePlaceholder')}
               value={value}
               excludedValue={selectedNativeLanguage}
               error={errors.learningLanguage?.message}
@@ -79,7 +81,7 @@ export default function OnboardingStepThree() {
         />
 
         <View style={styles.levelField}>
-          <ThemedText style={styles.label}>Your current level</ThemedText>
+          <ThemedText style={styles.label}>{t('step3.level')}</ThemedText>
           <Controller
             control={control}
             name="proficiencyLevel"
@@ -97,7 +99,7 @@ export default function OnboardingStepThree() {
                         pressed && styles.pressed,
                       ]}>
                       <ThemedText style={[styles.levelText, selected && styles.levelTextSelected]}>
-                        {level.label}
+                        {getLevelLabel(level.value)}
                       </ThemedText>
                     </Pressable>
                   );
@@ -107,7 +109,7 @@ export default function OnboardingStepThree() {
           />
         </View>
 
-        <AuthPrimaryButton label="Next" onPress={() => void handleSubmit(onNext)()} />
+        <AuthPrimaryButton label={t('next')} onPress={() => void handleSubmit(onNext)()} />
       </OnboardingCard>
     </OnboardingScreen>
   );

@@ -1,3 +1,7 @@
+import { translateKey } from '@/shared/i18n/translate-key';
+
+// Static data table: stored values stay in English because the API persists them. Display
+// labels are localized through the `data` i18n namespace.
 export const LANGUAGES = [
   'Arabic',
   'Armenian',
@@ -75,8 +79,34 @@ export const getCountry = (value?: string | null) => {
   );
 };
 
-export const getCountryName = (value?: string | null) =>
-  getCountry(value)?.name ?? value?.trim() ?? '';
+export const getCountryName = (value?: string | null) => {
+  const country = getCountry(value);
+  if (!country) return value?.trim() ?? '';
+  return translateKey(`data:countries.${country.code}`, country.name);
+};
+
+export const getLanguageLabel = (language?: string | null) => {
+  const normalized = language?.trim();
+  if (!normalized) return '';
+  return translateKey(`data:languages.${normalized}`, normalized);
+};
+
+const sortByLabel = <T extends { label: string }>(items: T[], locale: string) =>
+  items.sort((a, b) => a.label.localeCompare(b.label, locale));
+
+/** Countries with labels in the active app language, sorted for that language. */
+export const getLocalizedCountries = (locale: string) =>
+  sortByLabel(
+    COUNTRIES.map((country) => ({ ...country, label: getCountryName(country.code) })),
+    locale,
+  );
+
+/** Learnable languages with labels in the active app language, sorted for that language. */
+export const getLocalizedLanguages = (locale: string) =>
+  sortByLabel(
+    LANGUAGES.map((language) => ({ value: language, label: getLanguageLabel(language) })),
+    locale,
+  );
 
 export const getCountryFlag = (value: string) => {
   const code = getCountry(value)?.code ?? value.trim().toUpperCase();

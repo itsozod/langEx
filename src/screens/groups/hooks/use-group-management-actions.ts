@@ -6,6 +6,7 @@ import type { ChatParticipant } from '@/screens/chat/types/message.types';
 
 import { useManageGroup } from '../hooks';
 import type { GroupManagementAction } from '../types';
+import { useTranslation } from 'react-i18next';
 
 type UseGroupManagementActionsOptions = {
   conversationId?: string;
@@ -21,19 +22,20 @@ export function useGroupManagementActions({
   onMemberActionComplete,
 }: UseGroupManagementActionsOptions) {
   const mutation = useManageGroup();
+  const { t } = useTranslation(['groups', 'common']);
   const memberId = member?.id;
-  const memberName = member?.displayName?.trim() || 'this member';
-  const resolvedGroupName = groupName?.trim() || 'this group';
+  const memberName = member?.displayName?.trim() || t('alerts.thisMember');
+  const resolvedGroupName = groupName?.trim() || t('alerts.thisGroup');
 
   const promote = useCallback(() => {
     if (!conversationId || !memberId || mutation.isPending) return;
     Alert.alert(
-      `Make ${memberName} an admin?`,
-      `${memberName} will be able to manage members in ${resolvedGroupName}.`,
+      t('alerts.promoteTitle', { name: memberName }),
+      t('alerts.promoteMessage', { name: memberName, group: resolvedGroupName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Make admin',
+          text: t('actions.makeAdmin'),
           onPress: () =>
             mutation.mutate(
               { type: 'promote-admin', conversationId, participantId: memberId },
@@ -42,17 +44,25 @@ export function useGroupManagementActions({
         },
       ],
     );
-  }, [conversationId, memberId, memberName, mutation, onMemberActionComplete, resolvedGroupName]);
+  }, [
+    conversationId,
+    memberId,
+    memberName,
+    mutation,
+    onMemberActionComplete,
+    resolvedGroupName,
+    t,
+  ]);
 
   const revoke = useCallback(() => {
     if (!conversationId || !memberId || mutation.isPending) return;
     Alert.alert(
-      `Remove ${memberName} as an admin?`,
-      `${memberName} will remain a member of ${resolvedGroupName}, but will no longer be able to manage members.`,
+      t('alerts.revokeTitle', { name: memberName }),
+      t('alerts.revokeMessage', { name: memberName, group: resolvedGroupName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Remove admin role',
+          text: t('actions.removeAdmin'),
           onPress: () =>
             mutation.mutate(
               { type: 'revoke-admin', conversationId, participantId: memberId },
@@ -61,17 +71,25 @@ export function useGroupManagementActions({
         },
       ],
     );
-  }, [conversationId, memberId, memberName, mutation, onMemberActionComplete, resolvedGroupName]);
+  }, [
+    conversationId,
+    memberId,
+    memberName,
+    mutation,
+    onMemberActionComplete,
+    resolvedGroupName,
+    t,
+  ]);
 
   const transfer = useCallback(() => {
     if (!conversationId || !memberId || mutation.isPending) return;
     Alert.alert(
-      `Make ${memberName} the owner?`,
-      `You will become a regular member of ${resolvedGroupName}. The new owner can manage admins, while the owner and admins can add people.`,
+      t('alerts.transferTitle', { name: memberName }),
+      t('alerts.transferMessage', { group: resolvedGroupName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Transfer ownership',
+          text: t('actions.transferOwnership'),
           onPress: () =>
             mutation.mutate(
               { type: 'transfer-owner', conversationId, ownerId: memberId },
@@ -80,17 +98,25 @@ export function useGroupManagementActions({
         },
       ],
     );
-  }, [conversationId, memberId, memberName, mutation, onMemberActionComplete, resolvedGroupName]);
+  }, [
+    conversationId,
+    memberId,
+    memberName,
+    mutation,
+    onMemberActionComplete,
+    resolvedGroupName,
+    t,
+  ]);
 
   const remove = useCallback(() => {
     if (!conversationId || !memberId || mutation.isPending) return;
     Alert.alert(
-      `Remove ${memberName}?`,
-      `${memberName} will immediately lose access to ${resolvedGroupName}. If invited again, they will only see new messages.`,
+      t('alerts.removeTitle', { name: memberName }),
+      t('alerts.removeMessage', { name: memberName, group: resolvedGroupName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('actions.remove'),
           style: 'destructive',
           onPress: () =>
             mutation.mutate(
@@ -100,27 +126,31 @@ export function useGroupManagementActions({
         },
       ],
     );
-  }, [conversationId, memberId, memberName, mutation, onMemberActionComplete, resolvedGroupName]);
+  }, [
+    conversationId,
+    memberId,
+    memberName,
+    mutation,
+    onMemberActionComplete,
+    resolvedGroupName,
+    t,
+  ]);
 
   const leave = useCallback(() => {
     if (!conversationId || mutation.isPending) return;
-    Alert.alert(
-      `Leave ${resolvedGroupName}?`,
-      'You will immediately lose access. If you are invited again, you will only see messages sent after you rejoin.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave group',
-          style: 'destructive',
-          onPress: () =>
-            mutation.mutate(
-              { type: 'leave-group', conversationId },
-              { onSuccess: () => router.replace('/(tabs)/chats') },
-            ),
-        },
-      ],
-    );
-  }, [conversationId, mutation, resolvedGroupName]);
+    Alert.alert(t('alerts.leaveTitle', { group: resolvedGroupName }), t('alerts.leaveMessage'), [
+      { text: t('common:actions.cancel'), style: 'cancel' },
+      {
+        text: t('actions.leave'),
+        style: 'destructive',
+        onPress: () =>
+          mutation.mutate(
+            { type: 'leave-group', conversationId },
+            { onSuccess: () => router.replace('/(tabs)/chats') },
+          ),
+      },
+    ]);
+  }, [conversationId, mutation, resolvedGroupName, t]);
 
   const pendingAction: GroupManagementAction | undefined = mutation.isPending
     ? mutation.variables?.type === 'promote-admin'

@@ -1,5 +1,7 @@
 import type { ColorValue } from 'react-native';
 
+import { translateKey } from '@/shared/i18n/translate-key';
+
 import { SymbolView, type SymbolViewProps } from './symbol-view';
 
 type InterestDefinition = {
@@ -62,7 +64,10 @@ const getDefinition = (interest: string) =>
   INTERESTS[interest.trim().split(/\s+/)[0].toLowerCase()];
 
 export function getInterestLabel(interest: string) {
-  return getDefinition(interest)?.label ?? interest;
+  const key = interest.trim().split(/\s+/)[0].toLowerCase();
+  const definition = getDefinition(interest);
+  if (!definition) return interest;
+  return translateKey(`data:interests.${key}`, definition.label);
 }
 
 export function InterestIcon({

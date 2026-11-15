@@ -1,0 +1,42 @@
+{
+  "actions": {
+    "back": "Назад",
+    "goBack": "Назад",
+    "cancel": "Отмена",
+    "continue": "Продолжить",
+    "delete": "Удалить",
+    "done": "Готово",
+    "tryAgain": "Повторить"
+  },
+  "errors": {
+    "tryAgain": "Попробуйте ещё раз.",
+    "checkConnection": "Проверьте подключение к интернету."
+  },
+  "status": {
+    "online": "В сети",
+    "offline": "Не в сети"
+  },
+  "deletedUser": "Удалённый пользователь",
+  "session": {
+    "checking": "Проверяем сессию…"
+  },
+  "tabs": {
+    "chats": "Чаты",
+    "chatsUnread_one": "Чаты, {{count}} непрочитанное сообщение",
+    "chatsUnread_few": "Чаты, {{count}} непрочитанных сообщения",
+    "chatsUnread_many": "Чаты, {{count}} непрочитанных сообщений",
+    "chatsUnread_other": "Чаты, {{count}} непрочитанного сообщения",
+    "discover": "Поиск",
+    "profile": "Профиль"
+  },
+  "themeToggle": {
+    "label": "{{theme}}. Нажмите, чтобы сменить тему.",
+    "system": "Системная тема",
+    "light": "Светлая тема",
+    "dark": "Тёмная тема"
+  },
+  "accountSwitch": {
+    "title": "Переключаемся на {{name}}",
+    "subtitle": "Переносим ваши переписки…"
+  }
+}

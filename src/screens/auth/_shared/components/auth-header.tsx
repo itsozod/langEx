@@ -6,10 +6,12 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 const AuthHeader = ({ back }: NativeStackHeaderProps) => {
   const theme = useTheme();
   const styles = useStyles();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -17,7 +19,7 @@ const AuthHeader = ({ back }: NativeStackHeaderProps) => {
         {back ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={t('actions.back')}
             onPress={() => router.back()}
             hitSlop={12}
             style={({ pressed }) => [styles.side, pressed && styles.pressed]}>

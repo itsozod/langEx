@@ -22,6 +22,7 @@ import type { GiftedMessage } from '../types/message.types';
 import { formatMessageTime, isSameSenderOnSameDay } from '../utils/messages';
 import { ChatMessageImage } from './chat-message-image';
 import { ChatMessageReply } from './chat-message-reply';
+import { useTranslation } from 'react-i18next';
 
 const MessageLongPressContext = createContext<(() => void) | undefined>(undefined);
 
@@ -48,12 +49,13 @@ type BubbleHighlightProps = {
 
 function MessageDeliveryReceipt({ status }: { status: 'sent' | 'read' }) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
   const tintColor =
     status === 'read' ? styles.messageReceiptRead.color : styles.messageReceiptSent.color;
 
   return (
     <View
-      accessibilityLabel={status === 'read' ? 'Read' : 'Sent'}
+      accessibilityLabel={status === 'read' ? t('status.read') : t('status.sent')}
       accessibilityRole="text"
       style={styles.messageReceipt}>
       <SymbolView
@@ -95,6 +97,7 @@ function BubbleHighlight({ cornerStyles, highlightedMessageId, messageId }: Bubb
 
 function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
   const styles = useChatStyles();
+  const { t } = useTranslation('chat');
   const { currentMessage, highlightedMessageId, nextMessage, position, previousMessage } = props;
   const joinsAbove = isSameSenderOnSameDay(currentMessage, previousMessage);
   const joinsBelow = isSameSenderOnSameDay(currentMessage, nextMessage);
@@ -161,15 +164,15 @@ function ChatBubble(props: BubbleProps<GiftedMessage> & ChatMessageExtras) {
         {position === 'right' && currentMessage.deliveryStatus === 'failed' ? (
           <BubblePressable
             accessibilityHint={currentMessage.sendError}
-            accessibilityLabel="Message failed to send. Retry"
+            accessibilityLabel={t('status.failedLabel')}
             accessibilityRole="button"
             hitSlop={8}
             onPress={() => props.onRetryMessage?.(String(currentMessage._id))}>
-            <ThemedText style={styles.failedMessageLabel}>Failed · Retry</ThemedText>
+            <ThemedText style={styles.failedMessageLabel}>{t('status.failed')}</ThemedText>
           </BubblePressable>
         ) : null}
         {position === 'right' && currentMessage.deliveryStatus === 'queued' ? (
-          <ThemedText style={styles.pendingMessageLabel}>Waiting</ThemedText>
+          <ThemedText style={styles.pendingMessageLabel}>{t('status.waiting')}</ThemedText>
         ) : null}
         {currentMessage.editedAt ? (
           <ThemedText

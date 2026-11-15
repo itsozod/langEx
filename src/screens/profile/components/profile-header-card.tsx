@@ -11,6 +11,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useProfileStyles } from '../styles/profile-styles';
 import { getInitials } from '../utils/language-flags';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   user: AuthUser;
@@ -30,6 +31,7 @@ export function ProfileHeaderCard({
   onRemovePhoto,
 }: Props) {
   const styles = useProfileStyles();
+  const { t } = useTranslation('profile');
   const displayName = user.displayName?.trim() || user.email.split('@')[0];
 
   return (
@@ -37,7 +39,7 @@ export function ProfileHeaderCard({
       <View style={styles.avatarArea}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Change profile photo"
+          accessibilityLabel={t('header.changePhoto')}
           disabled={avatarPending}
           onPress={onChooseAvatar}
           style={({ pressed }) => [styles.avatarButton, pressed && styles.pressed]}>
@@ -70,7 +72,7 @@ export function ProfileHeaderCard({
             hitSlop={8}
             onPress={onRemovePhoto}
             style={({ pressed }) => pressed && styles.pressed}>
-            <ThemedText style={styles.removePhoto}>Remove photo</ThemedText>
+            <ThemedText style={styles.removePhoto}>{t('header.removePhoto')}</ThemedText>
           </Pressable>
         ) : null}
         {avatarError ? <ThemedText style={styles.error}>{avatarError}</ThemedText> : null}
@@ -90,7 +92,10 @@ export function ProfileHeaderCard({
         ) : null}
       </View>
 
-      <AuthPrimaryButton label="Edit Profile" onPress={() => router.push('/profile/edit')} />
+      <AuthPrimaryButton
+        label={t('header.editProfile')}
+        onPress={() => router.push('/profile/edit')}
+      />
     </View>
   );
 }

@@ -3,21 +3,21 @@ import { z } from 'zod';
 const emailSchema = z
   .string()
   .trim()
-  .min(1, 'Email is required.')
-  .pipe(z.email({ error: 'Enter a valid email address.' }))
+  .min(1, 'auth:validation.emailRequired')
+  .pipe(z.email({ error: 'auth:validation.emailInvalid' }))
   .transform((email) => email.toLowerCase());
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, 'Password is required.'),
+  password: z.string().min(1, 'auth:validation.passwordRequired'),
 });
 
 export const registerSchema = loginSchema
   .extend({
-    confirmPassword: z.string().min(1, 'Please confirm your password.'),
+    confirmPassword: z.string().min(1, 'auth:validation.confirmPasswordRequired'),
   })
   .refine(({ password, confirmPassword }) => password === confirmPassword, {
-    message: 'Passwords do not match.',
+    message: 'auth:validation.passwordsMismatch',
     path: ['confirmPassword'],
   });
 

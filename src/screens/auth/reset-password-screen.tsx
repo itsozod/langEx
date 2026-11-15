@@ -1,12 +1,14 @@
 import React from 'react';
 import AuthScreen from './_shared/components/auth-screen';
 import ResetPasswordForm from './_shared/components/reset-password-form';
+import { useTranslation } from 'react-i18next';
 
 const ResetPasswordScreen = ({ isAddingAccount = false }: { isAddingAccount?: boolean }) => {
+  const { t } = useTranslation('auth');
   return (
     <AuthScreen
-      title="Reset your password"
-      subtitle="Enter your email and we’ll send you instructions to get back in."
+      title={t('resetPassword.title')}
+      subtitle={t('resetPassword.subtitle')}
       dismissible={isAddingAccount}>
       <ResetPasswordForm isAddingAccount={isAddingAccount} />
     </AuthScreen>

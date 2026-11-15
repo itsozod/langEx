@@ -7,6 +7,7 @@ import type { AuthUser } from '@/screens/auth/types';
 import { getInitials } from '@/screens/profile/utils/language-flags';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useTranslation } from 'react-i18next';
 
 type ProfileAccountsProps = {
   users: AuthUser[];
@@ -22,19 +23,20 @@ export function ProfileAccounts({
   onSwitchAccount,
 }: ProfileAccountsProps) {
   const styles = useStyles();
+  const { t } = useTranslation('profile');
 
   const completedUsers = users.filter((user) => user.isProfileComplete);
 
   return (
     <View style={styles.card}>
       <ThemedText type="bold" style={styles.title}>
-        Accounts
+        {t('accounts.title')}
       </ThemedText>
       <View>
         {completedUsers.map((user, index) => {
           const isActive = user.id === activeAccountId;
           const isSwitching = user.id === switchingAccountId;
-          const displayName = user.displayName?.trim() || 'LangEx account';
+          const displayName = user.displayName?.trim() || t('accounts.fallbackName');
 
           return (
             <View key={user.id}>
@@ -101,7 +103,7 @@ export function ProfileAccounts({
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Add account"
+          accessibilityLabel={t('accounts.add')}
           disabled={Boolean(switchingAccountId)}
           onPress={() => router.push('/account-auth/login')}
           style={({ pressed }) => [styles.addRow, pressed && styles.pressed]}>
@@ -113,7 +115,7 @@ export function ProfileAccounts({
               tintColor={styles.addText.color}
             />
           </View>
-          <ThemedText style={styles.addText}>Add account</ThemedText>
+          <ThemedText style={styles.addText}>{t('accounts.add')}</ThemedText>
         </Pressable>
       </View>
     </View>

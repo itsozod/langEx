@@ -3,17 +3,19 @@ import { View } from 'react-native';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatThreadStyles } from '../styles/chat-thread-styles';
+import { useTranslation } from 'react-i18next';
 
 export function ChatEmptyState() {
   const styles = useChatThreadStyles();
+  const { t } = useTranslation('chat');
 
   return (
     <View style={styles.emptyChat}>
       <ThemedText type="bold" style={styles.emptyTitle}>
-        Say hello 👋
+        {t('empty.title')}
       </ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.emptyMessage}>
-        Send the first message to start your conversation.
+        {t('empty.message')}
       </ThemedText>
     </View>
   );
@@ -21,14 +23,15 @@ export function ChatEmptyState() {
 
 export function DeletedUserNotice() {
   const styles = useChatThreadStyles();
+  const { t } = useTranslation('chat');
 
   return (
     <View style={styles.deletedUserNotice}>
       <ThemedText type="bold" style={styles.deletedUserTitle}>
-        User is deleted
+        {t('deletedUser.title')}
       </ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.deletedUserMessage}>
-        You can still view your message history, but this conversation is read-only.
+        {t('deletedUser.message')}
       </ThemedText>
     </View>
   );

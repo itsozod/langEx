@@ -15,6 +15,7 @@ import type {
   SendImageResponse,
   UserPresenceResponse,
 } from './types/message.types';
+import i18n from '@/shared/i18n';
 
 type SendChatImagesInput = {
   assets: ImagePickerAsset[];
@@ -38,7 +39,7 @@ export async function sendChatImages({
   replyToId,
 }: SendChatImagesInput) {
   if (assets.length < 1 || assets.length > 4) {
-    throw new Error('Choose between one and four photos.');
+    throw new Error(i18n.t('chat:errors.photoCount'));
   }
   const formData = new FormData();
 
@@ -73,8 +74,21 @@ export async function sendChatImages({
   return response.data;
 }
 
-export function getConversations() {
-  return apiRequest<ConversationsResponse>('/conversations');
+export type ConversationListFilter = 'online' | 'unread';
+
+export type ConversationListParams = {
+  search?: string;
+  filter?: ConversationListFilter;
+};
+
+export function getConversations(params: ConversationListParams = {}) {
+  const query = new URLSearchParams();
+  if (params.search) query.set('search', params.search);
+  if (params.filter) query.set('filter', params.filter);
+  const queryString = query.toString();
+  return apiRequest<ConversationsResponse>(
+    queryString ? `/conversations?${queryString}` : '/conversations',
+  );
 }
 
 export function getConversationsUnreadCount() {

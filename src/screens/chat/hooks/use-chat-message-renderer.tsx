@@ -6,6 +6,7 @@ import type { AuthUser } from '@/screens/auth/types';
 
 import { ChatMessage, type MessageAnchor } from '../components/chat-message';
 import type { GiftedMessage } from '../types/message.types';
+import i18n from '@/shared/i18n';
 
 type UseChatMessageRendererOptions = {
   currentUser: AuthUser | null;
@@ -27,7 +28,7 @@ export function useChatMessageRenderer({
   const giftedUser = useMemo(
     () => ({
       _id: currentUser?.id ?? '',
-      name: currentUser?.displayName || currentUser?.email || 'You',
+      name: currentUser?.displayName || currentUser?.email || i18n.t('chat:you'),
       avatar: currentUser?.avatarUrl || undefined,
     }),
     [currentUser?.avatarUrl, currentUser?.displayName, currentUser?.email, currentUser?.id],

@@ -6,6 +6,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatPinnedStyles } from '../styles/chat-pinned-styles';
 import type { Message } from '../types/message.types';
+import { useTranslation } from 'react-i18next';
 
 type ChatPinnedMessageActionsProps = {
   canDelete: boolean;
@@ -27,6 +28,7 @@ export function ChatPinnedMessageActions({
   unpinPending,
 }: ChatPinnedMessageActionsProps) {
   const styles = useChatPinnedStyles();
+  const { t } = useTranslation(['chat', 'common']);
   const insets = useSafeAreaInsets();
   const canCopy = Boolean(message.content.trim());
   const copyMessage = () => {
@@ -35,25 +37,29 @@ export function ChatPinnedMessageActions({
   };
   const deleteMessage = () => {
     onClose();
-    Alert.alert('Delete message?', 'This removes it for everyone in the chat.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => onDelete(message.id, message) },
+    Alert.alert(t('pinned.deleteTitle'), t('removesForEveryone'), [
+      { text: t('common:actions.cancel'), style: 'cancel' },
+      {
+        text: t('common:actions.delete'),
+        style: 'destructive',
+        onPress: () => onDelete(message.id, message),
+      },
     ]);
   };
 
   return (
     <View accessibilityViewIsModal style={styles.actionsLayer}>
       <Pressable
-        accessibilityLabel="Close message actions"
+        accessibilityLabel={t('pinned.closeActions')}
         accessibilityRole="button"
         onPress={onClose}
         style={styles.actionsBackdrop}
       />
       <View style={[styles.actionsCard, { marginBottom: Math.max(insets.bottom, 12) }]}>
         <View style={styles.actionsHeader}>
-          <ThemedText style={styles.actionsTitle}>Message actions</ThemedText>
+          <ThemedText style={styles.actionsTitle}>{t('pinned.actionsTitle')}</ThemedText>
           <ThemedText numberOfLines={2} style={styles.actionsPreview}>
-            {message.content.trim() || 'Photo'}
+            {message.content.trim() || t('photo')}
           </ThemedText>
         </View>
         {canCopy ? (
@@ -66,7 +72,7 @@ export function ChatPinnedMessageActions({
               size={19}
               tintColor={styles.actionsIcon.color}
             />
-            <ThemedText style={styles.actionsLabel}>Copy</ThemedText>
+            <ThemedText style={styles.actionsLabel}>{t('menu.copy')}</ThemedText>
           </Pressable>
         ) : null}
         {canModify ? (
@@ -89,7 +95,7 @@ export function ChatPinnedMessageActions({
                 size={19}
                 tintColor={styles.actionsIcon.color}
               />
-              <ThemedText style={styles.actionsLabel}>Unpin</ThemedText>
+              <ThemedText style={styles.actionsLabel}>{t('menu.unpin')}</ThemedText>
             </Pressable>
           </>
         ) : null}
@@ -106,7 +112,7 @@ export function ChatPinnedMessageActions({
                 tintColor={styles.actionsDestructive.color}
               />
               <ThemedText style={[styles.actionsLabel, styles.actionsDestructive]}>
-                Delete
+                {t('common:actions.delete')}
               </ThemedText>
             </Pressable>
           </>

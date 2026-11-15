@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 
 import { pinMessage, unpinMessage } from '../api';
 import { replacePinnedMessagesInWindows } from '../utils/conversation-cache';
+import i18n from '@/shared/i18n';
 
 type TogglePinVariables = {
   messageId: string;
@@ -13,7 +14,7 @@ type TogglePinVariables = {
 export function useChatPins(conversationId?: string) {
   const mutation = useMutation({
     mutationFn: ({ messageId, pinned }: TogglePinVariables) => {
-      if (!conversationId) throw new Error('Open the conversation before pinning a message.');
+      if (!conversationId) throw new Error(i18n.t('chat:errors.pinWithoutConversation'));
       return pinned
         ? unpinMessage(conversationId, messageId)
         : pinMessage(conversationId, messageId);
@@ -24,8 +25,8 @@ export function useChatPins(conversationId?: string) {
     },
     onError: (error) => {
       Alert.alert(
-        'Pinned messages',
-        error instanceof Error ? error.message : 'The pinned message could not be updated.',
+        i18n.t('chat:pinned.title'),
+        error instanceof Error ? error.message : i18n.t('chat:errors.pinFailed'),
       );
     },
   });

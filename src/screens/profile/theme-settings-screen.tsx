@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProfileAppearance } from '@/screens/profile/components/profile-appearance';
 import { SettingsHeader } from '@/screens/profile/components/settings-header';
 import GradientBackground from '@/shared/components/ui/gradient-background';
+import { useTranslation } from 'react-i18next';
 
 export default function ThemeSettingsScreen() {
+  const { t } = useTranslation('profile');
   return (
     <GradientBackground>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -13,8 +15,8 @@ export default function ThemeSettingsScreen() {
           <View style={styles.content}>
             <SettingsHeader
               fallbackHref="/profile/settings"
-              subtitle="Choose how LangEx looks"
-              title="Theme"
+              subtitle={t('theme.subtitle')}
+              title={t('theme.title')}
             />
             <ProfileAppearance />
           </View>

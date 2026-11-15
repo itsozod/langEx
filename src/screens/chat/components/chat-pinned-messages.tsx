@@ -12,6 +12,8 @@ import { useChatPinnedSheet } from '../hooks/use-chat-pinned-sheet';
 import { useChatPinnedStyles } from '../styles/chat-pinned-styles';
 import type { ChatParticipant, Message } from '../types/message.types';
 import { ChatPinnedMessageActions } from './chat-pinned-message-actions';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/shared/i18n';
 
 type ChatPinnedMessagesProps = {
   currentUserId?: string;
@@ -28,7 +30,7 @@ function messagePreview(message: Message) {
   const text = message.content.trim().replace(/\s+/g, ' ');
   if (text) return text;
   const imageCount = message.images?.length ?? Number(Boolean(message.image));
-  return imageCount > 1 ? `${imageCount} photos` : 'Photo';
+  return i18n.t('chat:photoCount', { count: Math.max(imageCount, 1) });
 }
 
 export function ChatPinnedMessages({
@@ -42,6 +44,7 @@ export function ChatPinnedMessages({
   unpinPending,
 }: ChatPinnedMessagesProps) {
   const styles = useChatPinnedStyles();
+  const { t } = useTranslation(['chat', 'common']);
   const { height: windowHeight } = useWindowDimensions();
   const [currentMessageId, setCurrentMessageId] = useState<string>();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -68,15 +71,18 @@ export function ChatPinnedMessages({
   };
   const senderName = (message: Message) =>
     message.senderId === currentUserId
-      ? 'You'
-      : participantNames.get(message.senderId)?.trim() || 'Chat partner';
+      ? t('you')
+      : participantNames.get(message.senderId)?.trim() || t('chatPartner');
 
   return (
     <>
       <View style={styles.banner}>
         <Pressable
-          accessibilityHint="Jumps to this message and selects the next pinned message"
-          accessibilityLabel={`Pinned message ${currentIndex + 1} of ${messages.length}`}
+          accessibilityHint={t('pinned.bannerHint')}
+          accessibilityLabel={t('pinned.positionLabel', {
+            index: currentIndex + 1,
+            total: messages.length,
+          })}
           accessibilityRole="button"
           onPress={jumpAndAdvance}
           style={styles.bannerMain}>
@@ -84,8 +90,8 @@ export function ChatPinnedMessages({
           <View style={styles.bannerCopy}>
             <ThemedText numberOfLines={1} style={styles.bannerTitle}>
               {messages.length === 1
-                ? 'Pinned Message'
-                : `Pinned Message ${currentIndex + 1} of ${messages.length}`}
+                ? t('pinned.single')
+                : t('pinned.position', { index: currentIndex + 1, total: messages.length })}
             </ThemedText>
             <ThemedText numberOfLines={1} style={styles.bannerPreview}>
               {senderName(currentMessage)}: {messagePreview(currentMessage)}
@@ -93,7 +99,7 @@ export function ChatPinnedMessages({
           </View>
         </Pressable>
         <Pressable
-          accessibilityLabel={`Open all ${messages.length} pinned messages`}
+          accessibilityLabel={t('pinned.openAll', { count: messages.length })}
           accessibilityRole="button"
           onPress={() => setSheetOpen(true)}
           style={({ pressed }) => [styles.bannerButton, pressed && styles.bannerButtonPressed]}>
@@ -154,6 +160,7 @@ function PinnedMessagesSheet({
   windowHeight,
 }: PinnedMessagesSheetProps) {
   const styles = useChatPinnedStyles();
+  const { t } = useTranslation(['chat', 'common']);
   const insets = useSafeAreaInsets();
   const [actionMessage, setActionMessage] = useState<Message | null>(null);
   const sheetHeight = Math.min(
@@ -169,8 +176,8 @@ function PinnedMessagesSheet({
   });
   const senderName = (message: Message) =>
     message.senderId === currentUserId
-      ? 'You'
-      : participantNames.get(message.senderId)?.trim() || 'Chat partner';
+      ? t('you')
+      : participantNames.get(message.senderId)?.trim() || t('chatPartner');
   const dismissTopLayer = actionMessage ? () => setActionMessage(null) : close;
 
   return (
@@ -186,7 +193,7 @@ function PinnedMessagesSheet({
       <GestureHandlerRootView style={styles.modalRoot}>
         <Animated.View style={[styles.sheetBackdrop, backdropAnimatedStyle]}>
           <Pressable
-            accessibilityLabel="Close pinned messages"
+            accessibilityLabel={t('pinned.close')}
             accessibilityRole="button"
             onPress={close}
             style={styles.sheetBackdropPressable}
@@ -198,28 +205,26 @@ function PinnedMessagesSheet({
           style={[styles.sheetSurface, { height: sheetHeight }, sheetAnimatedStyle]}
           testID="pinned-messages-sheet">
           <GestureDetector gesture={dragGesture}>
-            <View accessibilityLabel="Swipe down to close" style={styles.sheetHandleArea}>
+            <View accessibilityLabel={t('swipeToClose')} style={styles.sheetHandleArea}>
               <View style={styles.sheetHandle} />
             </View>
           </GestureDetector>
           <View style={styles.sheetHeader}>
             <View style={styles.sheetHeaderCopy}>
-              <ThemedText style={styles.sheetTitle}>Pinned messages</ThemedText>
+              <ThemedText style={styles.sheetTitle}>{t('pinned.title')}</ThemedText>
               <ThemedText numberOfLines={1} style={styles.sheetSubtitle}>
-                {messages.length === 1
-                  ? '1 message saved in this chat'
-                  : `${messages.length} messages saved in this chat`}
+                {t('pinned.savedCount', { count: messages.length })}
               </ThemedText>
             </View>
             <Pressable
-              accessibilityLabel="Close pinned messages"
+              accessibilityLabel={t('pinned.close')}
               accessibilityRole="button"
               onPress={close}
               style={({ pressed }) => [
                 styles.sheetDoneButton,
                 pressed && styles.sheetButtonPressed,
               ]}>
-              <ThemedText style={styles.sheetDoneLabel}>Done</ThemedText>
+              <ThemedText style={styles.sheetDoneLabel}>{t('common:actions.done')}</ThemedText>
             </Pressable>
           </View>
           <ScrollView
@@ -233,7 +238,7 @@ function PinnedMessagesSheet({
             testID="pinned-messages-list">
             {messages.map((message, index) => (
               <Pressable
-                accessibilityHint="Tap to jump to this message. Touch and hold for actions"
+                accessibilityHint={t('pinned.itemHint')}
                 accessibilityLabel={`${senderName(message)}: ${messagePreview(message)}`}
                 accessibilityRole="button"
                 key={message.id}

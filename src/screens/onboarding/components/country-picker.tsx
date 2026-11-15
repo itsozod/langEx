@@ -6,7 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAppTheme } from '@/providers/theme-provider';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { COUNTRIES } from '@/screens/onboarding/data';
+import { getLocalizedCountries } from '@/screens/onboarding/data';
+import { useTranslation } from 'react-i18next';
+import { translateMessage } from '@/shared/i18n/translate-message';
 
 type CountryPickerProps = {
   value: string;
@@ -16,18 +18,22 @@ type CountryPickerProps = {
 
 export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
   const styles = useStyles();
+  const { t, i18n } = useTranslation(['onboarding', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const selectedCountry = COUNTRIES.find((country) => country.code === value);
+  const localizedCountries = useMemo(() => getLocalizedCountries(i18n.language), [i18n.language]);
+  const selectedCountry = localizedCountries.find((country) => country.code === value);
   const filteredCountries = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return COUNTRIES;
+    if (!query) return localizedCountries;
 
-    return COUNTRIES.filter(
+    return localizedCountries.filter(
       (country) =>
-        country.name.toLowerCase().includes(query) || country.code.toLowerCase().includes(query),
+        country.label.toLowerCase().includes(query) ||
+        country.name.toLowerCase().includes(query) ||
+        country.code.toLowerCase().includes(query),
     );
-  }, [search]);
+  }, [localizedCountries, search]);
 
   const close = () => {
     setSearch('');
@@ -36,10 +42,10 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
 
   return (
     <View style={styles.field}>
-      <ThemedText style={styles.label}>Country</ThemedText>
+      <ThemedText style={styles.label}>{t('pickers.country')}</ThemedText>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Choose your country"
+        accessibilityLabel={t('pickers.chooseCountry')}
         onPress={() => setIsOpen(true)}
         style={({ pressed }) => [
           styles.trigger,
@@ -58,8 +64,8 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
           )}
           <ThemedText style={[styles.triggerText, !selectedCountry && styles.placeholder]}>
             {selectedCountry
-              ? `${selectedCountry.name} (${selectedCountry.code})`
-              : 'Select country'}
+              ? `${selectedCountry.label} (${selectedCountry.code})`
+              : t('pickers.selectCountry')}
           </ThemedText>
         </View>
         <SymbolView
@@ -68,7 +74,7 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
           tintColor={styles.icon.color}
         />
       </Pressable>
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={styles.error}>{translateMessage(t, error)}</ThemedText> : null}
 
       <Modal
         visible={isOpen}
@@ -78,10 +84,10 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
         <SafeAreaView style={styles.modalSafeArea}>
           <View style={styles.modalHeader}>
             <ThemedText type="bold" style={styles.modalTitle}>
-              Choose your country
+              {t('pickers.chooseCountry')}
             </ThemedText>
             <Pressable onPress={close} hitSlop={10}>
-              <ThemedText style={styles.done}>Done</ThemedText>
+              <ThemedText style={styles.done}>{t('common:actions.done')}</ThemedText>
             </Pressable>
           </View>
           <View style={styles.searchWrapper}>
@@ -94,7 +100,7 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
               autoFocus
               value={search}
               onChangeText={setSearch}
-              placeholder="Search countries"
+              placeholder={t('pickers.searchCountries')}
               placeholderTextColor={styles.placeholder.color}
               autoCapitalize="none"
               autoCorrect={false}
@@ -108,7 +114,7 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
               <ThemedText themeColor="textSecondary" style={styles.emptyText}>
-                No countries found.
+                {t('pickers.noCountries')}
               </ThemedText>
             }
             renderItem={({ item }) => {
@@ -126,7 +132,7 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
                   ]}>
                   <View style={styles.countryIdentity}>
                     <CountryFlag country={item.code} size={20} boxSize={27} />
-                    <ThemedText style={styles.countryName}>{item.name}</ThemedText>
+                    <ThemedText style={styles.countryName}>{item.label}</ThemedText>
                   </View>
                   <View style={styles.codeArea}>
                     <ThemedText themeColor="textSecondary" style={styles.code}>

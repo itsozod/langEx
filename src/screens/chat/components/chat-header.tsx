@@ -9,6 +9,8 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useChatHeaderStyles } from '../styles/chat-header-styles';
 import type { ChatParticipant, UserPresence } from '../types/message.types';
 import { getInitials } from '../utils/messages';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/shared/i18n';
 
 type ChatHeaderProps = {
   conversationName?: string | null;
@@ -38,20 +40,21 @@ export function ChatHeader({
   presenceUnavailable,
 }: ChatHeaderProps) {
   const styles = useChatHeaderStyles();
+  const { t } = useTranslation(['chat', 'common', 'discover', 'groups']);
   const [now, setNow] = useState(() => Date.now());
   const name = isGroup
-    ? conversationName?.trim() || 'Group conversation'
+    ? conversationName?.trim() || t('groups:fallbackName')
     : participant?.isDeleted
-      ? 'Deleted user'
-      : participant?.displayName?.trim() || 'Language partner';
+      ? t('common:deletedUser')
+      : participant?.displayName?.trim() || t('discover:fallbackName');
   const presenceLabel = isGroup
-    ? `${participantCount} ${participantCount === 1 ? 'member' : 'members'}`
+    ? t('groups:info.memberCount', { count: participantCount })
     : participant?.isDeleted
-      ? 'Account deleted'
+      ? t('presence.accountDeleted')
       : presencePending
-        ? 'Checking status…'
+        ? t('presence.checking')
         : presenceUnavailable
-          ? 'Presence unavailable'
+          ? t('presence.unavailable')
           : formatPresenceLabel(presence, now);
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export function ChatHeader({
     <View style={styles.header}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Back to chats"
+        accessibilityLabel={t('backToChats')}
         hitSlop={10}
         onPress={onBack}
         style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
@@ -78,7 +81,9 @@ export function ChatHeader({
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={isGroup ? `View ${name} group info` : `View ${name}'s profile`}
+        accessibilityLabel={
+          isGroup ? t('header.viewGroup', { name }) : t('discover:viewProfile', { name })
+        }
         disabled={!isGroup && !participant?.id}
         hitSlop={4}
         onPress={onOpenProfile}
@@ -138,7 +143,7 @@ export function ChatHeader({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={
-          isGroup ? `Delete ${name} conversation` : `Delete conversation with ${name}`
+          isGroup ? t('header.deleteGroup', { name }) : t('header.deleteDirect', { name })
         }
         accessibilityState={{ busy: deletePending, disabled: deletePending }}
         disabled={deletePending}
@@ -161,23 +166,26 @@ export function ChatHeader({
 }
 
 function formatPresenceLabel(presence: UserPresence | undefined, now: number) {
-  if (presence?.isOnline) return 'Online';
-  if (!presence?.lastSeenAt) return 'Offline';
+  if (presence?.isOnline) return i18n.t('common:status.online');
+  if (!presence?.lastSeenAt) return i18n.t('common:status.offline');
 
   const lastSeen = new Date(presence.lastSeenAt);
-  if (Number.isNaN(lastSeen.getTime())) return 'Offline';
+  if (Number.isNaN(lastSeen.getTime())) return i18n.t('common:status.offline');
   const elapsedMinutes = Math.max(0, Math.floor((now - lastSeen.getTime()) / 60_000));
-  if (elapsedMinutes < 1) return 'Last seen just now';
-  if (elapsedMinutes < 60) return `Last seen ${elapsedMinutes}m ago`;
+  if (elapsedMinutes < 1) return i18n.t('chat:presence.justNow');
+  if (elapsedMinutes < 60) return i18n.t('chat:presence.minutesAgo', { count: elapsedMinutes });
 
   const today = new Date(now);
   const yesterday = new Date(now);
   yesterday.setDate(today.getDate() - 1);
-  const time = lastSeen.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  if (isSameDay(lastSeen, today)) return `Last seen today at ${time}`;
-  if (isSameDay(lastSeen, yesterday)) return `Last seen yesterday at ${time}`;
+  const locale = i18n.language;
+  const time = lastSeen.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+  if (isSameDay(lastSeen, today)) return i18n.t('chat:presence.today', { time });
+  if (isSameDay(lastSeen, yesterday)) return i18n.t('chat:presence.yesterday', { time });
 
-  return `Last seen ${lastSeen.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+  return i18n.t('chat:presence.date', {
+    date: lastSeen.toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
+  });
 }
 
 function isSameDay(first: Date, second: Date) {

@@ -8,6 +8,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import type { ChatImageSelection } from '../types/message.types';
 import { createGalleryCells } from '../utils/gallery-layout';
+import { useTranslation } from 'react-i18next';
 
 type ChatImageConfirmationProps = {
   images: ChatImageSelection[];
@@ -23,6 +24,7 @@ export function ChatImageConfirmation({
   onRemove,
 }: ChatImageConfirmationProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation('chat');
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   if (images.length === 0) return null;
 
@@ -32,7 +34,6 @@ export function ChatImageConfirmation({
     Math.min(galleryWidth, screenHeight - insets.top - insets.bottom - 190),
   );
   const cells = createGalleryCells(images.length, galleryWidth, galleryHeight, 3);
-  const photoLabel = images.length === 1 ? 'photo' : 'photos';
 
   return (
     <Modal
@@ -47,7 +48,7 @@ export function ChatImageConfirmation({
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 8 }]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Cancel sending photos"
+            accessibilityLabel={t('images.cancel')}
             hitSlop={8}
             onPress={onCancel}
             style={({ pressed }) => [styles.headerButton, pressed && styles.pressed]}>
@@ -59,7 +60,9 @@ export function ChatImageConfirmation({
               tintColor="#FFFFFF"
             />
           </Pressable>
-          <ThemedText style={styles.title}>{`${images.length} selected`}</ThemedText>
+          <ThemedText style={styles.title}>
+            {t('images.selected', { count: images.length })}
+          </ThemedText>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -68,7 +71,10 @@ export function ChatImageConfirmation({
             {images.map((image, index) => (
               <View key={`${image.uri}-${index}`} style={[styles.cell, cells[index]]}>
                 <Image
-                  accessibilityLabel={`Selected photo ${index + 1} of ${images.length}`}
+                  accessibilityLabel={t('images.selectedPhoto', {
+                    index: index + 1,
+                    total: images.length,
+                  })}
                   cachePolicy="memory"
                   contentFit={images.length === 1 ? 'contain' : 'cover'}
                   source={{ uri: image.uri }}
@@ -76,7 +82,7 @@ export function ChatImageConfirmation({
                 />
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Remove photo ${index + 1}`}
+                  accessibilityLabel={t('images.remove', { index: index + 1 })}
                   hitSlop={6}
                   onPress={() => onRemove(index)}
                   style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}>
@@ -96,11 +102,11 @@ export function ChatImageConfirmation({
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Send ${images.length} selected ${photoLabel}`}
+            accessibilityLabel={t('images.send', { count: images.length })}
             onPress={onConfirm}
             style={({ pressed }) => [styles.sendButton, pressed && styles.sendPressed]}>
             <ThemedText type="bold" style={styles.sendLabel}>
-              {`Send ${images.length} ${photoLabel}`}
+              {t('images.send', { count: images.length })}
             </ThemedText>
             <SymbolView
               name={{ ios: 'arrow.up', android: 'arrow_upward', web: 'arrow_upward' }}

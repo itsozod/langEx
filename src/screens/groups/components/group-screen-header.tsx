@@ -4,6 +4,7 @@ import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useGroupStyles } from '../styles/group-styles';
+import { useTranslation } from 'react-i18next';
 
 type GroupScreenHeaderProps = {
   actionLabel?: string;
@@ -23,12 +24,13 @@ export function GroupScreenHeader({
   title,
 }: GroupScreenHeaderProps) {
   const styles = useGroupStyles();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.screenHeader}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Go back"
+        accessibilityLabel={t('actions.goBack')}
         hitSlop={8}
         onPress={onBack}
         style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
