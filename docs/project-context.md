@@ -2,12 +2,25 @@
 
 ## Current state
 
+- Manual email/password registration now requests a six-digit email code before account creation.
+  The code step preserves the credential draft in memory, presents six responsive OTP slots over
+  one native autofill input, and submits exactly once when the sixth digit arrives. Invalid codes
+  clear and refocus the slots with an inline error; Google registration remains unchanged and
+  immediate.
+- Password reset is connected end to end. The unauthenticated request form posts an email and shows
+  a privacy-safe delivery state; `langex://reset-password-confirm?token=…` opens a keyboard-aware
+  new-password form with pending, retry, invalid/expired, and success states in English and Russian.
 - Group conversations support the complete owner/admin lifecycle: users can create a named group
   from eligible direct-chat partners, see groups in Chats, open group chat/info, and owners or
   admins can add people. Owners can manage up to three admins and transfer ownership; owners and
   admins can remove non-owner members, and non-owners can leave. Member additions render as
   structured, non-interactive timeline events and localized chat-list previews. Drafts and
   selections remain intact after API failures.
+- Group owners and admins can edit the normalized 80-character group name from a native `@expo/ui`
+  bottom sheet opened by the Group info pencil action; the stable page underneath never expands into
+  a form. Realtime updates refresh every member's list, chat header, and info screen. A root-level
+  accessible action toast confirms create, rename, add, role, removal, leave, and conversation-clear
+  successes across navigation without blocking interaction.
 - Login and registration share a native Google identity option. The device obtains a Google ID
   token, the sibling backend verifies it, and the existing session-transition boundary stores the
   resulting LangEx JWT. New Google users continue through normal onboarding; existing identities
@@ -27,12 +40,25 @@
 
 ## Architecture
 
+- Registration remains on the existing keyboard-aware register screen. `register-form.tsx` owns the
+  credential draft and request step; `registration-code-step.tsx` owns code validation, resend, and
+  final confirmation; `registration-code-input.tsx` renders the six visual slots while one native
+  numeric input retains keyboard and one-time-code autofill behavior. Passwords are never placed in
+  route parameters or persistent storage, and successful confirmation reuses the centralized
+  authenticated-session transition.
+- Password-reset API functions and mutations live in `src/screens/auth`; the one-line
+  `src/app/reset-password-confirm.tsx` route is intentionally outside auth-protected groups so an
+  emailed deep link works with or without an active local session. The root session redirect leaves
+  that route untouched, and the existing shared `AuthScreen` supplies keyboard-aware layout.
 - Group-specific API, queries, candidate selection, member lists, validation, and styles live under
   `src/screens/groups`; `src/app/group` contains only thin Expo Router entries. Existing chat domain
   types remain the shared conversation contract, while chat list/header rendering branches on
   `Conversation.type`. Group member actions use the SDK 57 universal `@expo/ui` BottomSheet; the
   socket manager patches account-scoped membership/role caches and immediately discards a group
   when the active account is removed.
+- `ActionToastProvider` is mounted once inside the themed root. It owns one replaceable top toast,
+  safe-area positioning, reduced-motion entry/exit, iOS success haptics, and polite accessibility
+  announcements; feature mutations supply localized action copy after confirmed success.
 - `src/shared/store/auth-store.ts` owns only credentials: it persists `{ token, userId }` records and derives the active token/account ID. `src/shared/store/user.store.ts` separately owns persisted user entities and the active user. Both stores migrate automatically from the legacy combined session, while `src/screens/auth/session-transition.ts` coordinates their updates.
 - `src/screens/auth/session-transition.ts` is the only account-transition boundary. It cancels and clears server queries, disconnects the socket, and resets chat/onboarding state before activating another account. Outbox data remains user-scoped and is deleted only when that account logs out.
 - Adding or switching accounts requires no backend account-linking model: each saved account remains an independent authenticated user. Message push payloads include `recipientUserId`, allowing a notification tap to activate the matching locally saved account before conversation navigation.
@@ -53,12 +79,26 @@
 
 ## Decisions
 
+- 2026-11-22: Email/password registration is a two-step in-screen flow rather than a separate route.
+  This keeps the pending password in memory, preserves drafts across resend/failure, and supports
+  both normal and add-account registration without duplicating navigation. Confirmation mutations
+  are not automatically retried because a lost success response may already have consumed the code
+  and created the account. Editing credentials also retains the pending verification: submitting
+  the same normalized email returns to its existing OTP without another request, while a changed
+  email requests a new code. Google sign-in continues to bypass this flow.
+- 2026-11-22: Password-reset confirmation is a public top-level route, not part of `(auth)` or
+  `account-auth`, because email links must remain reachable regardless of current session state.
+  Account existence is never disclosed by the request UI, and reset tokens remain route-local and
+  are never persisted or logged.
 - 2026-11-05: Group creation and membership management use dedicated full-screen routes with
   virtualized candidate/member lists. The Chats header is the creation entry point, and a group
   chat header opens group info. Owners and admins see Add people; only the owner sees
   admin/ownership controls. Admins receive removal controls, and non-owners receive Leave group.
   The server remains
   authoritative for eligibility, permissions, role limits, and the 50-member limit.
+- 2026-11-22: Group naming remains server-owned shared conversation state. Owners and admins may
+  rename active groups; other members cannot. The complete updated conversation is broadcast rather
+  than a name-only patch so clients reuse their existing cache merge boundary.
 - 2026-10-10: Google is an external identity provider, not the LangEx session authority. The API
   verifies Google ID tokens and keys identities by immutable `sub`, then issues the same LangEx JWT
   used by password login. A first Google sign-in with a verified email matching an active LangEx
@@ -87,6 +127,15 @@
 
 ## API behavior
 
+- `POST /auth/registration/request` accepts `{ email }` and returns code expiry plus resend-cooldown
+  seconds. `POST /auth/registration/confirm` accepts `{ email, password, confirmPassword, code }`
+  and returns the normal `{ token, user }` session. The code is six digits; frontend passwords match
+  the backend's 8-character and 72-byte limits. The former direct `/auth/register` call is unused.
+- `POST /auth/password-reset/request` accepts `{ email }` and returns a generic `202` message for
+  active, missing, and deleted accounts. `POST /auth/password-reset/confirm` accepts
+  `{ token, password, confirmPassword }`; tokens are single-use, expire after 15 minutes, and
+  successful reset invalidates existing sessions. Passwords require at least 8 characters and at
+  most 72 UTF-8 bytes.
 - `GET /conversations/group-candidates` returns active users from visible direct chats. Group names
   normalize whitespace and allow at most 80 Unicode characters; creation accepts 1–49 other users.
   `POST /conversations/groups` creates the group; owners and admins may add eligible people, while
@@ -97,6 +146,9 @@
   `conversation_created`, `conversation_participants_changed`, and `conversation_roles_changed` by
   patching or refetching account-scoped caches; a removed active account immediately discards the
   group and exits its chat/info route.
+- `PATCH /conversations/:id` accepts `{ name }` for an active group's owner or admins, applies the
+  creation-time normalization/80-character limit, and returns plus emits the updated conversation
+  through `conversation_updated`.
 - `POST /auth/google` accepts `{ idToken }`, creates or resumes the Google-backed user, and returns
   the normal `{ token, user }` auth response. A verified email owned by an active existing user
   links Google as another sign-in method and returns that same user; deleted users remain blocked.
@@ -112,6 +164,14 @@
 
 ## Next steps
 
+- Deploy the sibling backend migration `20261122120000_add_registration_verifications` and matching
+  backend before releasing this frontend. Then verify real Resend delivery, correct/incorrect/expired
+  codes, resend cooldown, edit-email recovery, onboarding transition, add-account registration, tall
+  keyboards, large text, and light/dark themes on physical Android and iOS.
+- Deploy migration `20261121120000_add_password_reset_tokens` and the Resend-enabled sibling
+  backend, then verify delivery plus `langex://reset-password-confirm` opening from Gmail and Apple
+  Mail on physical Android and iOS. Exercise expired/reused links, offline retry, tall keyboards,
+  large text, dark mode, and both signed-in and signed-out app states.
 - Deploy the sibling backend group contract, then verify create/open/message/add-person flows with
   four or more accounts on physical Android and iOS. Include keyboard-open group naming,
   80-character names, failed-create retry, 49 selections, full groups, three-admin limit,
@@ -130,6 +190,33 @@
 
 ## Verification
 
+- 2026-11-22: Group rename and action-toast frontend changes pass full TypeScript, targeted ESLint,
+  Prettier, translation JSON parsing, and `git diff --check`. The largest affected handwritten file
+  is `group-info-screen.tsx` at 293 lines, and group route entries remain thin. No app build/export
+  was run per user request. The open iOS simulator verified bottom-sheet presentation, focused input,
+  empty-name validation, Cancel dismissal, and the stable Group info layout underneath. Physical
+  Android/iOS realtime save, keyboard variants, haptic, reduced-motion, and large-text verification
+  remain outstanding.
+- 2026-11-22: The frontend now passes full TypeScript after replacing the SDK 57 image-manipulator
+  native-module call with the resource-releasing `manipulateAsync` wrapper and routing Android
+  Lucide color/size/stroke weight through `LucideProvider`. Targeted ESLint, Prettier, and
+  `git diff --check` also pass. Largest affected handwritten file: `symbol-view.tsx` at 201 lines.
+  No app build/export was run per user request; physical Android icon and image-send regression
+  checks remain outstanding.
+- 2026-11-22: Registration verification frontend passes targeted ESLint, Prettier, translation JSON
+  parsing, and `git diff --check`. Full TypeScript reaches only the two pre-existing errors in
+  `optimize-chat-images.ts` and `symbol-view.tsx`; the registration files add no type errors. The
+  largest affected handwritten source is `register-form.tsx` at 280 lines, while both
+  registration route entries remain thin. No app build/export was run per user request. The open
+  iOS simulator rendered the updated registration form, but an active backend request cooldown
+  blocked a fresh transition into OTP during this check; physical Android/iOS keyboard, autofill,
+  email-delivery, edit-email recovery, and onboarding verification remain outstanding.
+- 2026-11-22: Password-reset frontend passes targeted ESLint, Prettier, JSON parsing, and
+  `git diff --check`. Full TypeScript reaches only the two pre-existing errors in
+  `optimize-chat-images.ts` and `symbol-view.tsx`; the reset files add no type errors. The largest
+  affected handwritten source is `reset-password-confirm-form.tsx` at 228 lines, and the new route
+  is a one-line re-export. No build/export or device launch was run per user request; physical
+  Android/iOS keyboard and deep-link verification remain outstanding.
 - 2026-11-14: Frontend integration now matches `docs/GROUPS_API.md` through persisted
   `GROUP_MEMBER_ADDED` messages, structured list previews, non-interactive system-event rows, and
   owner/admin Add people access. Targeted ESLint, Prettier, and `git diff --check` pass. Full

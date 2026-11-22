@@ -1,8 +1,8 @@
-import { Image } from 'expo-image';
 import { Pressable, View } from 'react-native';
 
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { SymbolView } from '@/shared/components/ui/symbol-view';
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatsStyles } from '../styles/chats-styles';
@@ -10,15 +10,6 @@ import type { ChatParticipant, Conversation } from '../types/message.types';
 import { formatMessageSystemEvent } from '../utils/system-events';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/shared/i18n';
-
-function initials(name?: string | null) {
-  const value = name?.trim() || i18n.t('discover:fallbackName');
-  return value
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
-}
 
 function formatTimestamp(value?: string | null) {
   if (!value) return '';
@@ -74,12 +65,20 @@ export function ConversationRow({
       ? formatMessageSystemEvent(conversation.lastMessageSystemEvent, currentUserId)
       : '';
 
+  const isDeletedUser = !isGroup && Boolean(participant?.isDeleted);
+  const unreadCount = typeof conversation.unreadCount === 'number' ? conversation.unreadCount : 0;
+  const hasUnread = unreadCount > 0;
+  const preview =
+    systemPreview ||
+    conversation.lastMessagePreview ||
+    (isGroup ? t('row.groupStart', { count: conversation.participants.length }) : t('row.start'));
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={isOnline ? t('row.openOnline', { name }) : t('row.open', { name })}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={
@@ -96,59 +95,36 @@ export function ConversationRow({
           onOpenProfile();
         }}
         style={({ pressed }) => [styles.avatarWrap, pressed && styles.avatarPressed]}>
-        {isGroup ? (
-          <View style={styles.groupAvatarPlaceholder}>
-            <SymbolView
-              name={{ ios: 'person.3.fill', android: 'group', web: 'group' }}
-              size={24}
-              weight="semibold"
-              tintColor={styles.groupAvatarIcon.color}
-            />
-          </View>
-        ) : participant?.avatarUrl ? (
-          <Image source={{ uri: participant.avatarUrl }} contentFit="cover" style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <ThemedText type="bold" style={styles.initials}>
-              {initials(name)}
-            </ThemedText>
-          </View>
-        )}
-        {!isGroup && participant?.isOnline ? (
-          <View
-            accessibilityLabel={t('row.isOnline', { name })}
-            accessibilityRole="image"
-            style={styles.onlineDot}
-          />
-        ) : null}
-        {!isGroup && participant?.country ? (
-          <View pointerEvents="none" style={styles.countryBadge}>
-            <CountryFlag country={participant.country} size={14} boxSize={19} />
-          </View>
-        ) : null}
+        <ContactAvatar
+          avatarUrl={participant?.avatarUrl}
+          isOnline={isOnline}
+          name={name}
+          variant={isGroup ? 'group' : isDeletedUser ? 'deleted' : 'person'}
+        />
       </Pressable>
 
       <View style={styles.rowCopy}>
         <View style={styles.rowTop}>
-          <ThemedText type="bold" numberOfLines={1} style={styles.name}>
-            {name}
-          </ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.timestamp}>
+          <View style={styles.nameGroup}>
+            <ThemedText numberOfLines={1} style={[styles.name, hasUnread && styles.nameUnread]}>
+              {name}
+            </ThemedText>
+            {!isGroup && participant?.country ? (
+              <CountryFlag country={participant.country} size={14} boxSize={16} />
+            ) : null}
+          </View>
+          <ThemedText style={[styles.timestamp, hasUnread && styles.timestampUnread]}>
             {formatTimestamp(conversation.lastMessageTimestamp)}
           </ThemedText>
         </View>
         <View style={styles.rowBottom}>
-          <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.preview}>
-            {systemPreview ||
-              conversation.lastMessagePreview ||
-              (isGroup
-                ? t('row.groupStart', { count: conversation.participants.length })
-                : t('row.start'))}
+          <ThemedText numberOfLines={1} style={[styles.preview, hasUnread && styles.previewUnread]}>
+            {preview}
           </ThemedText>
-          {typeof conversation.unreadCount === 'number' && conversation.unreadCount > 0 ? (
+          {hasUnread ? (
             <View style={styles.unreadBadge}>
               <ThemedText style={styles.unreadText}>
-                {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
+                {unreadCount > 99 ? '99+' : unreadCount}
               </ThemedText>
             </View>
           ) : null}
@@ -162,10 +138,10 @@ export function ConversationSkeleton() {
   const styles = useChatsStyles();
   return (
     <View style={styles.skeletonRow}>
-      <View style={styles.skeletonAvatar} />
+      <Skeleton style={styles.skeletonAvatar} />
       <View style={styles.skeletonCopy}>
-        <View style={styles.skeletonName} />
-        <View style={styles.skeletonPreview} />
+        <Skeleton style={styles.skeletonName} />
+        <Skeleton style={styles.skeletonPreview} />
       </View>
     </View>
   );

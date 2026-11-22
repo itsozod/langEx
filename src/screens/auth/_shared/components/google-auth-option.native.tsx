@@ -1,4 +1,5 @@
 import { useAppTheme } from '@/providers/theme-provider';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 import { useGoogleAuthMutation } from '@/screens/auth/hooks';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import GoogleLogo from '@/assets/images/google.svg';
@@ -30,7 +31,7 @@ function readableGoogleError(error: unknown) {
 }
 
 export function GoogleAuthOption() {
-  const { theme } = useAppTheme();
+  const tokens = useUiTokens();
   const styles = useStyles();
   const { t } = useTranslation('auth');
   const mutation = useGoogleAuthMutation();
@@ -125,11 +126,7 @@ export function GoogleAuthOption() {
           </ThemedText>
         </View>
         {isPending ? (
-          <ActivityIndicator
-            color={theme === 'dark' ? '#E3E3E3' : '#1F1F1F'}
-            size="small"
-            style={styles.activityIndicator}
-          />
+          <ActivityIndicator color={tokens.loader} size="small" style={styles.activityIndicator} />
         ) : null}
       </Pressable>
 
@@ -152,20 +149,14 @@ const useStyles = () => {
     section: { gap: 18 },
     googleButton: {
       width: '100%',
-      height: 54,
+      height: 52,
       borderRadius: 14,
       borderCurve: 'continuous',
-      borderWidth: 1,
-      borderColor: isDark ? '#4A405F' : '#DED8EC',
-      backgroundColor: isDark ? '#171321' : '#FBFAFE',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
       alignItems: 'center',
       justifyContent: 'center',
     },
-    googleButtonPressed: {
-      backgroundColor: isDark ? '#1B1627' : '#FFFFFF',
-      borderColor: '#6654C7',
-      transform: [{ scale: 0.99 }],
-    },
+    googleButtonPressed: { opacity: 0.7 },
     googleButtonDisabled: {
       opacity: 0.72,
     },
@@ -184,9 +175,9 @@ const useStyles = () => {
       justifyContent: 'center',
     },
     googleButtonLabel: {
-      color: isDark ? '#E3E3E3' : '#1F1F1F',
-      fontFamily: 'PlusJakartaSansMedium',
-      fontSize: 14,
+      color: isDark ? '#F4F2F8' : '#18151F',
+      fontFamily: 'PlusJakartaSansSemiBold',
+      fontSize: 16,
       lineHeight: 20,
     },
     activityIndicator: {
@@ -195,7 +186,7 @@ const useStyles = () => {
     },
     errorText: {
       marginTop: -8,
-      color: isDark ? '#FFAAAA' : '#9F2018',
+      color: isDark ? '#FF6B7D' : '#D2364B',
       fontSize: 12,
       lineHeight: 18,
       textAlign: 'center',

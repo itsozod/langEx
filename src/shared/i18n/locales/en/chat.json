@@ -162,7 +162,8 @@
     "groupTitle": "Delete {{name}}?",
     "directTitle": "Delete conversation with {{name}}?",
     "groupMessage": "This removes the group conversation from your account and can’t be undone. It does not remove other members.",
-    "directMessage": "This removes the conversation from your account and can’t be undone. It does not unsend messages from {{name}}’s account."
+    "directMessage": "This removes the conversation from your account and can’t be undone. It does not unsend messages from {{name}}’s account.",
+    "removed": "Chat removed"
   },
   "errors": {
     "pinWithoutConversation": "Open the conversation before pinning a message.",
@@ -186,9 +187,8 @@
   "partner": "Partner",
   "filters": {
     "searchLabel": "Search your chats",
-    "searchPlaceholder": "Search people in your chats",
+    "searchPlaceholder": "Search",
     "clearSearch": "Clear search",
-    "chipHint": "Tap again to show all chats",
     "online": "Online",
     "unread": "Unread",
     "noSearchResults": "No chats match “{{query}}”",
@@ -196,7 +196,8 @@
     "noOnline": "No one is online",
     "noOnlineMessage": "Partners from your chats will appear here when they come online.",
     "noUnread": "You’re all caught up",
-    "noUnreadMessage": "Chats with unread messages will appear here."
+    "noUnreadMessage": "Chats with unread messages will appear here.",
+    "all": "All"
   },
   "search": {
     "openHint": "Opens full-screen search",

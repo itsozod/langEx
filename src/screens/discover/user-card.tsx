@@ -1,89 +1,59 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { useAppTheme } from '@/providers/theme-provider';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { getCountryName, getLanguageLabel } from '@/screens/onboarding/data';
-import { getLanguageFlag } from '@/screens/profile/utils/language-flags';
+import { getLanguageLabel } from '@/screens/onboarding/data';
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
 import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { getLevelLabel } from '@/shared/constants/language-levels';
+import { FONT, useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 import type { DiscoverUser } from './types';
-import { useTranslation } from 'react-i18next';
-import { getLevelLabel } from '@/shared/constants/language-levels';
 
-const initialsFor = (name?: string | null) => {
-  const parts = name?.trim().split(/\s+/).filter(Boolean) ?? [];
-  return parts.length
-    ? parts
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join('')
-    : '?';
-};
+const GUTTER = 20;
+const AVATAR_SIZE = 56;
+const AVATAR_GAP = 14;
+const MAX_VISIBLE_INTERESTS = 3;
 
+/** A potential language partner: who they are, their language pair, and what you share. */
 export function UserCard({ user }: { user: DiscoverUser }) {
   const styles = useStyles();
   const { t } = useTranslation('discover');
-  const visibleInterests = user.sharedInterests.slice(0, 3);
+  const name = user.displayName || t('fallbackName');
+  const visibleInterests = user.sharedInterests.slice(0, MAX_VISIBLE_INTERESTS);
   const remainingInterests = user.sharedInterests.length - visibleInterests.length;
+  const languagePair = [
+    getLanguageLabel(user.nativeLanguage) || '—',
+    getLanguageLabel(user.learningLanguage) || '—',
+  ].join(' → ');
+  const level = user.proficiencyLevel ? getLevelLabel(user.proficiencyLevel) : '';
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t('viewProfile', { name: user.displayName || t('fallbackName') })}
+      accessibilityLabel={t('viewProfile', { name })}
       onPress={() => router.push({ pathname: '/profile/[id]', params: { id: user.id } })}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <View style={styles.avatarColumn}>
-        <View style={styles.avatarWrap}>
-          {user.avatarUrl ? (
-            <Image source={{ uri: user.avatarUrl }} contentFit="cover" style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <ThemedText style={styles.initials}>{initialsFor(user.displayName)}</ThemedText>
-            </View>
-          )}
-          {user.country ? (
-            <View style={styles.countryBadge}>
-              <CountryFlag country={user.country} size={15} boxSize={21} />
-            </View>
-          ) : null}
-        </View>
-      </View>
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
+      <ContactAvatar avatarUrl={user.avatarUrl} name={name} size={AVATAR_SIZE} />
 
       <View style={styles.details}>
         <View style={styles.nameRow}>
-          <ThemedText type="bold" numberOfLines={1} style={styles.name}>
-            {user.displayName || t('fallbackName')}
+          <ThemedText numberOfLines={1} style={styles.name}>
+            {name}
           </ThemedText>
-          {user.country ? (
-            <ThemedText numberOfLines={1} style={styles.country}>
-              · {getCountryName(user.country)}
-            </ThemedText>
-          ) : null}
+          {user.country ? <CountryFlag country={user.country} size={14} boxSize={16} /> : null}
         </View>
 
-        <View style={styles.languageRow}>
-          <ThemedText style={styles.languageText}>
-            {getLanguageFlag(user.nativeLanguage)} {getLanguageLabel(user.nativeLanguage) || '—'}
-          </ThemedText>
-          <ThemedText style={styles.arrow}>⇄</ThemedText>
-          <ThemedText style={styles.languageText}>
-            {getLanguageFlag(user.learningLanguage)}{' '}
-            {getLanguageLabel(user.learningLanguage) || '—'}
-          </ThemedText>
-          {user.proficiencyLevel ? (
-            <View style={styles.levelPill}>
-              <ThemedText style={styles.levelText}>
-                {getLevelLabel(user.proficiencyLevel)}
-              </ThemedText>
-            </View>
-          ) : null}
-        </View>
+        <ThemedText numberOfLines={1} style={styles.languages}>
+          {languagePair}
+          {level ? <ThemedText style={styles.level}>{`  ·  ${level}`}</ThemedText> : null}
+        </ThemedText>
 
         {user.bio ? (
-          <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.bio}>
+          <ThemedText numberOfLines={2} style={styles.bio}>
             {user.bio}
           </ThemedText>
         ) : null}
@@ -91,16 +61,16 @@ export function UserCard({ user }: { user: DiscoverUser }) {
         {visibleInterests.length ? (
           <View style={styles.interests}>
             {visibleInterests.map((interest) => (
-              <View key={interest} style={styles.interestPill}>
-                <InterestIcon color={styles.interestText.color} interest={interest} size={11} />
+              <View key={interest} style={styles.interestTag}>
+                <InterestIcon color={styles.interestText.color} interest={interest} size={12} />
                 <ThemedText numberOfLines={1} style={styles.interestText}>
                   {getInterestLabel(interest)}
                 </ThemedText>
               </View>
             ))}
             {remainingInterests > 0 ? (
-              <View style={styles.morePill}>
-                <ThemedText style={styles.moreText}>+{remainingInterests}</ThemedText>
+              <View style={styles.interestTag}>
+                <ThemedText style={styles.interestText}>+{remainingInterests}</ThemedText>
               </View>
             ) : null}
           </View>
@@ -114,128 +84,57 @@ export function UserCardSkeleton() {
   const styles = useStyles();
   return (
     <View style={styles.row}>
-      <View style={styles.avatarColumn}>
-        <View style={[styles.avatar, styles.skeleton]} />
-      </View>
-      <View style={styles.skeletonDetails}>
-        <View style={[styles.skeleton, styles.skeletonName]} />
-        <View style={[styles.skeleton, styles.skeletonLanguages]} />
-        <View style={[styles.skeleton, styles.skeletonBio]} />
-        <View style={styles.skeletonPills}>
-          <View style={[styles.skeleton, styles.skeletonPill]} />
-          <View style={[styles.skeleton, styles.skeletonPill]} />
-          <View style={[styles.skeleton, styles.skeletonPillShort]} />
-        </View>
+      <Skeleton style={styles.skeletonAvatar} />
+      <View style={styles.details}>
+        <Skeleton style={styles.skeletonName} />
+        <Skeleton style={styles.skeletonLine} />
+        <Skeleton style={styles.skeletonLineShort} />
       </View>
     </View>
   );
 }
 
 const useStyles = () => {
-  const { theme } = useAppTheme();
-  const isDark = theme === 'dark';
+  const tokens = useUiTokens();
 
   return StyleSheet.create({
     row: {
-      minHeight: 134,
       flexDirection: 'row',
-      gap: 14,
-      paddingVertical: 17,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(64,52,88,0.14)',
+      alignItems: 'flex-start',
+      gap: AVATAR_GAP,
+      paddingHorizontal: GUTTER,
+      paddingVertical: 14,
     },
-    pressed: { opacity: 0.65 },
-    avatarColumn: { width: 72, alignItems: 'center' },
-    avatarWrap: { width: 70, height: 70 },
-    avatar: { width: 70, height: 70, borderRadius: 35 },
-    avatarPlaceholder: {
-      width: 70,
-      height: 70,
-      borderRadius: 35,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: isDark ? '#55488A' : '#E8E2FF',
-    },
-    countryBadge: {
-      position: 'absolute',
-      left: -4,
-      bottom: -3,
-      width: 27,
-      height: 27,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 14,
-      borderWidth: 2,
-      borderColor: isDark ? '#1D1828' : '#FFFFFF',
-      backgroundColor: isDark ? '#302A3E' : '#FFFFFF',
-    },
-    initials: {
-      color: isDark ? '#F0ECFF' : '#5948A9',
-      fontSize: 20,
-      lineHeight: 26,
-      fontWeight: '700',
-    },
-    details: { flex: 1, minWidth: 0, gap: 7 },
-    nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
-    name: { maxWidth: '62%', fontSize: 17, lineHeight: 22 },
-    country: {
-      flex: 1,
-      color: isDark ? '#928B9D' : '#85808C',
-      fontSize: 11,
-      lineHeight: 16,
-    },
-    languageRow: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 20 },
-    languageText: {
-      color: isDark ? '#D8D3E1' : '#504A59',
-      fontSize: 11,
-      lineHeight: 16,
-      fontWeight: '600',
-    },
-    arrow: { color: isDark ? '#777080' : '#A19AA9', fontSize: 12, lineHeight: 16 },
-    levelPill: {
-      borderRadius: 999,
-      paddingHorizontal: 7,
-      paddingVertical: 2,
-      backgroundColor: isDark ? 'rgba(138,116,255,0.18)' : '#EEE9FF',
-    },
-    levelText: {
-      color: isDark ? '#C9BEFF' : '#604DB7',
-      fontSize: 8,
-      lineHeight: 12,
-      fontWeight: '700',
-    },
-    bio: { fontSize: 12, lineHeight: 17 },
-    interests: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    interestPill: {
+    rowPressed: { backgroundColor: tokens.fillPressed },
+    details: { flex: 1, minWidth: 0, gap: 4 },
+    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    name: {
       flexShrink: 1,
-      maxWidth: '31%',
+      color: tokens.text,
+      fontFamily: FONT.semibold,
+      fontSize: 16,
+      lineHeight: 21,
+    },
+    languages: { color: tokens.text, fontFamily: FONT.medium, fontSize: 14, lineHeight: 19 },
+    level: { color: tokens.muted, fontFamily: FONT.regular },
+    bio: { color: tokens.muted, fontSize: 14, lineHeight: 19 },
+    interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+    interestTag: {
+      height: 26,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      backgroundColor: isDark ? 'rgba(255,193,92,0.13)' : '#FFF2D5',
+      gap: 5,
+      borderRadius: 13,
+      paddingHorizontal: 10,
+      backgroundColor: tokens.fill,
     },
-    interestText: {
-      color: isDark ? '#FFD58F' : '#805B12',
-      fontSize: 9,
-      lineHeight: 13,
-    },
-    morePill: {
-      borderRadius: 999,
-      paddingHorizontal: 7,
-      paddingVertical: 4,
-      backgroundColor: isDark ? '#35303F' : '#EFECF2',
-    },
-    moreText: { color: isDark ? '#B8B1C8' : '#6D6677', fontSize: 9, lineHeight: 13 },
-    skeleton: { backgroundColor: isDark ? '#3A3446' : '#E8E4ED' },
-    skeletonDetails: { flex: 1, gap: 10, paddingTop: 2 },
-    skeletonName: { width: '44%', height: 15, borderRadius: 8 },
-    skeletonLanguages: { width: '68%', height: 11, borderRadius: 6 },
-    skeletonBio: { width: '92%', height: 11, borderRadius: 6 },
-    skeletonPills: { flexDirection: 'row', gap: 6 },
-    skeletonPill: { width: 62, height: 21, borderRadius: 11 },
-    skeletonPillShort: { width: 42, height: 21, borderRadius: 11 },
+    interestText: { color: tokens.muted, fontFamily: FONT.medium, fontSize: 12, lineHeight: 16 },
+    skeletonAvatar: { width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2 },
+    skeletonName: { width: '40%', height: 13, borderRadius: 7, marginTop: 4 },
+    skeletonLine: { width: '70%', height: 11, borderRadius: 6, marginTop: 6 },
+    skeletonLineShort: { width: '52%', height: 11, borderRadius: 6, marginTop: 6 },
   });
 };
+
+/** Where separators start: aligned with the text column. */
+export const USER_CARD_TEXT_INSET = GUTTER + AVATAR_SIZE + AVATAR_GAP;

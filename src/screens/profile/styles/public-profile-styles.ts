@@ -1,188 +1,77 @@
 import { StyleSheet } from 'react-native';
 
-import { useAppTheme } from '@/providers/theme-provider';
+import { FONT, useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
-export const usePublicProfileStyles = () => {
-  const { theme } = useAppTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? 'rgba(38,32,52,0.96)' : 'rgba(255,255,255,0.94)';
-  const border = isDark ? 'rgba(190,176,255,0.14)' : 'rgba(97,76,190,0.10)';
+/** Another person's profile: open hero with a primary Message action, then grouped sections. */
+export function usePublicProfileStyles() {
+  const tokens = useUiTokens();
 
   return StyleSheet.create({
-    scrollContent: { flexGrow: 1, paddingBottom: 40 },
-    safeArea: { width: '100%', alignItems: 'center', paddingHorizontal: 20 },
-    content: { width: '100%', maxWidth: 560, gap: 16 },
-    header: {
-      height: 60,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    backButton: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: card,
-      borderWidth: 1,
-      borderColor: border,
-    },
-    icon: { color: isDark ? '#F5F1FF' : '#312C3C' },
-    headerTitle: { fontSize: 15, lineHeight: 21 },
-    headerSpacer: { width: 42 },
+    scrollContent: { flexGrow: 1, alignItems: 'center', paddingBottom: 40 },
+    safeArea: { width: '100%', alignItems: 'center', paddingHorizontal: 16, paddingTop: 4 },
+    content: { width: '100%', maxWidth: 560, gap: 28 },
     pressed: { opacity: 0.7 },
-    heroCard: {
-      alignItems: 'center',
-      borderRadius: 28,
-      padding: 26,
-      backgroundColor: isDark ? '#201A2E' : '#FFFFFF',
-      boxShadow: isDark
-        ? [
-            {
-              offsetX: 0,
-              offsetY: 18,
-              blurRadius: 38,
-              spreadDistance: -8,
-              color: 'rgba(0,0,0,0.46)',
-            },
-            {
-              offsetX: 0,
-              offsetY: 3,
-              blurRadius: 12,
-              spreadDistance: -6,
-              color: 'rgba(112,88,210,0.18)',
-            },
-          ]
-        : [
-            {
-              offsetX: 0,
-              offsetY: 16,
-              blurRadius: 34,
-              spreadDistance: -9,
-              color: 'rgba(54,40,113,0.16)',
-            },
-          ],
-    },
-    avatar: { width: 112, height: 112, borderRadius: 56, marginBottom: 16 },
-    avatarPlaceholder: {
-      width: 112,
-      height: 112,
-      borderRadius: 56,
-      marginBottom: 16,
+    barButton: {
+      width: 40,
+      height: 40,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: isDark ? '#55488A' : '#E8E2FF',
+      borderRadius: 20,
+      backgroundColor: tokens.fill,
     },
-    initials: {
-      color: isDark ? '#F1EDFF' : '#5948A9',
-      fontSize: 34,
-      lineHeight: 42,
-      fontWeight: '700',
-    },
-    displayName: { fontSize: 27, lineHeight: 34, textAlign: 'center' },
-    countryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 7 },
-    muted: { color: isDark ? '#B8B1C8' : '#716A7C', fontSize: 13, lineHeight: 18 },
-    sectionCard: {
-      borderRadius: 23,
-      padding: 18,
-      gap: 15,
-      backgroundColor: card,
-      borderWidth: 1,
-      borderColor: border,
-    },
-    elevatedSectionCard: {
-      borderWidth: 0,
-      backgroundColor: isDark ? '#1D1828' : '#FFFFFF',
-      boxShadow: isDark
-        ? [
-            {
-              offsetX: 0,
-              offsetY: 12,
-              blurRadius: 28,
-              spreadDistance: -8,
-              color: 'rgba(0,0,0,0.38)',
-            },
-          ]
-        : [
-            {
-              offsetX: 0,
-              offsetY: 11,
-              blurRadius: 26,
-              spreadDistance: -8,
-              color: 'rgba(54,40,113,0.12)',
-            },
-          ],
-    },
-    sectionTitle: { fontSize: 15, lineHeight: 21 },
-    languageRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    languageCopy: { flex: 1 },
-    eyebrow: { color: isDark ? '#AAA3B8' : '#7B7486', fontSize: 10, lineHeight: 14 },
-    languageName: { fontSize: 14, lineHeight: 20 },
-    divider: {
-      height: 1,
-      backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#E9E5EE',
-    },
-    levelPill: {
-      borderRadius: 999,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      backgroundColor: isDark ? 'rgba(138,116,255,0.18)' : '#EEE9FF',
-    },
-    levelText: {
-      color: isDark ? '#C9BEFF' : '#604DB7',
-      fontSize: 10,
-      lineHeight: 14,
-      fontWeight: '700',
-    },
-    interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    interestPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      borderRadius: 999,
-      paddingHorizontal: 11,
-      paddingVertical: 7,
-      backgroundColor: isDark ? '#35303F' : '#F1EEF4',
-    },
-    sharedInterestPill: {
-      backgroundColor: isDark ? 'rgba(255,193,92,0.17)' : '#FFF0CB',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(255,205,120,0.28)' : '#F4D388',
-    },
-    interestText: {
-      color: isDark ? '#B9B3C3' : '#6D6677',
-      fontSize: 11,
-      lineHeight: 16,
-    },
-    sharedInterestText: { color: isDark ? '#FFD58F' : '#805A0B', fontWeight: '600' },
-    legendRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    legendDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#E7AD42' },
-    legendText: { color: isDark ? '#A9A2B4' : '#7B7485', fontSize: 10, lineHeight: 14 },
-    bio: { fontSize: 13, lineHeight: 21 },
-    centered: {
-      flex: 1,
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 28,
-    },
-    loadingText: { fontSize: 13, marginTop: 14 },
-    errorTitle: { fontSize: 18, textAlign: 'center', marginBottom: 8 },
-    errorMessage: { fontSize: 13, lineHeight: 20, textAlign: 'center' },
-    errorButton: {
-      marginTop: 20,
-      borderRadius: 999,
-      paddingHorizontal: 18,
-      paddingVertical: 10,
-      backgroundColor: '#6654C7',
-    },
-    errorButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
-    startChatError: {
-      color: isDark ? '#FFB7BF' : '#A93643',
-      fontSize: 12,
-      lineHeight: 18,
+    barButtonIcon: { color: tokens.text },
+    hero: { alignItems: 'center', gap: 4 },
+    displayName: {
+      marginTop: 12,
+      color: tokens.text,
+      fontFamily: FONT.bold,
+      fontSize: 24,
+      lineHeight: 30,
+      letterSpacing: -0.3,
       textAlign: 'center',
     },
+    countryRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    muted: { color: tokens.muted, fontSize: 15, lineHeight: 20 },
+    messageButton: {
+      marginTop: 18,
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderRadius: 22,
+      paddingHorizontal: 24,
+      backgroundColor: tokens.accent,
+    },
+    messageButtonText: { color: tokens.onAccent, fontFamily: FONT.semibold, fontSize: 16 },
+    sectionBody: { padding: 16 },
+    interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 16 },
+    interestPill: {
+      minHeight: 32,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      backgroundColor: tokens.fill,
+    },
+    sharedInterestPill: { backgroundColor: tokens.accent },
+    interestIcon: { color: tokens.muted },
+    interestText: { color: tokens.text, fontFamily: FONT.medium, fontSize: 14, lineHeight: 18 },
+    sharedInterestText: { color: tokens.onAccent },
+    bio: { color: tokens.text, fontSize: 15, lineHeight: 22 },
+    // Loading, error and deleted states
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 10 },
+    loadingText: { color: tokens.muted, fontSize: 14, lineHeight: 20 },
+    errorTitle: { color: tokens.text, fontFamily: FONT.semibold, fontSize: 18, lineHeight: 24 },
+    errorMessage: { maxWidth: 300, textAlign: 'center', fontSize: 14, lineHeight: 20 },
+    errorButton: {
+      marginTop: 10,
+      minHeight: 44,
+      justifyContent: 'center',
+      borderRadius: 22,
+      paddingHorizontal: 22,
+      backgroundColor: tokens.fill,
+    },
+    errorButtonText: { color: tokens.text, fontFamily: FONT.semibold, fontSize: 15 },
   });
-};
+}

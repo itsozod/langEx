@@ -9,7 +9,6 @@ import type {
   ConversationsResponse,
   ConversationsUnreadCountResponse,
   DeleteConversationResponse,
-  DirectConversationResponse,
   Message,
   PinnedMessagesResponse,
   SendImageResponse,
@@ -157,12 +156,6 @@ export function unpinMessage(conversationId: string, messageId: string) {
   return apiRequest<PinnedMessagesResponse>(
     `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/pin`,
     { method: 'DELETE' },
-  );
-}
-
-export function findDirectConversation(participantId: string) {
-  return apiRequest<DirectConversationResponse>(
-    `/conversations/direct/${encodeURIComponent(participantId)}`,
   );
 }
 

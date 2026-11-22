@@ -7,15 +7,17 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
 import { useTranslation } from 'react-i18next';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 export function ChatLoadingState() {
   const styles = useChatStyles();
+  const tokens = useUiTokens();
   const { t } = useTranslation('chat');
 
   return (
     <GradientBackground>
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#6654C7" />
+        <ActivityIndicator size="large" color={tokens.loader} />
         <ThemedText themeColor="textSecondary" style={styles.loadingText}>
           {t('status.loadingMessages')}
         </ThemedText>

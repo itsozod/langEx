@@ -13,7 +13,13 @@ import { formatMessageSystemEvent } from '@/screens/chat/utils/system-events';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useChatStore } from '@/shared/store/chat-store';
 
-import { addGroupParticipants, createGroup, getGroupCandidates, manageGroup } from './api';
+import {
+  addGroupParticipants,
+  createGroup,
+  getGroupCandidates,
+  manageGroup,
+  renameGroup,
+} from './api';
 
 export const groupQueryKeys = {
   candidates: (accountId: string) => ['groups', 'candidates', accountId] as const,
@@ -78,6 +84,19 @@ export function useAddGroupParticipants() {
       if (accountId) {
         void queryClient.invalidateQueries({ queryKey: groupQueryKeys.candidates(accountId) });
       }
+    },
+  });
+}
+
+export function useRenameGroup() {
+  return useMutation({
+    mutationFn: renameGroup,
+    onSuccess: ({ conversation }) => {
+      mergeConversationIntoCaches(conversation);
+      void queryClient.invalidateQueries({ queryKey: chatQueryKeys.conversations() });
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversation(conversation.id),
+      });
     },
   });
 }

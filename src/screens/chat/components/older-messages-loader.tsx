@@ -5,6 +5,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatStyles } from '../styles/chat-styles';
 import { useTranslation } from 'react-i18next';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 export function OlderMessagesLoader({ isLoading, onPress, hasError }: MessagePageLoaderProps) {
   return (
@@ -36,12 +37,13 @@ function MessagePageLoader({
   showIdleAction = false,
 }: MessagePageLoaderProps & { direction: 'newer' | 'older'; showIdleAction?: boolean }) {
   const styles = useChatStyles();
+  const tokens = useUiTokens();
   const { t } = useTranslation('chat');
 
   if (isLoading) {
     return (
       <View style={styles.olderMessagesLoader}>
-        <ActivityIndicator size="small" color={styles.olderMessagesAccent.color} />
+        <ActivityIndicator size="small" color={tokens.loader} />
         <ThemedText style={styles.olderMessagesText}>
           {t(`pageLoader.${direction}.loading`)}
         </ThemedText>

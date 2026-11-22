@@ -1,8 +1,9 @@
-import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { ThemedText } from '@/shared/components/ui/themed-text';
+import { ICON_ROW_INSET, ListRow, ListSection } from '@/shared/components/ui/grouped-list';
+import { SymbolView } from '@/shared/components/ui/symbol-view';
 import {
   type AppLanguage,
   LANGUAGE_NATIVE_NAMES,
@@ -17,6 +18,7 @@ const LANGUAGE_FLAGS: Record<AppLanguage, string> = {
   ru: 'RU',
 };
 
+/** App language as a single-choice list; names are shown in their own language. */
 export function ProfileLanguage() {
   const styles = useProfileStyles();
   const { t } = useTranslation('profile');
@@ -24,39 +26,38 @@ export function ProfileLanguage() {
   const setLanguage = useLanguageStore((state) => state.setLanguage);
 
   return (
-    <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
-      <View>
-        <ThemedText type="bold" style={styles.sectionTitle}>
-          {t('language.title')}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.appearanceSubtitle}>
-          {t('language.description')}
-        </ThemedText>
-      </View>
-      <View accessibilityRole="radiogroup" style={styles.themeOptions}>
-        {SUPPORTED_LANGUAGES.map((option) => {
-          const selected = language === option;
-          return (
-            <Pressable
-              key={option}
-              accessibilityRole="radio"
-              accessibilityLabel={LANGUAGE_NATIVE_NAMES[option]}
-              accessibilityState={{ selected }}
-              onPress={() => setLanguage(option)}
-              style={({ pressed }) => [
-                styles.themeOption,
-                selected && styles.themeOptionSelected,
-                pressed && styles.pressed,
-              ]}>
-              <CountryFlag country={LANGUAGE_FLAGS[option]} size={20} boxSize={26} />
-              <ThemedText
-                style={[styles.themeOptionText, selected && styles.themeOptionTextSelected]}>
-                {LANGUAGE_NATIVE_NAMES[option]}
-              </ThemedText>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
+    <ListSection footer={t('language.description')} inset={ICON_ROW_INSET}>
+      {SUPPORTED_LANGUAGES.map((option) => {
+        const selected = language === option;
+        return (
+          <ListRow
+            key={option}
+            accessibilityLabel={LANGUAGE_NATIVE_NAMES[option]}
+            leading={
+              <View style={localStyles.flag}>
+                <CountryFlag country={LANGUAGE_FLAGS[option]} size={30} boxSize={30} />
+              </View>
+            }
+            onPress={() => setLanguage(option)}
+            showChevron={false}
+            title={LANGUAGE_NATIVE_NAMES[option]}
+            trailing={
+              selected ? (
+                <SymbolView
+                  name={{ ios: 'checkmark', android: 'check', web: 'check' }}
+                  size={17}
+                  weight="semibold"
+                  tintColor={styles.check.color}
+                />
+              ) : undefined
+            }
+          />
+        );
+      })}
+    </ListSection>
   );
 }
+
+const localStyles = StyleSheet.create({
+  flag: { width: 30, height: 30, borderRadius: 15, overflow: 'hidden' },
+});

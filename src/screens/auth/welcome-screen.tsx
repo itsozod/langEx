@@ -1,16 +1,17 @@
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import AppLogo from '@/shared/components/ui/app-logo';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import ThemeToggle from '@/shared/components/ui/theme-toggle';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { useAppTheme } from '@/providers/theme-provider';
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from 'tamagui';
+import { FONT, useUiTokens } from '@/shared/hooks/use-ui-tokens';
+
 import AuthPrimaryButton from './_shared/components/auth-primary-button';
-import { useTranslation } from 'react-i18next';
 
 const WelcomeScreen = () => {
   const styles = useStyles();
@@ -26,36 +27,25 @@ const WelcomeScreen = () => {
               <ThemeToggle />
             </View>
 
-            <View style={styles.heroCopy}>
-              <View style={styles.eyebrow}>
-                <View style={styles.eyebrowDot} />
-                <ThemedText style={styles.eyebrowText}>{t('welcome.eyebrow')}</ThemedText>
+            <View style={styles.hero}>
+              {/* Two tilted tiles (tilt and shadow are baked into the art) overlapping as a pair:
+                  a conversation photo with the translate symbol tucked against its corner. */}
+              <View accessible={false} style={styles.collage}>
+                <Image
+                  contentFit="contain"
+                  source={require('@/assets/images/people.png')}
+                  style={styles.photoTile}
+                />
+                <Image
+                  contentFit="contain"
+                  source={require('@/assets/images/language.png')}
+                  style={styles.languageTile}
+                />
               </View>
-              <ThemedText type="title" style={styles.title}>
+              <ThemedText accessibilityRole="header" style={styles.title}>
                 {t('welcome.title')}
               </ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-                {t('welcome.subtitle')}
-              </ThemedText>
-            </View>
-
-            <View style={styles.visualCard}>
-              <View style={styles.glowOne} />
-              <View style={styles.glowTwo} />
-              <Image
-                source={require('@/assets/images/language.png')}
-                style={styles.languageImage}
-                contentFit="contain"
-              />
-              <Image
-                source={require('@/assets/images/people.png')}
-                style={styles.peopleImage}
-                contentFit="contain"
-              />
-              <View style={styles.progressPill}>
-                <View style={styles.onlineDot} />
-                <ThemedText style={styles.progressText}>{t('welcome.progress')}</ThemedText>
-              </View>
+              <ThemedText style={styles.subtitle}>{t('welcome.subtitle')}</ThemedText>
             </View>
 
             <View style={styles.actions}>
@@ -63,22 +53,15 @@ const WelcomeScreen = () => {
                 label={t('welcome.createAccount')}
                 onPress={() => router.push('/register')}
               />
-              <Button
-                height={54}
-                rounded={15}
-                borderWidth={1}
-                style={styles.secondaryButton}
-                pressStyle={{ opacity: 0.72, scale: 0.99 }}
-                onPress={() => router.push('/login')}>
-                <ThemedText type="bold" style={styles.secondaryButtonText}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push('/login')}
+                style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
+                <ThemedText style={styles.secondaryButtonText}>
                   {t('welcome.haveAccount')}
                 </ThemedText>
-              </Button>
+              </Pressable>
             </View>
-
-            <ThemedText themeColor="textSecondary" style={styles.footerText}>
-              {t('welcome.footer')}
-            </ThemedText>
           </View>
         </SafeAreaView>
       </ScrollView>
@@ -87,163 +70,51 @@ const WelcomeScreen = () => {
 };
 
 const useStyles = () => {
-  const { theme } = useAppTheme();
-  const isDark = theme === 'dark';
+  const tokens = useUiTokens();
 
   return StyleSheet.create({
-    scrollContent: {
-      flexGrow: 1,
-    },
+    scrollContent: { flexGrow: 1 },
     safeArea: {
       flexGrow: 1,
       width: '100%',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 28,
+      paddingHorizontal: 24,
+      paddingTop: 8,
+      paddingBottom: 24,
     },
-    content: {
-      width: '100%',
-      maxWidth: 440,
-      flexGrow: 1,
-      gap: 24,
-    },
+    content: { width: '100%', maxWidth: 440, flexGrow: 1, justifyContent: 'space-between' },
     topBar: {
       minHeight: 48,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    heroCopy: {
-      gap: 12,
-      paddingTop: 4,
-    },
-    eyebrow: {
-      alignSelf: 'flex-start',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 7,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 999,
-      backgroundColor: isDark ? 'rgba(158, 140, 255, 0.10)' : 'rgba(102, 84, 199, 0.08)',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(183, 169, 255, 0.18)' : 'rgba(102, 84, 199, 0.12)',
-    },
-    eyebrowDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: '#FFB95D',
-    },
-    eyebrowText: {
-      color: isDark ? '#C9BEFF' : '#5B49B8',
-      fontSize: 9,
-      lineHeight: 12,
-      fontWeight: '700',
-      letterSpacing: 0.8,
-    },
+    hero: { gap: 12, paddingVertical: 24 },
+    // Sized near the art's native resolution so the tiles stay sharp. The PNGs carry transparent
+    // padding, so offsets are tuned to what's visible: the translate tile overlaps the photo's
+    // lower-left corner by ~30pt and the pair is centered as one group.
+    collage: { alignSelf: 'center', width: 320, maxWidth: '100%', height: 232, marginBottom: 20 },
+    photoTile: { position: 'absolute', top: -8, right: 20, width: 214, height: 230 },
+    languageTile: { position: 'absolute', left: 40, bottom: 0, width: 142, height: 151 },
     title: {
-      fontSize: 38,
-      lineHeight: 45,
-      letterSpacing: -1.2,
+      color: tokens.text,
+      fontFamily: FONT.bold,
+      fontSize: 36,
+      lineHeight: 42,
+      letterSpacing: -1,
     },
-    subtitle: {
-      maxWidth: 395,
-      fontSize: 15,
-      lineHeight: 23,
-    },
-    visualCard: {
-      height: 270,
-      overflow: 'hidden',
-      borderRadius: 28,
-      backgroundColor: isDark ? 'rgba(31, 25, 47, 0.86)' : 'rgba(255, 255, 255, 0.82)',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(151, 134, 219, 0.22)' : 'rgba(91, 70, 176, 0.10)',
-      shadowColor: isDark ? '#000000' : '#3B309E',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: isDark ? 0.22 : 0.08,
-      shadowRadius: 28,
-      elevation: 4,
-    },
-    glowOne: {
-      position: 'absolute',
-      width: 180,
-      height: 180,
-      borderRadius: 90,
-      top: -70,
-      right: -35,
-      backgroundColor: isDark ? 'rgba(112, 91, 210, 0.20)' : 'rgba(112, 91, 210, 0.12)',
-    },
-    glowTwo: {
-      position: 'absolute',
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      bottom: -70,
-      left: -35,
-      backgroundColor: isDark ? 'rgba(255, 185, 93, 0.10)' : 'rgba(255, 185, 93, 0.14)',
-    },
-    languageImage: {
-      position: 'absolute',
-      width: 205,
-      height: 205,
-      left: -2,
-      top: 4,
-      transform: [{ rotate: '-4deg' }],
-    },
-    peopleImage: {
-      position: 'absolute',
-      width: 220,
-      height: 220,
-      right: -4,
-      bottom: 2,
-      transform: [{ rotate: '3deg' }],
-    },
-    progressPill: {
-      position: 'absolute',
-      left: 18,
-      right: 18,
-      bottom: 16,
-      minHeight: 42,
-      paddingHorizontal: 14,
-      flexDirection: 'row',
+    subtitle: { color: tokens.muted, fontSize: 17, lineHeight: 25 },
+    actions: { gap: 10 },
+    secondaryButton: {
+      height: 52,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
       borderRadius: 14,
-      backgroundColor: isDark ? 'rgba(21, 17, 31, 0.90)' : 'rgba(255, 255, 255, 0.92)',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(91, 70, 176, 0.10)',
+      borderCurve: 'continuous',
+      backgroundColor: tokens.fill,
     },
-    onlineDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 4,
-      backgroundColor: '#43B581',
-    },
-    progressText: {
-      fontSize: 11,
-      lineHeight: 16,
-      fontWeight: '600',
-    },
-    actions: {
-      gap: 11,
-    },
-    secondaryButton: {
-      borderColor: isDark ? '#4A405F' : '#D8D1E8',
-      backgroundColor: isDark ? 'rgba(23, 19, 33, 0.74)' : 'rgba(255, 255, 255, 0.72)',
-    },
-    secondaryButtonText: {
-      color: isDark ? '#EEE9F8' : '#332D3E',
-      fontSize: 14,
-    },
-    footerText: {
-      textAlign: 'center',
-      fontSize: 11,
-      lineHeight: 16,
-      letterSpacing: 0.3,
-    },
+    secondaryButtonText: { color: tokens.text, fontFamily: FONT.semibold, fontSize: 16 },
+    pressed: { opacity: 0.7 },
   });
 };
 

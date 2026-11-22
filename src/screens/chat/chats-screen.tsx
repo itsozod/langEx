@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, View, type ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAppTheme } from '@/providers/theme-provider';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
@@ -21,11 +20,12 @@ import { useChatSearchStore } from './store/chat-search-store';
 import { useChatsStyles } from './styles/chats-styles';
 import type { Conversation } from './types/message.types';
 import { useTranslation } from 'react-i18next';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 export default function ChatsScreen() {
   const styles = useChatsStyles();
+  const tokens = useUiTokens();
   const { t } = useTranslation(['chat', 'common']);
-  const { theme } = useAppTheme();
   const userId = useUserStore((state) => state.user?.id);
   const query = useConversations();
   const filters = useChatListFilters();
@@ -143,49 +143,33 @@ export default function ChatsScreen() {
           renderItem={renderConversation}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListHeaderComponent={
-            <View>
+            <View style={styles.listHeader}>
               <View style={styles.header}>
-                <View>
-                  <ThemedText type="title" style={styles.title}>
-                    {t('list.title')}
-                  </ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-                    {t('list.subtitle')}
-                  </ThemedText>
-                </View>
+                <ThemedText accessibilityRole="header" style={styles.title}>
+                  {t('list.title')}
+                </ThemedText>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={t('list.createGroup')}
-                  hitSlop={5}
+                  hitSlop={8}
                   onPress={() => router.push('/group/new')}
                   style={({ pressed }) => [
-                    styles.headerBadge,
-                    pressed && styles.headerBadgePressed,
+                    styles.headerButton,
+                    pressed && styles.headerButtonPressed,
                   ]}>
                   <SymbolView
-                    name={{
-                      ios: 'person.3.fill',
-                      android: 'group',
-                      web: 'group',
-                    }}
-                    size={22}
-                    tintColor="#FFFFFF"
+                    name={{ ios: 'person.badge.plus', android: 'person_add', web: 'person_add' }}
+                    size={19}
+                    weight="medium"
+                    tintColor={styles.headerButtonIcon.color}
                   />
-                  <View style={styles.headerBadgePlus}>
-                    <SymbolView
-                      name={{ ios: 'plus', android: 'add', web: 'add' }}
-                      size={11}
-                      weight="bold"
-                      tintColor="#6654C7"
-                    />
-                  </View>
                 </Pressable>
               </View>
               <ChatListFilters
                 filter={filters.filter}
                 isSearchTriggerHidden={isSearchOpen}
                 onOpenSearch={openSearch}
-                onToggleFilter={filters.toggleFilter}
+                onSelectFilter={filters.selectFilter}
               />
             </View>
           }
@@ -196,7 +180,7 @@ export default function ChatsScreen() {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={() => void refresh()}
-              tintColor={theme === 'dark' ? '#B8A9FF' : '#6654C7'}
+              tintColor={tokens.loader}
             />
           }
         />

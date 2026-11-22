@@ -10,19 +10,20 @@ import type { SearchBarRect } from '@/shared/hooks/use-search-overlay-transition
 import { useChatListFilterStyles } from '../styles/chat-list-filter-styles';
 import { useChatsStyles } from '../styles/chats-styles';
 import { ChatListFilterChips } from './chat-list-filter-chips';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 type ChatListFiltersProps = {
   filter: ConversationListFilter | null;
   isSearchTriggerHidden: boolean;
   onOpenSearch: (origin: SearchBarRect | null) => void;
-  onToggleFilter: (filter: ConversationListFilter) => void;
+  onSelectFilter: (filter: ConversationListFilter | null) => void;
 };
 
 export function ChatListFilters({
   filter,
   isSearchTriggerHidden,
   onOpenSearch,
-  onToggleFilter,
+  onSelectFilter,
 }: ChatListFiltersProps) {
   const styles = useChatListFilterStyles();
   const { t } = useTranslation('chat');
@@ -36,7 +37,7 @@ export function ChatListFilters({
         onOpen={onOpenSearch}
         placeholder={t('filters.searchPlaceholder')}
       />
-      <ChatListFilterChips selected={filter} onToggle={onToggleFilter} />
+      <ChatListFilterChips selected={filter} onSelect={onSelectFilter} />
     </View>
   );
 }
@@ -55,12 +56,13 @@ export function ChatListFilterEmptyState({
   onRetry,
 }: ChatListFilterEmptyStateProps) {
   const styles = useChatsStyles();
+  const tokens = useUiTokens();
   const { t } = useTranslation(['chat', 'common']);
 
   if (isPending) {
     return (
       <View style={styles.stateCard}>
-        <ActivityIndicator color={styles.stateIconColor.color} />
+        <ActivityIndicator color={tokens.loader} />
       </View>
     );
   }

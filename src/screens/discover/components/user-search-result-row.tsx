@@ -1,9 +1,8 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
-import { getInitials, getLanguageFlag } from '@/screens/profile/utils/language-flags';
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
@@ -30,36 +29,21 @@ export function UserSearchResultRow({ user }: UserSearchResultRowProps) {
         leaveSearch(() => router.push({ pathname: '/profile/[id]', params: { id: user.id } }))
       }
       style={({ pressed }) => [styles.resultRow, pressed && styles.resultRowPressed]}>
-      <View style={styles.avatarWrap}>
-        {user.avatarUrl ? (
-          <Image source={{ uri: user.avatarUrl }} contentFit="cover" style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <ThemedText style={styles.initials}>{getInitials(name, '')}</ThemedText>
-          </View>
-        )}
-        {user.country ? (
-          <View style={styles.flagBadge}>
-            <CountryFlag country={user.country} size={14} boxSize={19} />
-          </View>
-        ) : null}
-      </View>
+      <ContactAvatar avatarUrl={user.avatarUrl} name={name} />
 
       <View style={styles.resultCopy}>
-        <ThemedText type="bold" numberOfLines={1} style={styles.resultName}>
-          {name}
-        </ThemedText>
-        <View style={styles.languageLine}>
-          <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.languageText}>
-            {getLanguageFlag(user.nativeLanguage)}{' '}
-            {getLanguageLabel(user.nativeLanguage) || t('profile:sections.notAdded')}
+        <View style={styles.nameRow}>
+          <ThemedText numberOfLines={1} style={styles.resultName}>
+            {name}
           </ThemedText>
-          <ThemedText style={styles.arrow}>→</ThemedText>
-          <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.languageText}>
-            {getLanguageFlag(user.learningLanguage)}{' '}
-            {getLanguageLabel(user.learningLanguage) || t('profile:sections.notAdded')}
-          </ThemedText>
+          {user.country ? <CountryFlag country={user.country} size={14} boxSize={16} /> : null}
         </View>
+        <ThemedText numberOfLines={1} style={styles.languageText}>
+          {[
+            getLanguageLabel(user.nativeLanguage) || t('profile:sections.notAdded'),
+            getLanguageLabel(user.learningLanguage) || t('profile:sections.notAdded'),
+          ].join(' → ')}
+        </ThemedText>
       </View>
 
       <SymbolView

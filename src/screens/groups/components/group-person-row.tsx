@@ -1,7 +1,7 @@
-import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import type { ChatParticipant } from '@/screens/chat/types/message.types';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
@@ -53,31 +53,23 @@ export const GroupPersonRow = memo(function GroupPersonRow({
         disabled && styles.personRowDisabled,
         pressed && styles.pressed,
       ]}>
-      <View style={styles.personAvatarWrap}>
-        {candidate.avatarUrl ? (
-          <Image
-            source={{ uri: candidate.avatarUrl }}
-            contentFit="cover"
-            style={styles.personAvatar}
-          />
-        ) : (
-          <View style={styles.personAvatarPlaceholder}>
-            <ThemedText type="bold" style={styles.personInitials}>
-              {getInitials(name)}
-            </ThemedText>
-          </View>
-        )}
-        {candidate.country ? (
-          <View pointerEvents="none" style={styles.countryBadge}>
-            <CountryFlag country={candidate.country} size={13} boxSize={18} />
-          </View>
-        ) : null}
-      </View>
+      <ContactAvatar
+        avatarUrl={candidate.avatarUrl}
+        isOnline={selectionMode && Boolean(candidate.isOnline)}
+        name={name}
+        size={48}
+        variant={candidate.isDeleted ? 'deleted' : 'person'}
+      />
       <View style={styles.personCopy}>
-        <ThemedText type="bold" numberOfLines={1} style={styles.personName}>
-          {name}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.personMeta}>
+        <View style={styles.personNameRow}>
+          <ThemedText numberOfLines={1} style={styles.personName}>
+            {name}
+          </ThemedText>
+          {candidate.country ? (
+            <CountryFlag country={candidate.country} size={14} boxSize={16} />
+          ) : null}
+        </View>
+        <ThemedText numberOfLines={1} style={styles.personMeta}>
           {selectionMode
             ? candidate.isOnline
               ? t('common:status.online')
@@ -99,7 +91,7 @@ export const GroupPersonRow = memo(function GroupPersonRow({
       ) : onManage ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Manage ${name}`}
+          accessibilityLabel={t('person.manage', { name })}
           hitSlop={4}
           onPress={(event) => {
             event.stopPropagation();
@@ -123,11 +115,3 @@ export const GroupPersonRow = memo(function GroupPersonRow({
     </Pressable>
   );
 });
-
-function getInitials(name: string) {
-  return name
-    .split(/\s+/u)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
-}

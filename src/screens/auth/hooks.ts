@@ -4,7 +4,15 @@ import { ApiError } from '@/shared/lib/api-client';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 import { activateAuthenticatedSession } from './_shared/utils/session-transition';
-import { authenticateWithGoogle, getMe, login, register } from './api';
+import {
+  authenticateWithGoogle,
+  confirmRegistration,
+  confirmPasswordReset,
+  getMe,
+  login,
+  requestRegistrationVerification,
+  requestPasswordReset,
+} from './api';
 
 export const authQueryKeys = {
   all: ['auth'] as const,
@@ -37,16 +45,22 @@ export const useLoginMutation = () => {
   });
 };
 
-export const useRegisterMutation = () => {
+export const useConfirmRegistrationMutation = () => {
   const onSuccess = useAuthMutationSuccess();
 
   return useMutation({
-    mutationKey: ['auth', 'register'],
-    mutationFn: register,
+    mutationKey: ['auth', 'registration', 'confirm'],
+    mutationFn: confirmRegistration,
     onSuccess,
-    retry: retryUnreachable,
+    gcTime: 0,
   });
 };
+
+export const useRequestRegistrationVerificationMutation = () =>
+  useMutation({
+    mutationKey: ['auth', 'registration', 'request'],
+    mutationFn: requestRegistrationVerification,
+  });
 
 export const useGoogleAuthMutation = () => {
   const onSuccess = useAuthMutationSuccess();
@@ -58,6 +72,20 @@ export const useGoogleAuthMutation = () => {
     retry: retryUnreachable,
   });
 };
+
+export const useRequestPasswordResetMutation = () =>
+  useMutation({
+    mutationKey: ['auth', 'password-reset', 'request'],
+    mutationFn: requestPasswordReset,
+    retry: retryUnreachable,
+  });
+
+export const useConfirmPasswordResetMutation = () =>
+  useMutation({
+    mutationKey: ['auth', 'password-reset', 'confirm'],
+    mutationFn: confirmPasswordReset,
+    retry: retryUnreachable,
+  });
 
 export const useMeQuery = () => {
   const token = useAuthStore((state) => state.token);

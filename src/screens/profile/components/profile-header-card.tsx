@@ -1,101 +1,130 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
 
-import AuthPrimaryButton from '@/screens/auth/_shared/components/auth-primary-button';
 import type { AuthUser } from '@/screens/auth/types';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import { getCountryName } from '@/screens/onboarding/data';
+import { IslandAvatarAnchor } from '@/shared/components/island-header/island-avatar';
+import type { IslandCollapse } from '@/shared/components/island-header/use-island-collapse';
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useProfileStyles } from '../styles/profile-styles';
-import { getInitials } from '../utils/language-flags';
-import { useTranslation } from 'react-i18next';
 
-type Props = {
+export const PROFILE_AVATAR_SIZE = 104;
+
+export function getProfileDisplayName(user: AuthUser) {
+  return user.displayName?.trim() || user.email.split('@')[0];
+}
+
+type AvatarButtonProps = {
   user: AuthUser;
   avatarUri: string | null | undefined;
   avatarPending: boolean;
-  avatarError: string | null;
   onChooseAvatar: () => void;
   onRemovePhoto: () => void;
 };
 
-export function ProfileHeaderCard({
+/** Your photo with the camera badge; tapping offers Choose / Remove. Rendered in the island overlay. */
+export function ProfileAvatarButton({
   user,
   avatarUri,
   avatarPending,
-  avatarError,
   onChooseAvatar,
   onRemovePhoto,
-}: Props) {
+}: AvatarButtonProps) {
   const styles = useProfileStyles();
-  const { t } = useTranslation('profile');
-  const displayName = user.displayName?.trim() || user.email.split('@')[0];
+  const { t } = useTranslation(['profile', 'common']);
+
+  const openPhotoActions = () => {
+    if (!user.avatarUrl) {
+      onChooseAvatar();
+      return;
+    }
+    Alert.alert(t('header.changePhoto'), undefined, [
+      { text: t('header.choosePhoto'), onPress: onChooseAvatar },
+      { text: t('header.removePhoto'), style: 'destructive', onPress: onRemovePhoto },
+      { text: t('common:actions.cancel'), style: 'cancel' },
+    ]);
+  };
 
   return (
-    <View style={styles.profileCard}>
-      <View style={styles.avatarArea}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('header.changePhoto')}
-          disabled={avatarPending}
-          onPress={onChooseAvatar}
-          style={({ pressed }) => [styles.avatarButton, pressed && styles.pressed]}>
-          {avatarUri ? (
-            <Image source={{ uri: avatarUri }} contentFit="cover" style={styles.avatar} />
-          ) : (
-            <View style={styles.initialsAvatar}>
-              <ThemedText style={styles.initials}>
-                {getInitials(user.displayName, user.email)}
-              </ThemedText>
-            </View>
-          )}
-          <View style={styles.editBadge}>
-            {avatarPending ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <SymbolView
-                name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-                size={16}
-                weight="semibold"
-                tintColor="#FFFFFF"
-              />
-            )}
-          </View>
-        </Pressable>
-
-        {user.avatarUrl ? (
-          <Pressable
-            disabled={avatarPending}
-            hitSlop={8}
-            onPress={onRemovePhoto}
-            style={({ pressed }) => pressed && styles.pressed}>
-            <ThemedText style={styles.removePhoto}>{t('header.removePhoto')}</ThemedText>
-          </Pressable>
-        ) : null}
-        {avatarError ? <ThemedText style={styles.error}>{avatarError}</ThemedText> : null}
-      </View>
-
-      <View style={styles.identity}>
-        <ThemedText type="title" style={styles.displayName}>
-          {displayName}
-        </ThemedText>
-        {user.country ? (
-          <View style={styles.countryRow}>
-            <CountryFlag country={user.country} size={17} boxSize={23} />
-            <ThemedText themeColor="textSecondary" style={styles.countryText}>
-              {getCountryName(user.country)}
-            </ThemedText>
-          </View>
-        ) : null}
-      </View>
-
-      <AuthPrimaryButton
-        label={t('header.editProfile')}
-        onPress={() => router.push('/profile/edit')}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('header.changePhoto')}
+      disabled={avatarPending}
+      onPress={openPhotoActions}
+      style={({ pressed }) => pressed && styles.pressed}>
+      <ContactAvatar
+        avatarUrl={avatarUri}
+        name={getProfileDisplayName(user)}
+        size={PROFILE_AVATAR_SIZE}
       />
+      {avatarPending ? (
+        <View style={styles.pendingOverlay}>
+          <ActivityIndicator color="#FFFFFF" />
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+/** Camera badge on your photo; passed to the island overlay so it fades out first. */
+export function ProfileAvatarBadge() {
+  const styles = useProfileStyles();
+  return (
+    <View pointerEvents="none" style={styles.editBadge}>
+      <SymbolView
+        name={{ ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' }}
+        size={14}
+        tintColor="#FFFFFF"
+      />
+    </View>
+  );
+}
+
+type Props = {
+  collapse: IslandCollapse;
+  user: AuthUser;
+  avatarError: string | null;
+};
+
+/** Open profile header: avatar slot, name, country, and a quiet edit action. No card around it. */
+export function ProfileHeaderCard({ collapse, user, avatarError }: Props) {
+  const styles = useProfileStyles();
+  const { t } = useTranslation('profile');
+
+  return (
+    <View style={styles.hero}>
+      <View style={styles.avatarButton}>
+        <IslandAvatarAnchor collapse={collapse} size={PROFILE_AVATAR_SIZE} />
+      </View>
+
+      <ThemedText accessibilityRole="header" style={styles.displayName}>
+        {getProfileDisplayName(user)}
+      </ThemedText>
+      {user.country ? (
+        <View style={styles.countryRow}>
+          <CountryFlag country={user.country} size={16} boxSize={18} />
+          <ThemedText style={styles.countryText}>{getCountryName(user.country)}</ThemedText>
+        </View>
+      ) : null}
+      {avatarError ? <ThemedText style={styles.error}>{avatarError}</ThemedText> : null}
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push('/profile/edit')}
+        style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
+        <SymbolView
+          name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+          size={14}
+          weight="semibold"
+          tintColor={styles.secondaryButtonText.color}
+        />
+        <ThemedText style={styles.secondaryButtonText}>{t('header.editProfile')}</ThemedText>
+      </Pressable>
     </View>
   );
 }

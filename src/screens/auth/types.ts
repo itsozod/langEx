@@ -23,8 +23,38 @@ export type RegisterCredentials = AuthCredentials & {
   confirmPassword: string;
 };
 
+export type RegistrationVerificationRequest = Pick<RegisterCredentials, 'email'>;
+
+export type RegistrationVerificationResponse = {
+  message: string;
+  expiresInSeconds: number;
+  resendAfterSeconds: number;
+};
+
+export type RegistrationConfirmation = RegisterCredentials & {
+  code: string;
+};
+
 export type GoogleAuthCredentials = {
   idToken: string;
+};
+
+export type PasswordResetRequest = {
+  email: string;
+};
+
+export type PasswordResetRequestResponse = {
+  message: string;
+};
+
+export type PasswordResetConfirmation = {
+  token: string;
+  password: string;
+  confirmPassword: string;
+};
+
+export type PasswordResetConfirmationResponse = {
+  success: true;
 };
 
 export type AuthResponse = {

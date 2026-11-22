@@ -124,7 +124,7 @@ const useStyles = () => {
       gap: 8,
     },
     label: {
-      color: isDark ? '#D8D0E8' : '#34303D',
+      color: isDark ? '#F4F2F8' : '#18151F',
       fontSize: 13,
       lineHeight: 18,
       fontWeight: '600',
@@ -141,12 +141,12 @@ const useStyles = () => {
       justifyContent: 'center',
       borderRadius: 999,
       borderWidth: 1,
-      borderColor: isDark ? '#4A405F' : '#DED8EC',
-      backgroundColor: isDark ? '#171321' : '#FBFAFE',
+      borderColor: 'transparent',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
     },
     levelPillSelected: {
-      borderColor: '#6654C7',
-      backgroundColor: isDark ? 'rgba(102,84,199,0.28)' : '#EEEAFB',
+      borderColor: 'transparent',
+      backgroundColor: isDark ? '#F4F2F8' : '#18151F',
     },
     levelText: {
       fontSize: 12,
@@ -154,7 +154,7 @@ const useStyles = () => {
       fontWeight: '600',
     },
     levelTextSelected: {
-      color: isDark ? '#C9BEFF' : '#5643B4',
+      color: isDark ? '#18151F' : '#FFFFFF',
     },
     pressed: {
       opacity: 0.7,

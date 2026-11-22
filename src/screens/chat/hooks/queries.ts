@@ -1,13 +1,8 @@
-import { keepPreviousData, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/store/auth-store';
 
-import {
-  findDirectConversation,
-  getConversation,
-  getConversations,
-  getConversationsUnreadCount,
-} from '../api';
+import { getConversation, getConversations, getConversationsUnreadCount } from '../api';
 import type { ConversationListFilter, ConversationWindowParams } from '../api';
 
 /** Keep chat memory bounded while still retaining several screens around the reader. */
@@ -110,8 +105,4 @@ export function useConversation(id?: string, anchorMessageId?: string | null, wi
     enabled: Boolean(accountId && token && id),
     refetchOnWindowFocus: 'always',
   });
-}
-
-export function useFindDirectConversation() {
-  return useMutation({ mutationFn: findDirectConversation });
 }

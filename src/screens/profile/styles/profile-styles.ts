@@ -1,267 +1,117 @@
 import { StyleSheet } from 'react-native';
 
-import { useAppTheme } from '@/providers/theme-provider';
+import { FONT, useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
+/** Profile, settings and preference screens: open layout with grouped lists, no floating cards. */
 export const useProfileStyles = () => {
-  const { theme } = useAppTheme();
-  const isDark = theme === 'dark';
+  const tokens = useUiTokens();
 
   return StyleSheet.create({
-    scrollContent: { flexGrow: 1, paddingBottom: 118 },
-    safeArea: {
-      width: '100%',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingTop: 16,
-    },
-    content: { width: '100%', maxWidth: 520, gap: 16 },
+    screen: { flex: 1, width: '100%' },
+    scrollContent: { flexGrow: 1, alignItems: 'center', paddingBottom: 132 },
+    safeArea: { width: '100%', alignItems: 'center', paddingHorizontal: 16 },
+    content: { width: '100%', maxWidth: 560, gap: 28 },
     titleRow: {
-      minHeight: 54,
+      paddingTop: 12,
+      paddingHorizontal: 4,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      paddingHorizontal: 2,
-      paddingBottom: 4,
+      justifyContent: 'space-between',
     },
-    titleCopy: { flex: 1, minWidth: 0 },
-    screenTitle: { fontSize: 30, lineHeight: 38, letterSpacing: -0.6 },
-    screenSubtitle: { marginTop: 3, fontSize: 13, lineHeight: 19 },
-    settingsButton: {
-      width: 44,
-      height: 44,
+    screenTitle: {
+      color: tokens.text,
+      fontFamily: FONT.bold,
+      fontSize: 32,
+      lineHeight: 38,
+      letterSpacing: -0.6,
+    },
+    iconButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 22,
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(91,70,176,0.10)',
-      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.82)',
+      backgroundColor: tokens.fill,
     },
-    settingsIcon: { color: isDark ? '#F0EAF9' : '#302A3A' },
-    profileCard: {
-      alignItems: 'center',
-      padding: 22,
-      gap: 18,
-      borderRadius: 26,
-      backgroundColor: isDark ? '#201A2E' : '#FFFFFF',
-      boxShadow: isDark
-        ? [
-            {
-              offsetX: 0,
-              offsetY: 18,
-              blurRadius: 38,
-              spreadDistance: -8,
-              color: 'rgba(0,0,0,0.46)',
-            },
-            {
-              offsetX: 0,
-              offsetY: 3,
-              blurRadius: 12,
-              spreadDistance: -6,
-              color: 'rgba(112,88,210,0.18)',
-            },
-          ]
-        : [
-            {
-              offsetX: 0,
-              offsetY: 16,
-              blurRadius: 34,
-              spreadDistance: -9,
-              color: 'rgba(54,40,113,0.16)',
-            },
-          ],
-    },
-    avatarArea: { alignItems: 'center', gap: 8 },
-    avatarButton: { width: 124, height: 124, borderRadius: 62 },
-    avatar: { width: '100%', height: '100%', borderRadius: 62 },
-    initialsAvatar: {
-      width: '100%',
-      height: '100%',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 62,
-      backgroundColor: isDark ? '#342A51' : '#E9E3FA',
-      borderWidth: 2,
-      borderColor: isDark ? '#554878' : '#D4C9F2',
-    },
-    initials: {
-      color: isDark ? '#D6CCFF' : '#5B49B8',
-      fontSize: 36,
-      lineHeight: 44,
-      fontWeight: '700',
-    },
+    iconButtonIcon: { color: tokens.text },
+    pressed: { opacity: 0.6 },
+
+    // Profile hero
+    hero: { alignItems: 'center', gap: 4 },
+    avatarButton: { marginBottom: 12 },
     editBadge: {
       position: 'absolute',
-      right: 1,
-      bottom: 2,
-      width: 36,
-      height: 36,
+      right: 0,
+      bottom: 0,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 18,
       borderWidth: 3,
-      borderColor: isDark ? '#1F192F' : '#FFFFFF',
-      backgroundColor: '#6654C7',
+      borderColor: tokens.card,
+      backgroundColor: tokens.accent,
     },
-    removePhoto: {
-      color: isDark ? '#C5B8FF' : '#5B49B8',
-      fontSize: 12,
-      lineHeight: 18,
-      fontWeight: '600',
+    pendingOverlay: {
+      ...StyleSheet.absoluteFill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 999,
+      backgroundColor: 'rgba(0,0,0,0.35)',
     },
-    error: {
-      maxWidth: 280,
-      color: isDark ? '#FFAAAA' : '#B42318',
-      fontSize: 12,
-      lineHeight: 18,
+    displayName: {
+      color: tokens.text,
+      fontFamily: FONT.bold,
+      fontSize: 24,
+      lineHeight: 30,
+      letterSpacing: -0.3,
       textAlign: 'center',
     },
-    identity: { alignItems: 'center', gap: 5 },
-    displayName: { fontSize: 27, lineHeight: 34, letterSpacing: -0.5, textAlign: 'center' },
-    countryRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    countryText: { fontSize: 13, lineHeight: 18 },
-    pressed: { opacity: 0.65 },
-    sectionCard: {
-      padding: 20,
-      gap: 16,
-      borderRadius: 22,
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(151,134,219,0.18)' : 'rgba(91,70,176,0.09)',
-      backgroundColor: isDark ? 'rgba(27,22,39,0.92)' : 'rgba(255,255,255,0.91)',
-    },
-    elevatedSectionCard: {
-      borderWidth: 0,
-      backgroundColor: isDark ? '#1D1828' : '#FFFFFF',
-      boxShadow: isDark
-        ? [
-            {
-              offsetX: 0,
-              offsetY: 12,
-              blurRadius: 28,
-              spreadDistance: -8,
-              color: 'rgba(0,0,0,0.38)',
-            },
-          ]
-        : [
-            {
-              offsetX: 0,
-              offsetY: 11,
-              blurRadius: 26,
-              spreadDistance: -8,
-              color: 'rgba(54,40,113,0.12)',
-            },
-          ],
-    },
-    sectionTitle: { fontSize: 15, lineHeight: 21 },
-    languageRow: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 12 },
-    flagCircle: {
-      width: 44,
-      height: 44,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 22,
-      overflow: 'hidden',
-      backgroundColor: isDark ? '#292238' : '#F2EEF9',
-    },
-    languageFlagFallback: { color: isDark ? '#C9BEFF' : '#6654C7' },
-    languageCopy: { flex: 1, gap: 1 },
-    eyebrow: {
-      fontSize: 11,
-      lineHeight: 16,
-      fontWeight: '600',
-      textTransform: 'uppercase',
-      letterSpacing: 0.4,
-    },
-    languageName: { fontSize: 15, lineHeight: 21 },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: isDark ? '#40384E' : '#E7E1EE',
-    },
-    levelPill: {
-      paddingHorizontal: 11,
-      paddingVertical: 6,
-      borderRadius: 999,
-      backgroundColor: isDark ? 'rgba(102,84,199,0.28)' : '#EEEAFB',
-    },
-    levelText: {
-      color: isDark ? '#C9BEFF' : '#5643B4',
-      fontSize: 11,
-      lineHeight: 15,
-      fontWeight: '700',
-    },
-    interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-    interestPill: {
+    countryRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    countryText: { color: tokens.muted, fontSize: 15, lineHeight: 20 },
+    error: { color: tokens.danger, fontSize: 13, lineHeight: 18, textAlign: 'center' },
+    secondaryButton: {
+      marginTop: 16,
+      minHeight: 40,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 13,
-      paddingVertical: 8,
-      borderRadius: 999,
-      backgroundColor: isDark ? '#2A2338' : '#F1EDF8',
+      gap: 7,
+      borderRadius: 20,
+      paddingHorizontal: 18,
+      backgroundColor: tokens.fill,
     },
-    interestIconColor: { color: isDark ? '#C9BEFF' : '#6654C7' },
-    interestText: { fontSize: 12, lineHeight: 17, fontWeight: '600' },
-    bio: { fontSize: 14, lineHeight: 23 },
-    appearanceSubtitle: { marginTop: 4, fontSize: 12, lineHeight: 18 },
-    themeOptions: { flexDirection: 'row', gap: 9 },
-    themeOption: {
-      minHeight: 64,
-      flex: 1,
+    secondaryButtonText: { color: tokens.text, fontFamily: FONT.semibold, fontSize: 15 },
+
+    // Language rows
+    flagCircle: {
+      width: 30,
+      height: 30,
       alignItems: 'center',
       justifyContent: 'center',
+      borderRadius: 15,
+      overflow: 'hidden',
+      backgroundColor: tokens.fill,
+    },
+    languageFlagFallback: { color: tokens.muted },
+    levelText: { color: tokens.muted, fontSize: 15, lineHeight: 20 },
+
+    // Interests and bio live inside a grouped section container
+    sectionBody: { padding: 16, gap: 12 },
+    interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    interestPill: {
+      minHeight: 32,
+      flexDirection: 'row',
+      alignItems: 'center',
       gap: 6,
       borderRadius: 16,
-      borderWidth: 1,
-      borderColor: isDark ? '#40384E' : '#E5DFEC',
-      backgroundColor: isDark ? '#251F33' : '#F5F2F9',
+      paddingHorizontal: 12,
+      backgroundColor: tokens.fill,
     },
-    themeOptionSelected: { borderColor: '#6654C7', backgroundColor: '#6654C7' },
-    themeOptionText: {
-      color: isDark ? '#C7BECE' : '#625A6B',
-      fontSize: 12,
-      lineHeight: 17,
-      fontWeight: '700',
-    },
-    themeOptionTextSelected: { color: '#FFFFFF' },
-    logoutButton: {
-      minHeight: 54,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 9,
-      borderRadius: 18,
-      backgroundColor: isDark ? '#2B1B28' : '#FFDCD8',
-      boxShadow: isDark
-        ? [
-            {
-              offsetX: 0,
-              offsetY: 9,
-              blurRadius: 22,
-              spreadDistance: -7,
-              color: 'rgba(0,0,0,0.38)',
-            },
-            {
-              offsetX: 0,
-              offsetY: 2,
-              blurRadius: 9,
-              spreadDistance: -5,
-              color: 'rgba(255,112,125,0.14)',
-            },
-          ]
-        : [
-            {
-              offsetX: 0,
-              offsetY: 9,
-              blurRadius: 21,
-              spreadDistance: -7,
-              color: 'rgba(180,35,24,0.23)',
-            },
-          ],
-    },
-    logoutText: {
-      color: isDark ? '#FFAAAA' : '#B42318',
-      fontSize: 14,
-      lineHeight: 20,
-      fontWeight: '700',
-    },
+    interestText: { color: tokens.text, fontFamily: FONT.medium, fontSize: 14, lineHeight: 18 },
+    interestIconColor: { color: tokens.muted },
+    bio: { color: tokens.text, fontSize: 15, lineHeight: 22 },
+
+    // Selection rows (theme, language)
+    check: { color: tokens.accentText },
   });
 };

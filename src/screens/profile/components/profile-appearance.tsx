@@ -1,11 +1,10 @@
-import { Pressable, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
-import { useAppTheme, type ThemePreference } from '@/providers/theme-provider';
+import { type ThemePreference, useAppTheme } from '@/providers/theme-provider';
+import { ICON_ROW_INSET, ListRow, ListSection } from '@/shared/components/ui/grouped-list';
 import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-view';
-import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useProfileStyles } from '../styles/profile-styles';
-import { useTranslation } from 'react-i18next';
 
 const OPTIONS: {
   value: ThemePreference;
@@ -20,58 +19,47 @@ const OPTIONS: {
   {
     value: 'light',
     labelKey: 'theme.light',
-    icon: { ios: 'sun.max.fill', android: 'light_mode', web: 'light_mode' },
+    icon: { ios: 'sun.max', android: 'light_mode', web: 'light_mode' },
   },
   {
     value: 'dark',
     labelKey: 'theme.dark',
-    icon: { ios: 'moon.fill', android: 'dark_mode', web: 'dark_mode' },
+    icon: { ios: 'moon', android: 'dark_mode', web: 'dark_mode' },
   },
 ];
 
+/** System / Light / Dark as a single-choice list with a checkmark, like the system settings. */
 export function ProfileAppearance() {
   const styles = useProfileStyles();
   const { preference, setPreference } = useAppTheme();
   const { t } = useTranslation('profile');
+
   return (
-    <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
-      <View>
-        <ThemedText type="bold" style={styles.sectionTitle}>
-          {t('theme.title')}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.appearanceSubtitle}>
-          {t('theme.description')}
-        </ThemedText>
-      </View>
-      <View accessibilityRole="radiogroup" style={styles.themeOptions}>
-        {OPTIONS.map((option) => {
-          const selected = preference === option.value;
-          const label = t(option.labelKey);
-          return (
-            <Pressable
-              key={option.value}
-              accessibilityRole="radio"
-              accessibilityLabel={t('theme.optionLabel', { option: label })}
-              accessibilityState={{ selected }}
-              onPress={() => setPreference(option.value)}
-              style={({ pressed }) => [
-                styles.themeOption,
-                selected && styles.themeOptionSelected,
-                pressed && styles.pressed,
-              ]}>
-              <SymbolView
-                name={option.icon}
-                size={19}
-                tintColor={selected ? '#FFFFFF' : styles.themeOptionText.color}
-              />
-              <ThemedText
-                style={[styles.themeOptionText, selected && styles.themeOptionTextSelected]}>
-                {label}
-              </ThemedText>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
+    <ListSection footer={t('theme.description')} inset={ICON_ROW_INSET}>
+      {OPTIONS.map((option) => {
+        const selected = preference === option.value;
+        const label = t(option.labelKey);
+        return (
+          <ListRow
+            key={option.value}
+            accessibilityLabel={t('theme.optionLabel', { option: label })}
+            icon={option.icon}
+            onPress={() => setPreference(option.value)}
+            showChevron={false}
+            title={label}
+            trailing={
+              selected ? (
+                <SymbolView
+                  name={{ ios: 'checkmark', android: 'check', web: 'check' }}
+                  size={17}
+                  weight="semibold"
+                  tintColor={styles.check.color}
+                />
+              ) : undefined
+            }
+          />
+        );
+      })}
+    </ListSection>
   );
 }

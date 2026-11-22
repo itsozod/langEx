@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
 import type { ChatParticipant } from '@/screens/chat/types/message.types';
+import { useActionToast } from '@/shared/components/ui/action-toast-provider';
 
 import { useManageGroup } from '../hooks';
 import type { GroupManagementAction } from '../types';
@@ -22,6 +23,7 @@ export function useGroupManagementActions({
   onMemberActionComplete,
 }: UseGroupManagementActionsOptions) {
   const mutation = useManageGroup();
+  const { showToast } = useActionToast();
   const { t } = useTranslation(['groups', 'common']);
   const memberId = member?.id;
   const memberName = member?.displayName?.trim() || t('alerts.thisMember');
@@ -39,7 +41,12 @@ export function useGroupManagementActions({
           onPress: () =>
             mutation.mutate(
               { type: 'promote-admin', conversationId, participantId: memberId },
-              { onSuccess: onMemberActionComplete },
+              {
+                onSuccess: () => {
+                  onMemberActionComplete();
+                  showToast({ message: t('feedback.adminAdded', { name: memberName }) });
+                },
+              },
             ),
         },
       ],
@@ -51,6 +58,7 @@ export function useGroupManagementActions({
     mutation,
     onMemberActionComplete,
     resolvedGroupName,
+    showToast,
     t,
   ]);
 
@@ -66,7 +74,12 @@ export function useGroupManagementActions({
           onPress: () =>
             mutation.mutate(
               { type: 'revoke-admin', conversationId, participantId: memberId },
-              { onSuccess: onMemberActionComplete },
+              {
+                onSuccess: () => {
+                  onMemberActionComplete();
+                  showToast({ message: t('feedback.adminRemoved', { name: memberName }) });
+                },
+              },
             ),
         },
       ],
@@ -78,6 +91,7 @@ export function useGroupManagementActions({
     mutation,
     onMemberActionComplete,
     resolvedGroupName,
+    showToast,
     t,
   ]);
 
@@ -93,7 +107,12 @@ export function useGroupManagementActions({
           onPress: () =>
             mutation.mutate(
               { type: 'transfer-owner', conversationId, ownerId: memberId },
-              { onSuccess: onMemberActionComplete },
+              {
+                onSuccess: () => {
+                  onMemberActionComplete();
+                  showToast({ message: t('feedback.ownerTransferred', { name: memberName }) });
+                },
+              },
             ),
         },
       ],
@@ -105,6 +124,7 @@ export function useGroupManagementActions({
     mutation,
     onMemberActionComplete,
     resolvedGroupName,
+    showToast,
     t,
   ]);
 
@@ -121,7 +141,12 @@ export function useGroupManagementActions({
           onPress: () =>
             mutation.mutate(
               { type: 'remove-member', conversationId, participantId: memberId },
-              { onSuccess: onMemberActionComplete },
+              {
+                onSuccess: () => {
+                  onMemberActionComplete();
+                  showToast({ message: t('feedback.memberRemoved', { name: memberName }) });
+                },
+              },
             ),
         },
       ],
@@ -133,6 +158,7 @@ export function useGroupManagementActions({
     mutation,
     onMemberActionComplete,
     resolvedGroupName,
+    showToast,
     t,
   ]);
 
@@ -146,11 +172,16 @@ export function useGroupManagementActions({
         onPress: () =>
           mutation.mutate(
             { type: 'leave-group', conversationId },
-            { onSuccess: () => router.replace('/(tabs)/chats') },
+            {
+              onSuccess: () => {
+                showToast({ message: t('feedback.groupRemoved') });
+                router.replace('/(tabs)/chats');
+              },
+            },
           ),
       },
     ]);
-  }, [conversationId, mutation, resolvedGroupName, t]);
+  }, [conversationId, mutation, resolvedGroupName, showToast, t]);
 
   const pendingAction: GroupManagementAction | undefined = mutation.isPending
     ? mutation.variables?.type === 'promote-admin'

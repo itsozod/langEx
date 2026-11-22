@@ -1,20 +1,19 @@
 import { type Href, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { useAppTheme } from '@/providers/theme-provider';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
-import { useTranslation } from 'react-i18next';
+import { FONT, useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 type SettingsHeaderProps = {
   fallbackHref: Href;
-  subtitle: string;
   title: string;
 };
 
-export function SettingsHeader({ fallbackHref, subtitle, title }: SettingsHeaderProps) {
-  const { theme } = useAppTheme();
-  const isDark = theme === 'dark';
+/** Compact navigation bar for settings pages: back button and a centered title. */
+export function SettingsHeader({ fallbackHref, title }: SettingsHeaderProps) {
+  const tokens = useUiTokens();
   const { t } = useTranslation();
 
   const goBack = () => {
@@ -31,50 +30,37 @@ export function SettingsHeader({ fallbackHref, subtitle, title }: SettingsHeader
         onPress={goBack}
         style={({ pressed }) => [
           styles.backButton,
-          isDark ? styles.backButtonDark : styles.backButtonLight,
+          { backgroundColor: tokens.fill },
           pressed && styles.pressed,
         ]}>
         <SymbolView
           name={{ ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' }}
-          size={21}
+          size={18}
           weight="semibold"
-          tintColor={isDark ? '#F0EAF9' : '#302A3A'}
+          tintColor={tokens.text}
         />
       </Pressable>
-      <View style={styles.headerCopy}>
-        <ThemedText type="bold" style={styles.title}>
-          {title}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-          {subtitle}
-        </ThemedText>
-      </View>
-      <View style={styles.headerSpacer} />
+      <ThemedText
+        accessibilityRole="header"
+        numberOfLines={1}
+        style={[styles.title, { color: tokens.text }]}>
+        {title}
+      </ThemedText>
+      <View style={styles.spacer} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { minHeight: 52, flexDirection: 'row', alignItems: 'center' },
+  header: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12 },
   backButton: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 21,
-    borderWidth: 1,
+    borderRadius: 20,
   },
-  backButtonLight: {
-    borderColor: 'rgba(91,70,176,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.78)',
-  },
-  backButtonDark: {
-    borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.07)',
-  },
-  headerCopy: { flex: 1, alignItems: 'center', gap: 1 },
-  title: { fontSize: 17, lineHeight: 23 },
-  subtitle: { fontSize: 11, lineHeight: 16 },
-  headerSpacer: { width: 42 },
-  pressed: { opacity: 0.65 },
+  title: { flex: 1, textAlign: 'center', fontFamily: FONT.semibold, fontSize: 17, lineHeight: 22 },
+  spacer: { width: 40 },
+  pressed: { opacity: 0.6 },
 });

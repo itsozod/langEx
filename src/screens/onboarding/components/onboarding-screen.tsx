@@ -1,4 +1,3 @@
-import { useAppTheme } from '@/providers/theme-provider';
 import { switchToSavedAccount } from '@/screens/auth/_shared/utils/session-transition';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
@@ -6,17 +5,15 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useOnboardingStore } from '@/shared/store/onboarding-store';
 import { router } from 'expo-router';
 import { type ReactNode, useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { FONT, useUiTokens } from '@/shared/hooks/use-ui-tokens';
 import { useTranslation } from 'react-i18next';
+
+// Space kept below a focused field: the Next button (52), the card gap, and a validation error.
+const NEXT_BUTTON_CLEARANCE = 130;
 
 type OnboardingScreenProps = {
   step: 1 | 2 | 3 | 4 | 5;
@@ -83,87 +80,75 @@ export function OnboardingScreen({
 
   return (
     <GradientBackground>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
+        bottomOffset={NEXT_BUTTON_CLEARANCE}
+        contentContainerStyle={styles.scrollContent}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="always"
+        showsVerticalScrollIndicator={false}
         style={styles.keyboardView}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-          keyboardShouldPersistTaps="always"
-          showsVerticalScrollIndicator={false}>
-          <SafeAreaView style={styles.safeArea}>
-            <View style={styles.content}>
-              <View style={styles.topRow}>
-                {onBack ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('actions.goBack')}
-                    hitSlop={10}
-                    onPress={onBack}
-                    style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-                    <SymbolView
-                      name={{ ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' }}
-                      size={21}
-                      weight="semibold"
-                      tintColor={styles.icon.color}
-                    />
-                  </Pressable>
-                ) : (
-                  <View style={styles.backPlaceholder} />
-                )}
-                <ThemedText themeColor="textSecondary" style={styles.stepLabel}>
-                  {t('onboarding:stepOf', { step, total: 5 })}
-                </ThemedText>
-                <View style={styles.actionSlot}>{exitAction}</View>
-              </View>
-
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${step * 20}%` }]} />
-              </View>
-
-              <View style={styles.heading}>
-                <ThemedText type="title" style={styles.title}>
-                  {title}
-                </ThemedText>
-                <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-                  {subtitle}
-                </ThemedText>
-              </View>
-
-              {children}
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            <View style={styles.topRow}>
+              {onBack ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('actions.goBack')}
+                  hitSlop={10}
+                  onPress={onBack}
+                  style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+                  <SymbolView
+                    name={{ ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' }}
+                    size={21}
+                    weight="semibold"
+                    tintColor={styles.icon.color}
+                  />
+                </Pressable>
+              ) : (
+                <View style={styles.backPlaceholder} />
+              )}
+              <ThemedText themeColor="textSecondary" style={styles.stepLabel}>
+                {t('onboarding:stepOf', { step, total: 5 })}
+              </ThemedText>
+              <View style={styles.actionSlot}>{exitAction}</View>
             </View>
-          </SafeAreaView>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${step * 20}%` }]} />
+            </View>
+
+            <View style={styles.heading}>
+              <ThemedText type="title" style={styles.title}>
+                {title}
+              </ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+                {subtitle}
+              </ThemedText>
+            </View>
+
+            {children}
+          </View>
+        </SafeAreaView>
+      </KeyboardAwareScrollView>
     </GradientBackground>
   );
 }
 
 const useStyles = () => {
-  const { theme } = useAppTheme();
-  const isDark = theme === 'dark';
+  const tokens = useUiTokens();
 
   return StyleSheet.create({
-    keyboardView: {
-      flex: 1,
-      width: '100%',
-    },
-    scrollContent: {
-      flexGrow: 1,
-    },
+    keyboardView: { flex: 1, width: '100%' },
+    scrollContent: { flexGrow: 1 },
     safeArea: {
       flexGrow: 1,
       width: '100%',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingTop: 10,
+      paddingHorizontal: 24,
+      paddingTop: 8,
       paddingBottom: 30,
     },
-    content: {
-      width: '100%',
-      maxWidth: 440,
-      gap: 22,
-    },
+    content: { width: '100%', maxWidth: 440, gap: 24 },
     topRow: {
       minHeight: 44,
       flexDirection: 'row',
@@ -176,9 +161,7 @@ const useStyles = () => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 20,
-      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.76)',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(91,70,176,0.10)',
+      backgroundColor: tokens.fill,
     },
     closeButton: {
       width: 40,
@@ -186,51 +169,28 @@ const useStyles = () => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 20,
-      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.76)',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(91,70,176,0.10)',
+      backgroundColor: tokens.fill,
     },
-    backPlaceholder: {
-      width: 40,
-      height: 40,
-    },
-    pressed: {
-      opacity: 0.6,
-    },
-    icon: {
-      color: isDark ? '#F0EAF9' : '#302A3A',
-    },
-    stepLabel: {
-      fontSize: 12,
-      lineHeight: 17,
-      fontWeight: '600',
-    },
-    actionSlot: {
-      width: 64,
-      alignItems: 'flex-end',
-    },
+    backPlaceholder: { width: 40, height: 40 },
+    pressed: { opacity: 0.6 },
+    icon: { color: tokens.text },
+    stepLabel: { color: tokens.muted, fontFamily: FONT.semibold, fontSize: 13, lineHeight: 18 },
+    actionSlot: { width: 64, alignItems: 'flex-end' },
     progressTrack: {
-      height: 5,
+      height: 4,
       overflow: 'hidden',
-      borderRadius: 999,
-      backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(91,70,176,0.10)',
+      borderRadius: 2,
+      backgroundColor: tokens.fill,
     },
-    progressFill: {
-      height: '100%',
-      borderRadius: 999,
-      backgroundColor: '#6654C7',
-    },
-    heading: {
-      gap: 8,
-    },
+    progressFill: { height: '100%', borderRadius: 2, backgroundColor: tokens.accent },
+    heading: { gap: 8 },
     title: {
-      fontSize: 31,
-      lineHeight: 39,
+      color: tokens.text,
+      fontFamily: FONT.bold,
+      fontSize: 30,
+      lineHeight: 36,
       letterSpacing: -0.7,
     },
-    subtitle: {
-      fontSize: 14,
-      lineHeight: 22,
-    },
+    subtitle: { color: tokens.muted, fontSize: 16, lineHeight: 23 },
   });
 };

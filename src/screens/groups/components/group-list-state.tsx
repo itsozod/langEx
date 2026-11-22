@@ -5,6 +5,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useGroupStyles } from '../styles/group-styles';
 import { useTranslation } from 'react-i18next';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 type GroupListStateProps = {
   message: string;
@@ -15,13 +16,14 @@ type GroupListStateProps = {
 
 export function GroupListState({ message, onRetry, title, type }: GroupListStateProps) {
   const styles = useGroupStyles();
+  const tokens = useUiTokens();
   const { t } = useTranslation();
 
   return (
     <View style={styles.stateCard}>
       <View style={styles.stateIcon}>
         {type === 'loading' ? (
-          <ActivityIndicator color={styles.stateIconColor.color} />
+          <ActivityIndicator color={tokens.loader} />
         ) : (
           <SymbolView
             name={

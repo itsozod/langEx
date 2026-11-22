@@ -8,6 +8,8 @@ import type {
   GroupCandidatesResponse,
   GroupManagementInput,
   GroupManagementResponse,
+  RenameGroupInput,
+  RenameGroupResponse,
 } from './types';
 
 export function getGroupCandidates() {
@@ -29,6 +31,13 @@ export function addGroupParticipants({
     `/conversations/${encodeURIComponent(conversationId)}/participants`,
     { method: 'POST', body: { participantIds } },
   );
+}
+
+export function renameGroup({ conversationId, name }: RenameGroupInput) {
+  return apiRequest<RenameGroupResponse>(`/conversations/${encodeURIComponent(conversationId)}`, {
+    method: 'PATCH',
+    body: { name },
+  });
 }
 
 export function manageGroup(input: GroupManagementInput) {

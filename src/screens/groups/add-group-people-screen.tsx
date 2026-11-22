@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useConversation } from '@/screens/chat/hooks';
 import GradientBackground from '@/shared/components/ui/gradient-background';
+import { useActionToast } from '@/shared/components/ui/action-toast-provider';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useUserStore } from '@/shared/store/user.store';
 
@@ -26,6 +27,7 @@ export default function AddGroupPeopleScreen() {
   const conversationQuery = useConversation(conversationId);
   const candidatesQuery = useGroupCandidates();
   const addParticipants = useAddGroupParticipants();
+  const { showToast } = useActionToast();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const conversation = conversationQuery.data?.pages[0]?.conversation;
   const existingIds = useMemo(
@@ -82,9 +84,7 @@ export default function AddGroupPeopleScreen() {
       { conversationId, participantIds: [...selectedIds] },
       {
         onSuccess: () => {
-          if (process.env.EXPO_OS === 'ios') {
-            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }
+          showToast({ message: t('feedback.peopleAdded', { count: selectedIds.size }) });
           router.back();
         },
         onError: () => {
@@ -94,7 +94,7 @@ export default function AddGroupPeopleScreen() {
         },
       },
     );
-  }, [addParticipants, canManage, conversationId, selectedIds]);
+  }, [addParticipants, canManage, conversationId, selectedIds, showToast, t]);
 
   const isLoading = conversationQuery.isPending || candidatesQuery.isPending;
   const error = conversationQuery.error ?? candidatesQuery.error;

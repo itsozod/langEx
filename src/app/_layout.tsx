@@ -12,6 +12,7 @@ import {
   ThemeProvider as NavigationThemeProvider,
   router,
   Stack,
+  usePathname,
   useRootNavigationState,
 } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -37,6 +38,7 @@ import {
 } from '@/screens/notifications/push-notification-manager';
 import { AnimatedSplashOverlay } from '@/shared/components/ui/animated-icon';
 import { AccountTransitionOverlay } from '@/shared/components/ui/account-transition-overlay';
+import { ActionToastProvider } from '@/shared/components/ui/action-toast-provider';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 import { useAuthHydration, useAuthStore } from '@/shared/store/auth-store';
 import { useUserHydration } from '@/shared/store/user.store';
@@ -44,18 +46,22 @@ import { useUserHydration } from '@/shared/store/user.store';
 import tamaguiConfig from '../../tamagui.config';
 import { useTranslation } from 'react-i18next';
 import { useLanguageHydration } from '@/shared/store/language-store';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function ThemedAppShell() {
   const { theme } = useAppTheme();
+  const tokens = useUiTokens();
   const { t } = useTranslation();
   const rootNavigationState = useRootNavigationState();
+  const pathname = usePathname();
   const token = useAuthStore((state) => state.token);
   const [notificationTarget, setNotificationTarget] =
     useState<NotificationConversationTarget | null>(null);
   const { isUnauthorized, isVerifying, user } = useAuthSessionBootstrap();
-  const isSignedIn = Boolean(token && user && !isUnauthorized);
+  const userId = user?.id;
+  const isSignedIn = Boolean(token && userId && !isUnauthorized);
   const isProfileComplete = user?.isProfileComplete === true;
   const routedSessionRef = useRef<string | null>(null);
   const handledNotificationIdRef = useRef<string | null>(null);
@@ -83,19 +89,24 @@ function ThemedAppShell() {
 
   useEffect(() => {
     if (isVerifying || !rootNavigationState?.key) return;
+    if (pathname === '/reset-password-confirm') {
+      if (isSignedIn && userId && token) routedSessionRef.current = `${userId}:${token}`;
+      return;
+    }
 
     if (!isSignedIn) {
       routedSessionRef.current = null;
-      router.replace('/welcome');
+      const isAuthRoute = ['/welcome', '/login', '/register', '/reset-password'].includes(pathname);
+      if (!isAuthRoute) router.replace('/welcome');
       return;
     }
 
     if (!isProfileComplete) {
-      router.replace('/onboarding/step1');
+      if (!pathname.startsWith('/onboarding/')) router.replace('/onboarding/step1');
       return;
     }
 
-    const sessionId = `${user.id}:${token}`;
+    const sessionId = `${userId}:${token}`;
     const isNewSession = routedSessionRef.current !== sessionId;
     if (isNewSession) routedSessionRef.current = sessionId;
 
@@ -118,9 +129,10 @@ function ThemedAppShell() {
     isSignedIn,
     isVerifying,
     notificationTarget,
+    pathname,
     rootNavigationState?.key,
     token,
-    user?.id,
+    userId,
   ]);
 
   return (
@@ -133,18 +145,20 @@ function ThemedAppShell() {
         {isSignedIn ? <OutboxManager /> : null}
         <PushNotificationManager
           onOpenConversation={handleOpenNotificationConversation}
-          userId={isSignedIn ? user?.id : undefined}
+          userId={isSignedIn ? userId : undefined}
         />
 
         {isVerifying ? (
           <View style={[styles.loadingScreen, theme === 'dark' && styles.loadingScreenDark]}>
-            <ActivityIndicator size="large" color="#6654C7" />
+            <ActivityIndicator size="large" color={tokens.loader} />
             <ThemedText themeColor="textSecondary" style={styles.loadingText}>
               {t('session.checking')}
             </ThemedText>
           </View>
         ) : (
           <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="reset-password-confirm" />
+
             <Stack.Protected guard={isSignedIn && !isProfileComplete}>
               <Stack.Screen name="onboarding" />
             </Stack.Protected>
@@ -214,7 +228,9 @@ export default function RootLayout() {
       <KeyboardProvider preload={false}>
         <QueryProvider>
           <ThemeProvider>
-            <ThemedAppShell />
+            <ActionToastProvider>
+              <ThemedAppShell />
+            </ActionToastProvider>
           </ThemeProvider>
         </QueryProvider>
       </KeyboardProvider>

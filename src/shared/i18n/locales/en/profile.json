@@ -15,12 +15,15 @@
   "header": {
     "changePhoto": "Change profile photo",
     "removePhoto": "Remove photo",
-    "editProfile": "Edit Profile"
+    "editProfile": "Edit Profile",
+    "choosePhoto": "Choose new photo"
   },
   "accounts": {
     "title": "Accounts",
     "fallbackName": "LangEx account",
-    "add": "Add account"
+    "add": "Add account",
+    "activeLabel": "{{name}}, active account",
+    "switchTo": "Switch to {{name}}"
   },
   "sections": {
     "languages": "Languages",
@@ -54,7 +57,7 @@
     "yourProfile": "Your profile",
     "partnerProfile": "Partner profile",
     "fallbackName": "Language partner",
-    "sharedWithYou": "Shared with you",
+    "sharedWithYou": "Highlighted interests are the ones you share.",
     "about": "About",
     "sendMessage": "Send Message",
     "openConversationFailed": "Could not open this conversation."
@@ -67,7 +70,8 @@
     "accountSubtitle": "Security and account deletion",
     "themeHint": "Opens theme choices",
     "themeSubtitle": "System, light, or dark appearance",
-    "languageHint": "Opens app language choices"
+    "languageHint": "Opens app language choices",
+    "version": "LangEx {{version}}"
   },
   "account": {
     "title": "Account",

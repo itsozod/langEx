@@ -19,6 +19,7 @@ import { useUserStore } from '@/shared/store/user.store';
 import { useOutboxStore } from './store/outbox-store';
 import {
   markParticipantDeletedInCaches,
+  mergeConversationIntoCaches,
   removeConversationFromListCache,
   updateGroupMembershipInCaches,
   updateGroupRolesInCaches,
@@ -109,6 +110,16 @@ export function ChatSocketManager() {
       );
       void queryClient.invalidateQueries({
         queryKey: chatQueryKeys.conversations(activeAccountId),
+      });
+    };
+    const handleConversationUpdated = (payload: { conversation?: Conversation }) => {
+      if (!payload?.conversation?.id || !activeAccountId) return;
+      mergeConversationIntoCaches(payload.conversation);
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversations(activeAccountId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: chatQueryKeys.conversation(payload.conversation.id, activeAccountId),
       });
     };
     const handleParticipantsChanged = (payload: {
@@ -210,6 +221,7 @@ export function ChatSocketManager() {
     socket.on('connect', joinRooms);
     socket.on('receive_message', handleMessage);
     socket.on('conversation_created', handleConversationCreated);
+    socket.on('conversation_updated', handleConversationUpdated);
     socket.on('conversation_participants_changed', handleParticipantsChanged);
     socket.on('conversation_roles_changed', handleRolesChanged);
     socket.on('message_edited', handleMessageChanged);
@@ -226,6 +238,7 @@ export function ChatSocketManager() {
       socket.off('connect', joinRooms);
       socket.off('receive_message', handleMessage);
       socket.off('conversation_created', handleConversationCreated);
+      socket.off('conversation_updated', handleConversationUpdated);
       socket.off('conversation_participants_changed', handleParticipantsChanged);
       socket.off('conversation_roles_changed', handleRolesChanged);
       socket.off('message_edited', handleMessageChanged);

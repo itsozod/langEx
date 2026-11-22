@@ -1,15 +1,8 @@
-import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  TextInput,
-  View,
-} from 'react-native';
+import { Platform, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AuthFormField from '@/screens/auth/_shared/components/auth-form-field';
@@ -18,6 +11,8 @@ import { LanguagePicker } from '@/screens/onboarding/components/language-picker'
 import { EditProfileInterests } from '@/screens/profile/components/edit-profile-interests';
 import { useUpdateProfileMutation } from '@/screens/profile/hooks';
 import { editProfileSchema, type EditProfileFormValues } from '@/screens/profile/schemas';
+import { SettingsHeader } from '@/screens/profile/components/settings-header';
+import { FilterChip } from '@/shared/components/ui/filter-chip';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { InputWithIcon } from '@/shared/components/ui/input-with-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
@@ -27,6 +22,9 @@ import { useUserStore } from '@/shared/store/user.store';
 import { useEditProfileStyles } from './styles/edit-profile-styles';
 import { useTranslation } from 'react-i18next';
 import { translateMessage } from '@/shared/i18n/translate-message';
+
+// Space kept below the focused field: Save button (54), its gap, and a two-line server error.
+const SAVE_BUTTON_CLEARANCE = 150;
 
 export default function EditProfile() {
   const themeColors = useTheme();
@@ -74,212 +72,175 @@ export default function EditProfile() {
 
   return (
     <GradientBackground>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
+        bottomOffset={SAVE_BUTTON_CLEARANCE}
+        contentContainerStyle={styles.scrollContent}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="always"
+        showsVerticalScrollIndicator={false}
         style={styles.keyboardView}>
-        <ScrollView
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          <SafeAreaView style={styles.safeArea}>
-            <View style={styles.content}>
-              <View style={styles.header}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('edit.cancel')}
-                  disabled={updateMutation.isPending}
-                  hitSlop={10}
-                  onPress={leave}
-                  style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-                  <SymbolView
-                    name={{ ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' }}
-                    size={21}
-                    weight="semibold"
-                    tintColor={styles.icon.color}
-                  />
-                </Pressable>
-                <View style={styles.headerCopy}>
-                  <ThemedText type="bold" style={styles.headerTitle}>
-                    {t('edit.title')}
-                  </ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.headerSubtitle}>
-                    {t('edit.subtitle')}
-                  </ThemedText>
-                </View>
-                <View style={styles.headerSpacer} />
-              </View>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            <SettingsHeader fallbackHref="/(tabs)/profile" title={t('edit.title')} />
 
-              <View style={styles.formCard}>
-                <AuthFormField
-                  label={t('onboarding:step1.displayName')}
-                  error={errors.displayName?.message}>
-                  <Controller
-                    control={control}
-                    name="displayName"
-                    render={({ field: { onBlur, onChange, value } }) => (
-                      <InputWithIcon
-                        icon={{ ios: 'person', android: 'person', web: 'person' }}
-                        iconColor={themeColors.textSecondary}
-                        hasError={Boolean(errors.displayName)}
-                        value={value}
-                        onBlur={onBlur}
-                        onChangeText={(text) => {
-                          onChange(text);
-                          clearErrors('root.server');
-                        }}
-                        placeholder={t('edit.displayNamePlaceholder')}
-                        autoCapitalize="words"
-                        disabled={updateMutation.isPending}
-                      />
-                    )}
-                  />
-                </AuthFormField>
-
-                <View style={styles.field}>
-                  <View style={styles.labelRow}>
-                    <ThemedText style={styles.label}>{t('onboarding:step5.bio')}</ThemedText>
-                    <Controller
-                      control={control}
-                      name="bio"
-                      render={({ field: { value } }) => (
-                        <ThemedText themeColor="textSecondary" style={styles.characterCount}>
-                          {value.length}/150
-                        </ThemedText>
-                      )}
+            <View style={styles.formCard}>
+              <AuthFormField
+                label={t('onboarding:step1.displayName')}
+                error={errors.displayName?.message}>
+                <Controller
+                  control={control}
+                  name="displayName"
+                  render={({ field: { onBlur, onChange, value } }) => (
+                    <InputWithIcon
+                      icon={{ ios: 'person', android: 'person', web: 'person' }}
+                      iconColor={themeColors.textSecondary}
+                      hasError={Boolean(errors.displayName)}
+                      value={value}
+                      onBlur={onBlur}
+                      onChangeText={(text) => {
+                        onChange(text);
+                        clearErrors('root.server');
+                      }}
+                      placeholder={t('edit.displayNamePlaceholder')}
+                      autoCapitalize="words"
+                      disabled={updateMutation.isPending}
                     />
-                  </View>
+                  )}
+                />
+              </AuthFormField>
+
+              <View style={styles.field}>
+                <View style={styles.labelRow}>
+                  <ThemedText style={styles.label}>{t('onboarding:step5.bio')}</ThemedText>
                   <Controller
                     control={control}
                     name="bio"
-                    render={({ field: { onBlur, onChange, value } }) => (
-                      <TextInput
-                        value={value}
-                        onBlur={onBlur}
-                        onChangeText={(text) => {
-                          onChange(text);
-                          clearErrors('root.server');
-                        }}
-                        editable={!updateMutation.isPending}
-                        multiline
-                        maxLength={150}
-                        placeholder={t('edit.bioPlaceholder')}
-                        placeholderTextColor={styles.placeholder.color}
-                        textAlignVertical="top"
-                        style={[styles.textArea, errors.bio && styles.inputError]}
-                      />
-                    )}
-                  />
-                  {errors.bio?.message ? (
-                    <ThemedText style={styles.error}>
-                      {translateMessage(t, errors.bio.message)}
-                    </ThemedText>
-                  ) : null}
-                </View>
-
-                <Controller
-                  control={control}
-                  name="nativeLanguage"
-                  render={({ field: { onChange, value } }) => (
-                    <LanguagePicker
-                      label={t('onboarding:step3.nativeLanguage')}
-                      placeholder={t('onboarding:step3.nativeLanguagePlaceholder')}
-                      value={value}
-                      error={errors.nativeLanguage?.message}
-                      onChange={(language) => {
-                        onChange(language);
-                        clearErrors('root.server');
-                      }}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="learningLanguage"
-                  render={({ field: { onChange, value } }) => (
-                    <LanguagePicker
-                      label={t('onboarding:step3.learningLanguage')}
-                      placeholder={t('onboarding:step3.learningLanguagePlaceholder')}
-                      value={value}
-                      error={errors.learningLanguage?.message}
-                      onChange={(language) => {
-                        onChange(language);
-                        clearErrors('root.server');
-                      }}
-                    />
-                  )}
-                />
-
-                <View style={styles.field}>
-                  <ThemedText style={styles.label}>{t('edit.proficiency')}</ThemedText>
-                  <Controller
-                    control={control}
-                    name="proficiencyLevel"
-                    render={({ field: { onChange, value } }) => (
-                      <View style={styles.levelRow}>
-                        {LEVELS.map((level) => {
-                          const selected = value === level.value;
-                          return (
-                            <Pressable
-                              key={level.value}
-                              disabled={updateMutation.isPending}
-                              onPress={() => {
-                                onChange(level.value);
-                                clearErrors('root.server');
-                              }}
-                              style={({ pressed }) => [
-                                styles.levelPill,
-                                selected && styles.levelPillSelected,
-                                pressed && styles.pressed,
-                              ]}>
-                              <ThemedText
-                                style={[styles.levelText, selected && styles.levelTextSelected]}>
-                                {getLevelLabel(level.value)}
-                              </ThemedText>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
+                    render={({ field: { value } }) => (
+                      <ThemedText themeColor="textSecondary" style={styles.characterCount}>
+                        {value.length}/150
+                      </ThemedText>
                     )}
                   />
                 </View>
-
                 <Controller
                   control={control}
-                  name="interests"
-                  render={({ field: { onChange, value } }) => (
-                    <EditProfileInterests
-                      disabled={updateMutation.isPending}
-                      error={errors.interests?.message}
-                      onChange={onChange}
-                      onClearErrors={() => {
-                        clearErrors('interests');
+                  name="bio"
+                  render={({ field: { onBlur, onChange, value } }) => (
+                    <TextInput
+                      value={value}
+                      onBlur={onBlur}
+                      onChangeText={(text) => {
+                        onChange(text);
                         clearErrors('root.server');
                       }}
-                      value={value}
+                      editable={!updateMutation.isPending}
+                      multiline
+                      maxLength={150}
+                      placeholder={t('edit.bioPlaceholder')}
+                      placeholderTextColor={styles.placeholder.color}
+                      textAlignVertical="top"
+                      style={[styles.textArea, errors.bio && styles.inputError]}
                     />
                   )}
                 />
-
-                {errors.root?.server?.message ? (
-                  <View style={styles.serverError}>
-                    <ThemedText style={styles.serverErrorText}>
-                      {errors.root.server.message}
-                    </ThemedText>
-                  </View>
+                {errors.bio?.message ? (
+                  <ThemedText style={styles.error}>
+                    {translateMessage(t, errors.bio.message)}
+                  </ThemedText>
                 ) : null}
+              </View>
 
-                <AuthPrimaryButton
-                  label={updateMutation.isPending ? t('edit.saving') : t('edit.save')}
-                  pending={updateMutation.isPending}
-                  onPress={() => void handleSubmit(onSave)()}
+              <Controller
+                control={control}
+                name="nativeLanguage"
+                render={({ field: { onChange, value } }) => (
+                  <LanguagePicker
+                    label={t('onboarding:step3.nativeLanguage')}
+                    placeholder={t('onboarding:step3.nativeLanguagePlaceholder')}
+                    value={value}
+                    error={errors.nativeLanguage?.message}
+                    onChange={(language) => {
+                      onChange(language);
+                      clearErrors('root.server');
+                    }}
+                  />
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="learningLanguage"
+                render={({ field: { onChange, value } }) => (
+                  <LanguagePicker
+                    label={t('onboarding:step3.learningLanguage')}
+                    placeholder={t('onboarding:step3.learningLanguagePlaceholder')}
+                    value={value}
+                    error={errors.learningLanguage?.message}
+                    onChange={(language) => {
+                      onChange(language);
+                      clearErrors('root.server');
+                    }}
+                  />
+                )}
+              />
+
+              <View style={styles.field}>
+                <ThemedText style={styles.label}>{t('edit.proficiency')}</ThemedText>
+                <Controller
+                  control={control}
+                  name="proficiencyLevel"
+                  render={({ field: { onChange, value } }) => (
+                    <View accessibilityRole="radiogroup" style={styles.levelRow}>
+                      {LEVELS.map((level) => (
+                        <FilterChip
+                          key={level.value}
+                          label={getLevelLabel(level.value)}
+                          onPress={() => {
+                            onChange(level.value);
+                            clearErrors('root.server');
+                          }}
+                          selected={value === level.value}
+                        />
+                      ))}
+                    </View>
+                  )}
                 />
               </View>
+
+              <Controller
+                control={control}
+                name="interests"
+                render={({ field: { onChange, value } }) => (
+                  <EditProfileInterests
+                    disabled={updateMutation.isPending}
+                    error={errors.interests?.message}
+                    onChange={onChange}
+                    onClearErrors={() => {
+                      clearErrors('interests');
+                      clearErrors('root.server');
+                    }}
+                    value={value}
+                  />
+                )}
+              />
+
+              {errors.root?.server?.message ? (
+                <View style={styles.serverError}>
+                  <ThemedText style={styles.serverErrorText}>
+                    {errors.root.server.message}
+                  </ThemedText>
+                </View>
+              ) : null}
+
+              <AuthPrimaryButton
+                label={updateMutation.isPending ? t('edit.saving') : t('edit.save')}
+                pending={updateMutation.isPending}
+                onPress={() => void handleSubmit(onSave)()}
+              />
             </View>
-          </SafeAreaView>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </View>
+        </SafeAreaView>
+      </KeyboardAwareScrollView>
     </GradientBackground>
   );
 }

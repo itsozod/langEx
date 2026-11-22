@@ -5,6 +5,7 @@ import { FlatList, TextInput, View, type ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import GradientBackground from '@/shared/components/ui/gradient-background';
+import { useActionToast } from '@/shared/components/ui/action-toast-provider';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { GroupAvatar } from './components/group-avatar';
@@ -25,6 +26,7 @@ export default function CreateGroupScreen() {
   const { t } = useTranslation(['groups', 'common']);
   const candidatesQuery = useGroupCandidates();
   const createGroup = useCreateGroup();
+  const { showToast } = useActionToast();
   const [name, setName] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [didAttemptSubmit, setDidAttemptSubmit] = useState(false);
@@ -77,9 +79,7 @@ export default function CreateGroupScreen() {
       { name: normalizeGroupName(name), participantIds: [...selectedIds] },
       {
         onSuccess: ({ conversation }) => {
-          if (process.env.EXPO_OS === 'ios') {
-            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }
+          showToast({ message: t('feedback.created') });
           router.replace({ pathname: '/chat/[id]', params: { id: conversation.id } });
         },
         onError: () => {
@@ -89,7 +89,7 @@ export default function CreateGroupScreen() {
         },
       },
     );
-  }, [canSubmit, createGroup, name, selectedIds]);
+  }, [canSubmit, createGroup, name, selectedIds, showToast, t]);
 
   const listHeader = (
     <View>

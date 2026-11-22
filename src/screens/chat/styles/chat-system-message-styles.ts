@@ -14,7 +14,7 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: 12,
       paddingVertical: 7,
       borderRadius: 14,
-      backgroundColor: isDark ? 'rgba(190,176,255,0.09)' : 'rgba(97,76,190,0.07)',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(24,21,31,0.05)',
     },
     text: {
       color: isDark ? '#AAA2B6' : '#746D7E',

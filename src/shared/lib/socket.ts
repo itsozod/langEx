@@ -15,6 +15,7 @@ import { API_URL } from './api-client';
 
 type ServerToClientEvents = {
   conversation_created: (payload: { conversation: Conversation }) => void;
+  conversation_updated: (payload: { conversation: Conversation }) => void;
   conversation_participants_changed: (payload: {
     conversationId: string;
     addedParticipantIds: string[];

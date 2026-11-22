@@ -1,7 +1,7 @@
-import { useAppTheme } from '@/providers/theme-provider';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-view';
 import { Pressable, StyleSheet } from 'react-native';
-import { Input, View } from 'tamagui';
+import { type ColorTokens, Input, View } from 'tamagui';
 
 type IconName = SymbolViewProps['name'];
 
@@ -23,28 +23,29 @@ export const InputWithIcon = ({
   onTrailingIconPress,
   ...inputProps
 }: InputWithIconProps) => {
-  const { theme } = useAppTheme();
-  const isDark = theme === 'dark';
+  const tokens = useUiTokens();
 
   return (
     <View style={styles.inputWrapper}>
       <View style={styles.inputIcon} pointerEvents="none">
         <SymbolView name={icon} size={18} tintColor={iconColor} />
       </View>
+      {/* Filled and borderless at rest; the border only appears for focus or an error.
+          Tamagui types colors as theme tokens, so the app's plain hex tokens are cast here. */}
       <Input
-        height={54}
+        height={50}
         pl={44}
-        pr={trailingIcon ? 46 : 16}
-        rounded={14}
+        pr={trailingIcon ? 46 : 14}
+        rounded={12}
         borderWidth={1}
-        borderColor={hasError ? '#D64545' : isDark ? '#4A405F' : '#DED8EC'}
-        bg={isDark ? '#171321' : '#FBFAFE'}
-        color={isDark ? '#F5F1FF' : '#221E2B'}
-        placeholderTextColor="$gray9"
-        fontSize={15}
+        borderColor={(hasError ? tokens.danger : 'transparent') as ColorTokens}
+        bg={tokens.fill as ColorTokens}
+        color={tokens.text as ColorTokens}
+        placeholderTextColor={tokens.subtle as ColorTokens}
+        fontSize={16}
         focusStyle={{
-          borderColor: hasError ? '#D64545' : '#6654C7',
-          bg: isDark ? '#1B1627' : '#FFFFFF',
+          borderColor: (hasError ? tokens.danger : tokens.accent) as ColorTokens,
+          bg: tokens.fill as ColorTokens,
           outlineWidth: 0,
         }}
         {...inputProps}

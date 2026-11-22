@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,7 +38,6 @@ export default function ChatScreen() {
   const { theme } = useAppTheme();
   const currentUser = useUserStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
-  const setActiveMessages = useChatStore((state) => state.setActiveMessages);
   const syncActiveMessages = useChatStore((state) => state.syncActiveMessages);
   const typingUsers = useChatStore((state) => state.typingUsers);
   const listConversation = useChatStore((state) =>
@@ -46,6 +45,7 @@ export default function ChatScreen() {
   );
   const [anchorMessageId, setAnchorMessageId] = useState<string | null>(null);
   const [anchorWindowVersion, setAnchorWindowVersion] = useState(0);
+  const isFocused = useIsFocused();
   const query = useConversation(conversationId);
   // The newest window is never torn down, so returning to it is instant and the screen keeps its
   // loading, error and participant state while an older window is being fetched.
@@ -117,18 +117,15 @@ export default function ChatScreen() {
     initialPresence,
   );
 
-  // Clear the shared window only when leaving or switching chats. Clearing on mount races the
-  // layout-phase cache hydration below: cached messages are restored first and then erased by a
-  // passive effect, which renders the empty state beside an in-flight older-page loader.
-  useLayoutEffect(() => () => setActiveMessages([]), [routeId, setActiveMessages]);
-
-  // Keep the previous window until the query resolves, then synchronize in the layout phase so the
-  // query result and Gifted Chat rows reach native in one paint. Synchronizing instead of merging
-  // also releases evicted pages while retaining optimistic rows outside the server window.
+  // Native stacks keep covered chat screens mounted. Only the focused screen may hydrate the
+  // shared message window; otherwise a group chat left underneath a profile/direct-chat flow can
+  // overwrite that direct chat, and the direct chat's unmount can leave the group window empty.
+  // Focus changes rerun this layout effect before paint, restoring the cached group messages on
+  // back navigation without briefly rendering the first-message state.
   useLayoutEffect(() => {
-    if (!activeWindowPages) return;
+    if (!isFocused || !activeWindowPages) return;
     syncActiveMessages(paginatedMessages);
-  }, [activeWindowPages, paginatedMessages, syncActiveMessages, windowKey]);
+  }, [activeWindowPages, isFocused, paginatedMessages, syncActiveMessages, windowKey]);
 
   const serverParticipantReadAt = !isGroup
     ? conversation?.reads?.find((readState) => readState.userId === otherParticipant?.id)

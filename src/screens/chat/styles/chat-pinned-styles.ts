@@ -3,14 +3,14 @@ import { StyleSheet } from 'react-native';
 
 const createPinnedStyles = (theme: AppTheme) => {
   const isDark = theme === 'dark';
-  const border = isDark ? 'rgba(190,176,255,0.14)' : 'rgba(97,76,190,0.11)';
+  const border = isDark ? 'rgba(255,255,255,0.09)' : 'rgba(24,21,31,0.08)';
 
   return StyleSheet.create({
     banner: {
       minHeight: 58,
       flexDirection: 'row',
       alignItems: 'stretch',
-      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+      backgroundColor: isDark ? '#18161E' : '#FFFFFF',
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: border,
     },
@@ -26,7 +26,7 @@ const createPinnedStyles = (theme: AppTheme) => {
       width: 3,
       alignSelf: 'stretch',
       borderRadius: 2,
-      backgroundColor: '#735FDC',
+      backgroundColor: '#7B68E0',
     },
     bannerCopy: { flex: 1, minWidth: 0, paddingLeft: 10 },
     bannerTitle: {
@@ -61,7 +61,7 @@ const createPinnedStyles = (theme: AppTheme) => {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 4,
-      backgroundColor: '#6654C7',
+      backgroundColor: '#6B57D6',
     },
     countText: { color: '#FFFFFF', fontSize: 9, lineHeight: 12, fontWeight: '700' },
     modalRoot: {
@@ -84,13 +84,13 @@ const createPinnedStyles = (theme: AppTheme) => {
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
       borderCurve: 'continuous',
-      backgroundColor: isDark ? '#181420' : '#F8F6FC',
+      backgroundColor: isDark ? '#121117' : '#F6F5F9',
     },
     sheetHandleArea: {
       height: 24,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+      backgroundColor: isDark ? '#18161E' : '#FFFFFF',
     },
     sheetHandle: {
       width: 38,
@@ -106,7 +106,7 @@ const createPinnedStyles = (theme: AppTheme) => {
       paddingLeft: 18,
       paddingRight: 10,
       paddingBottom: 10,
-      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+      backgroundColor: isDark ? '#18161E' : '#FFFFFF',
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: border,
     },
@@ -127,7 +127,7 @@ const createPinnedStyles = (theme: AppTheme) => {
       borderCurve: 'continuous',
     },
     sheetButtonPressed: {
-      backgroundColor: isDark ? 'rgba(190,176,255,0.10)' : 'rgba(97,76,190,0.07)',
+      backgroundColor: isDark ? 'rgba(190,176,255,0.10)' : 'rgba(24,21,31,0.05)',
     },
     sheetDoneLabel: {
       color: isDark ? '#C8BEFF' : '#5D4BB3',
@@ -148,12 +148,12 @@ const createPinnedStyles = (theme: AppTheme) => {
       borderCurve: 'continuous',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
-      backgroundColor: isDark ? '#302A3D' : '#FFFFFF',
+      backgroundColor: isDark ? '#26242E' : '#FFFFFF',
     },
     sheetMessagePressed: {
       backgroundColor: isDark ? '#3A3348' : '#F0ECF8',
     },
-    sheetMessageAccent: { width: 4, alignSelf: 'stretch', backgroundColor: '#735FDC' },
+    sheetMessageAccent: { width: 4, alignSelf: 'stretch', backgroundColor: '#7B68E0' },
     sheetMessageCopy: { flex: 1, minWidth: 0, gap: 4, paddingVertical: 12 },
     sheetMessageMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     sheetAuthor: {
@@ -183,7 +183,7 @@ const createPinnedStyles = (theme: AppTheme) => {
       borderCurve: 'continuous',
       backgroundColor: isDark ? 'rgba(115,95,220,0.18)' : 'rgba(102,84,199,0.10)',
     },
-    sheetPinIcon: { color: isDark ? '#C8BEFF' : '#6654C7' },
+    sheetPinIcon: { color: isDark ? '#C8BEFF' : '#6B57D6' },
     actionsLayer: {
       position: 'absolute',
       top: 0,
@@ -208,7 +208,7 @@ const createPinnedStyles = (theme: AppTheme) => {
       borderCurve: 'continuous',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
-      backgroundColor: isDark ? '#282234' : '#FFFFFF',
+      backgroundColor: isDark ? '#24222B' : '#FFFFFF',
     },
     actionsHeader: { gap: 3, paddingHorizontal: 18, paddingVertical: 14 },
     actionsTitle: {
@@ -230,7 +230,7 @@ const createPinnedStyles = (theme: AppTheme) => {
       paddingHorizontal: 18,
     },
     actionsItemPressed: {
-      backgroundColor: isDark ? 'rgba(190,176,255,0.09)' : 'rgba(97,76,190,0.07)',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(24,21,31,0.05)',
     },
     actionsItemDisabled: { opacity: 0.45 },
     actionsDivider: {

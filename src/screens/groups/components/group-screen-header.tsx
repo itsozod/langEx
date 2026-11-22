@@ -5,6 +5,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useGroupStyles } from '../styles/group-styles';
 import { useTranslation } from 'react-i18next';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 type GroupScreenHeaderProps = {
   actionLabel?: string;
@@ -24,6 +25,7 @@ export function GroupScreenHeader({
   title,
 }: GroupScreenHeaderProps) {
   const styles = useGroupStyles();
+  const tokens = useUiTokens();
   const { t } = useTranslation();
 
   return (
@@ -36,7 +38,7 @@ export function GroupScreenHeader({
         style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}>
         <SymbolView
           name={{ ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' }}
-          size={23}
+          size={18}
           weight="semibold"
           tintColor={styles.headerIcon.color}
         />
@@ -58,7 +60,7 @@ export function GroupScreenHeader({
             pressed && styles.pressed,
           ]}>
           {actionPending ? (
-            <ActivityIndicator size="small" color={styles.headerActionText.color} />
+            <ActivityIndicator size="small" color={tokens.loader} />
           ) : (
             <ThemedText type="bold" style={styles.headerActionText}>
               {actionLabel}

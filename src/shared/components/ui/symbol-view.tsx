@@ -30,7 +30,6 @@ import {
   LogOut,
   Laptop,
   Mail,
-  MessageSquareDot,
   MessageCircle,
   Music2,
   Moon,
@@ -57,6 +56,7 @@ import {
   WifiOff,
   X,
   type LucideIcon,
+  LucideProvider,
 } from 'lucide-react-native';
 import { Platform, StyleSheet, View } from 'react-native';
 
@@ -92,7 +92,6 @@ const androidIcons: Record<string, LucideIcon> = {
   lock: Lock,
   logout: LogOut,
   mail: Mail,
-  mark_chat_unread: MessageSquareDot,
   more_horiz: Ellipsis,
   menu_book: BookOpen,
   movie: Film,
@@ -181,7 +180,12 @@ export function SymbolView(props: SymbolViewProps) {
       style={[styles.iconBox, { width: size, height: size }, style]}
       pointerEvents="none">
       {AndroidIcon ? (
-        <AndroidIcon color={tintColor} size={size} strokeWidth={getStrokeWidth(weight)} />
+        <LucideProvider
+          color={tintColor as string | undefined}
+          size={size}
+          strokeWidth={getStrokeWidth(weight)}>
+          <AndroidIcon />
+        </LucideProvider>
       ) : (
         fallback
       )}

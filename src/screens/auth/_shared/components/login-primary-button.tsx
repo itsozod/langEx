@@ -33,22 +33,24 @@ export function LoginPrimaryButton({ label, onPress, pending }: LoginPrimaryButt
   );
 }
 
+// Solid accent, no gradient or glow; height matches the inputs' rhythm.
 const styles = StyleSheet.create({
   button: {
     width: '100%',
-    height: 54,
-    borderRadius: 15,
+    height: 52,
+    borderRadius: 14,
+    borderCurve: 'continuous',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6654C7',
+    backgroundColor: '#6B57D6',
   },
-  buttonPressed: { backgroundColor: '#5745B4', transform: [{ scale: 0.99 }] },
-  buttonDisabled: { opacity: 0.72 },
+  buttonPressed: { opacity: 0.85 },
+  buttonDisabled: { opacity: 0.6 },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  label: { color: '#FFFFFF', fontSize: 15 },
+  label: { color: '#FFFFFF', fontFamily: 'PlusJakartaSansSemiBold', fontSize: 16 },
 });

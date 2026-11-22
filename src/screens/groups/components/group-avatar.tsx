@@ -1,25 +1,13 @@
-import { View } from 'react-native';
-
-import { SymbolView } from '@/shared/components/ui/symbol-view';
-
-import { useGroupStyles } from '../styles/group-styles';
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
 
 type GroupAvatarProps = {
+  /** Group name; picks the same stable color the group has in the Chats list. */
+  name?: string | null;
   size?: 'medium' | 'large';
 };
 
-export function GroupAvatar({ size = 'medium' }: GroupAvatarProps) {
-  const styles = useGroupStyles();
-  const isLarge = size === 'large';
-
+export function GroupAvatar({ name, size = 'medium' }: GroupAvatarProps) {
   return (
-    <View style={isLarge ? styles.groupAvatarLarge : styles.groupAvatar}>
-      <SymbolView
-        name={{ ios: 'person.3.fill', android: 'group', web: 'group' }}
-        size={isLarge ? 31 : 22}
-        weight="semibold"
-        tintColor={styles.groupAvatarIcon.color}
-      />
-    </View>
+    <ContactAvatar name={name?.trim() ?? ''} size={size === 'large' ? 88 : 48} variant="group" />
   );
 }

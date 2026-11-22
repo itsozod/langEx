@@ -13,10 +13,11 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
+import { SEARCH_FIELD_HEIGHT } from '@/shared/components/search-overlay/search-overlay-styles';
 
 export type SearchBarRect = { x: number; y: number; width: number; height: number };
 
-export const SEARCH_BAR_HEIGHT = 50;
+export const SEARCH_BAR_HEIGHT = SEARCH_FIELD_HEIGHT;
 const HORIZONTAL_GUTTER = 16;
 const CANCEL_SLOT_WIDTH = 84;
 

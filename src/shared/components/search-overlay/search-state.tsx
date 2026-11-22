@@ -4,6 +4,7 @@ import { SymbolView, type SymbolViewProps } from '@/shared/components/ui/symbol-
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useSearchOverlayStyles } from './search-overlay-styles';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 type SearchStateProps = {
   actionLabel?: string;
@@ -39,10 +40,11 @@ export function SearchState({ actionLabel, icon, message, onAction, title }: Sea
 
 export function SearchLoadingState() {
   const styles = useSearchOverlayStyles();
+  const tokens = useUiTokens();
 
   return (
     <View style={styles.state}>
-      <ActivityIndicator color={styles.stateIconColor.color} />
+      <ActivityIndicator color={tokens.loader} />
     </View>
   );
 }

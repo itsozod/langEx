@@ -3,14 +3,14 @@ import { StyleSheet } from 'react-native';
 
 const createChatStyles = (theme: AppTheme) => {
   const isDark = theme === 'dark';
-  const border = isDark ? 'rgba(190,176,255,0.13)' : 'rgba(97,76,190,0.10)';
+  const border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(24,21,31,0.08)';
 
   return StyleSheet.create({
     safeArea: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' },
     pressed: { opacity: 0.65 },
     threadViewport: { flex: 1, overflow: 'hidden' },
-    chat: { flex: 1, backgroundColor: isDark ? '#181420' : '#F8F6FC' },
-    messagesContainer: { flex: 1, backgroundColor: isDark ? '#181420' : '#F8F6FC' },
+    chat: { flex: 1, backgroundColor: isDark ? '#121117' : '#F6F5F9' },
+    messagesContainer: { flex: 1, backgroundColor: isDark ? '#121117' : '#F6F5F9' },
     messageList: { flexGrow: 1, paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10 },
     messageLane: { width: '100%' },
     messageRowGrouped: { marginBottom: 3 },
@@ -27,20 +27,12 @@ const createChatStyles = (theme: AppTheme) => {
       paddingBottom: 7,
     },
     bubbleLeft: {
-      backgroundColor: isDark ? '#302A3D' : '#FFFFFF',
+      backgroundColor: isDark ? '#26242E' : '#FFFFFF',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
-      shadowColor: '#000000',
-      shadowOpacity: isDark ? 0.12 : 0.06,
-      shadowRadius: 7,
-      shadowOffset: { width: 0, height: 3 },
     },
     bubbleRight: {
-      backgroundColor: isDark ? '#735FDC' : '#6654C7',
-      shadowColor: '#503CB9',
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
+      backgroundColor: isDark ? '#7B68E0' : '#6B57D6',
     },
     bubbleJoinAboveLeft: { borderTopLeftRadius: 7 },
     bubbleJoinBelowLeft: { borderBottomLeftRadius: 7 },
@@ -55,7 +47,7 @@ const createChatStyles = (theme: AppTheme) => {
       borderRadius: 20,
       borderWidth: 2,
       borderColor: isDark ? '#C7B9FF' : '#5846AA',
-      backgroundColor: isDark ? 'rgba(199,185,255,0.17)' : 'rgba(88,70,170,0.11)',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(24,21,31,0.07)',
     },
     messageReply: {
       minWidth: 126,
@@ -89,8 +81,8 @@ const createChatStyles = (theme: AppTheme) => {
     },
     replyThumbnailBadgeText: { color: '#FFFFFF', fontSize: 9, lineHeight: 12 },
     messageReplyLeft: {
-      backgroundColor: isDark ? 'rgba(123,102,218,0.13)' : '#F0ECFA',
-      borderLeftColor: '#735FDC',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : '#F1F0F4',
+      borderLeftColor: '#7B68E0',
     },
     messageReplyRight: {
       backgroundColor: 'rgba(255,255,255,0.13)',
@@ -113,12 +105,8 @@ const createChatStyles = (theme: AppTheme) => {
       overflow: 'hidden',
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? 'rgba(190,176,255,0.16)' : 'rgba(97,76,190,0.12)',
-      backgroundColor: isDark ? '#282234' : '#FFFFFF',
-      shadowColor: '#000000',
-      shadowOpacity: isDark ? 0.4 : 0.18,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 8 },
+      borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(24,21,31,0.09)',
+      backgroundColor: isDark ? '#24222B' : '#FFFFFF',
       elevation: 8,
     },
     menuItem: {
@@ -129,14 +117,14 @@ const createChatStyles = (theme: AppTheme) => {
       paddingHorizontal: 16,
     },
     menuItemPressed: {
-      backgroundColor: isDark ? 'rgba(190,176,255,0.09)' : 'rgba(97,76,190,0.07)',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(24,21,31,0.05)',
     },
-    menuIcon: { color: isDark ? '#D9D1FF' : '#4B3F8C' },
+    menuIcon: { color: isDark ? '#E9E7EE' : '#3D3946' },
     menuLabel: { fontSize: 14, lineHeight: 19 },
     menuDivider: {
       height: StyleSheet.hairlineWidth,
       marginHorizontal: 16,
-      backgroundColor: isDark ? 'rgba(190,176,255,0.14)' : 'rgba(97,76,190,0.10)',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(24,21,31,0.08)',
     },
     menuLabelDestructive: { color: isDark ? '#FF9AA4' : '#C0392F' },
     menuIconDestructive: { color: isDark ? '#FF9AA4' : '#C0392F' },
@@ -171,7 +159,7 @@ const createChatStyles = (theme: AppTheme) => {
       gap: 10,
       paddingHorizontal: 16,
       paddingVertical: 9,
-      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+      backgroundColor: isDark ? '#18161E' : '#FFFFFF',
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: border,
     },
@@ -198,7 +186,7 @@ const createChatStyles = (theme: AppTheme) => {
       minHeight: 62,
       paddingHorizontal: 10,
       paddingTop: 8,
-      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+      backgroundColor: isDark ? '#18161E' : '#FFFFFF',
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: border,
     },
@@ -207,7 +195,7 @@ const createChatStyles = (theme: AppTheme) => {
       flexDirection: 'row',
       alignItems: 'flex-end',
       borderRadius: 23,
-      backgroundColor: isDark ? '#302A3C' : '#F2EFF6',
+      backgroundColor: isDark ? '#25232C' : '#F1F0F4',
       paddingLeft: 8,
       paddingRight: 4,
     },
@@ -217,7 +205,7 @@ const createChatStyles = (theme: AppTheme) => {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    imageActionIcon: { color: isDark ? '#BDB2F4' : '#6554B7' },
+    imageActionIcon: { color: isDark ? '#A9A4B3' : '#6E6979' },
     // Gifted Chat's Composer only auto-grows the input on web; on native it leaves `height`
     // undefined and relies on the multiline input measuring its own content. Never give this
     // style `flex`: the toolbar is measured against the space left above the keyboard, so a
@@ -244,7 +232,7 @@ const createChatStyles = (theme: AppTheme) => {
       borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#6654C7',
+      backgroundColor: '#6B57D6',
     },
     sendButtonDisabled: { opacity: 0.42 },
     replySwipeAction: { width: 50, alignItems: 'center', justifyContent: 'center' },
@@ -254,11 +242,7 @@ const createChatStyles = (theme: AppTheme) => {
       borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#6654C7',
-      shadowColor: '#3D2A9E',
-      shadowOpacity: 0.2,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 3 },
+      backgroundColor: '#6B57D6',
     },
     replyPreview: {
       minHeight: 54,
@@ -269,10 +253,10 @@ const createChatStyles = (theme: AppTheme) => {
       overflow: 'hidden',
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? 'rgba(190,176,255,0.15)' : 'rgba(97,76,190,0.12)',
-      backgroundColor: isDark ? '#2A2436' : '#F5F2FC',
+      borderColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(24,21,31,0.09)',
+      backgroundColor: isDark ? '#24222B' : '#F3F2F6',
     },
-    replyPreviewAccent: { width: 4, alignSelf: 'stretch', backgroundColor: '#735FDC' },
+    replyPreviewAccent: { width: 4, alignSelf: 'stretch', backgroundColor: '#7B68E0' },
     replyPreviewCopy: { flex: 1, minWidth: 0, paddingHorizontal: 11, paddingVertical: 8 },
     replyPreviewTitle: { color: isDark ? '#C5BAFF' : '#604DB7', fontSize: 10, lineHeight: 14 },
     replyPreviewText: {
@@ -309,10 +293,10 @@ const createChatStyles = (theme: AppTheme) => {
       alignSelf: 'center',
       borderRadius: 20,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? 'rgba(190,176,255,0.15)' : 'rgba(97,76,190,0.12)',
-      backgroundColor: isDark ? '#272130' : '#F2EEFA',
+      borderColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(24,21,31,0.09)',
+      backgroundColor: isDark ? '#211F28' : '#F1F0F4',
     },
-    olderMessagesAccent: { color: isDark ? '#B7A8FF' : '#6654C7' },
+    olderMessagesAccent: { color: isDark ? '#B7A8FF' : '#6B57D6' },
     olderMessagesText: { color: isDark ? '#B8B0C4' : '#6D6578', fontSize: 10, lineHeight: 15 },
     errorBanner: {
       flexDirection: 'row',
@@ -343,7 +327,7 @@ const createChatStyles = (theme: AppTheme) => {
       borderRadius: 999,
       paddingHorizontal: 18,
       paddingVertical: 10,
-      backgroundColor: '#6654C7',
+      backgroundColor: '#6B57D6',
     },
     errorButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
   });

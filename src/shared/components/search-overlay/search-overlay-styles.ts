@@ -2,7 +2,8 @@ import { StyleSheet } from 'react-native';
 
 import { useAppTheme } from '@/providers/theme-provider';
 
-export const SEARCH_ACCENT_COLOR = '#6654C7';
+export const SEARCH_ACCENT_COLOR = '#7B68E0';
+export const SEARCH_FIELD_HEIGHT = 42;
 
 /** Styles shared by every full-screen search: the field, its trigger, the layer and states. */
 export const useSearchOverlayStyles = () => {
@@ -10,30 +11,34 @@ export const useSearchOverlayStyles = () => {
   const isDark = theme === 'dark';
 
   return StyleSheet.create({
+    // Filled and borderless, like the native search field: it reads as an input, not a card.
     field: {
-      height: 50,
+      height: SEARCH_FIELD_HEIGHT,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      borderRadius: 17,
+      gap: 8,
+      borderRadius: 12,
       borderCurve: 'continuous',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(192,177,255,0.18)' : 'rgba(93,72,180,0.13)',
-      paddingLeft: 14,
-      backgroundColor: isDark ? '#262030' : '#FFFFFF',
+      paddingLeft: 12,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
     },
-    fieldIcon: { color: isDark ? '#BBAEFF' : SEARCH_ACCENT_COLOR },
+    fieldIcon: { color: isDark ? '#9A95A6' : '#77727F' },
     input: {
       minWidth: 0,
       flex: 1,
       paddingVertical: 0,
       color: isDark ? '#FFFFFF' : '#201B29',
       fontFamily: 'PlusJakartaSans',
-      fontSize: 15,
+      fontSize: 16,
       lineHeight: 21,
     },
-    placeholder: { color: isDark ? '#8F879B' : '#9A92A2' },
-    trailingSlot: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+    placeholder: { color: isDark ? '#8C8798' : '#8A8592' },
+    trailingSlot: {
+      width: 40,
+      height: SEARCH_FIELD_HEIGHT,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     clearIcon: { color: isDark ? '#A8A0B3' : '#7C7487' },
     hidden: { opacity: 0 },
     pressed: { opacity: 0.75 },
@@ -46,7 +51,7 @@ export const useSearchOverlayStyles = () => {
     bar: { position: 'absolute' },
     cancelSlot: {
       position: 'absolute',
-      height: 50,
+      height: SEARCH_FIELD_HEIGHT,
       alignItems: 'center',
       justifyContent: 'center',
       paddingRight: 16,
@@ -59,15 +64,14 @@ export const useSearchOverlayStyles = () => {
     },
     content: { ...StyleSheet.absoluteFill },
     keyboardView: { flex: 1 },
-    listContent: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24, gap: 8 },
+    listContent: { flexGrow: 1, paddingBottom: 24 },
     sectionLabel: {
-      paddingHorizontal: 4,
-      paddingBottom: 4,
+      paddingHorizontal: 20,
+      paddingTop: 4,
+      paddingBottom: 6,
       fontSize: 12,
       lineHeight: 17,
       fontWeight: '700',
-      letterSpacing: 0.4,
-      textTransform: 'uppercase',
       color: isDark ? '#948BA3' : '#7C7487',
     },
     state: { flex: 1, minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 10 },

@@ -143,7 +143,7 @@ export function CountryPicker({ value, error, onChange }: CountryPickerProps) {
                         name={{ ios: 'checkmark', android: 'check', web: 'check' }}
                         size={18}
                         weight="semibold"
-                        tintColor="#6654C7"
+                        tintColor="#7B68E0"
                       />
                     ) : null}
                   </View>
@@ -164,7 +164,7 @@ const useStyles = () => {
   return StyleSheet.create({
     field: { gap: 7 },
     label: {
-      color: isDark ? '#D8D0E8' : '#34303D',
+      color: isDark ? '#F4F2F8' : '#18151F',
       fontSize: 13,
       lineHeight: 18,
       fontWeight: '600',
@@ -177,17 +177,17 @@ const useStyles = () => {
       justifyContent: 'space-between',
       borderRadius: 14,
       borderWidth: 1,
-      borderColor: isDark ? '#4A405F' : '#DED8EC',
-      backgroundColor: isDark ? '#171321' : '#FBFAFE',
+      borderColor: 'transparent',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
     },
-    triggerError: { borderColor: '#D64545' },
+    triggerError: { borderColor: '#D2364B' },
     triggerValue: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 11 },
     triggerText: { flex: 1, fontSize: 15 },
-    placeholder: { color: isDark ? '#8E849D' : '#91899E' },
-    icon: { color: isDark ? '#A9A0B6' : '#6F6879' },
+    placeholder: { color: isDark ? '#6E6979' : '#A9A4B1' },
+    icon: { color: isDark ? '#9A95A6' : '#77727F' },
     pressed: { opacity: 0.65 },
-    error: { color: isDark ? '#FF9A9A' : '#B42318', fontSize: 12, lineHeight: 17 },
-    modalSafeArea: { flex: 1, backgroundColor: isDark ? '#15111F' : '#FCFBFF' },
+    error: { color: isDark ? '#FF6B7D' : '#D2364B', fontSize: 12, lineHeight: 17 },
+    modalSafeArea: { flex: 1, backgroundColor: isDark ? '#121117' : '#FCFCFD' },
     modalHeader: {
       minHeight: 56,
       paddingHorizontal: 20,
@@ -195,10 +195,10 @@ const useStyles = () => {
       alignItems: 'center',
       justifyContent: 'space-between',
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: isDark ? '#3A3347' : '#E4DFEC',
+      borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(24,21,31,0.09)',
     },
     modalTitle: { fontSize: 16 },
-    done: { color: isDark ? '#BFB1FF' : '#5B49B8', fontSize: 14, fontWeight: '700' },
+    done: { color: isDark ? '#A898FF' : '#5F4CC9', fontSize: 14, fontWeight: '700' },
     searchWrapper: {
       height: 48,
       margin: 16,
@@ -207,9 +207,9 @@ const useStyles = () => {
       alignItems: 'center',
       gap: 10,
       borderRadius: 14,
-      backgroundColor: isDark ? '#211B2E' : '#F0ECF8',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
     },
-    searchInput: { flex: 1, height: '100%', color: isDark ? '#F5F1FF' : '#221E2B', fontSize: 15 },
+    searchInput: { flex: 1, height: '100%', color: isDark ? '#F4F2F8' : '#18151F', fontSize: 15 },
     listContent: { paddingHorizontal: 16, paddingBottom: 24 },
     countryRow: {
       minHeight: 54,
@@ -220,7 +220,7 @@ const useStyles = () => {
       borderRadius: 12,
     },
     countryRowSelected: {
-      backgroundColor: isDark ? 'rgba(102,84,199,0.18)' : 'rgba(102,84,199,0.09)',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(24,21,31,0.05)',
     },
     countryIdentity: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
     countryName: { flex: 1, fontSize: 15 },

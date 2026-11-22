@@ -17,10 +17,7 @@ export function useChatListFilters() {
   const filteredQuery = useFilteredConversations('', filter);
   const isFiltering = filter !== null;
 
-  const toggleFilter = useCallback(
-    (next: ConversationListFilter) => setFilter((current) => (current === next ? null : next)),
-    [],
-  );
+  const selectFilter = useCallback((next: ConversationListFilter | null) => setFilter(next), []);
 
   const visibleConversations = useMemo<Conversation[]>(
     () =>
@@ -35,7 +32,7 @@ export function useChatListFilters() {
     filteredQuery,
     isFiltering,
     isFilterPending: isFiltering && filteredQuery.isPending,
-    toggleFilter,
+    selectFilter,
     visibleConversations,
   };
 }

@@ -14,7 +14,7 @@
   "viewProfile": "View {{name}}’s profile",
   "search": {
     "label": "Search by username",
-    "placeholder": "Enter a display name",
+    "placeholder": "Search people",
     "clear": "Clear search",
     "close": "Close search",
     "idleTitle": "Find someone you know",

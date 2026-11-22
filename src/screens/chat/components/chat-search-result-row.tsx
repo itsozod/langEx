@@ -1,13 +1,12 @@
-import { Image } from 'expo-image';
 import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatSearchStyles } from '../styles/chat-search-styles';
 import type { ChatParticipant, Conversation } from '../types/message.types';
-import { getInitials } from '../utils/messages';
 import { splitSearchMatch } from '../utils/search-match';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 
@@ -48,40 +47,27 @@ export function ChatSearchResultRow({
       accessibilityRole="button"
       onPress={onOpenChat}
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-      <View style={styles.avatarWrap}>
-        {isGroup ? (
-          <View style={[styles.avatarPlaceholder, styles.groupAvatar]}>
-            <SymbolView
-              name={{ ios: 'person.3.fill', android: 'group', web: 'group' }}
-              size={21}
-              weight="semibold"
-              tintColor={styles.avatarIcon.color}
-            />
-          </View>
-        ) : participant?.avatarUrl ? (
-          <Image source={{ uri: participant.avatarUrl }} contentFit="cover" style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <ThemedText type="bold" style={styles.initials}>
-              {getInitials(name)}
-            </ThemedText>
-          </View>
-        )}
-        {isOnline ? <View style={styles.onlineDot} /> : null}
-        {!isGroup && participant?.country ? (
-          <View pointerEvents="none" style={styles.countryBadge}>
-            <CountryFlag country={participant.country} size={14} boxSize={19} />
-          </View>
-        ) : null}
-      </View>
+      <ContactAvatar
+        avatarUrl={participant?.avatarUrl}
+        isOnline={isOnline}
+        name={name}
+        variant={isGroup ? 'group' : isDeleted ? 'deleted' : 'person'}
+      />
 
       <View style={styles.copy}>
-        <ThemedText type="bold" numberOfLines={1} style={styles.name}>
-          {before}
-          {match ? <ThemedText style={[styles.name, styles.highlight]}>{match}</ThemedText> : null}
-          {after}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.meta}>
+        <View style={styles.nameRow}>
+          <ThemedText numberOfLines={1} style={styles.name}>
+            {before}
+            {match ? (
+              <ThemedText style={[styles.name, styles.highlight]}>{match}</ThemedText>
+            ) : null}
+            {after}
+          </ThemedText>
+          {!isGroup && participant?.country ? (
+            <CountryFlag country={participant.country} size={14} boxSize={16} />
+          ) : null}
+        </View>
+        <ThemedText numberOfLines={1} style={styles.meta}>
           {meta}
         </ThemedText>
       </View>
@@ -94,9 +80,8 @@ export function ChatSearchResultRow({
           onPress={onOpenChat}
           style={({ pressed }) => [styles.actionButton, pressed && styles.rowPressed]}>
           <SymbolView
-            name={{ ios: 'bubble.left.fill', android: 'chat', web: 'chat' }}
-            size={18}
-            weight="semibold"
+            name={{ ios: 'bubble.left', android: 'chat', web: 'chat' }}
+            size={20}
             tintColor={styles.actionIcon.color}
           />
         </Pressable>
@@ -120,8 +105,7 @@ export function ChatSearchResultRow({
                 ? { ios: 'info.circle', android: 'info', web: 'info' }
                 : { ios: 'person.crop.circle', android: 'account_circle', web: 'account_circle' }
             }
-            size={19}
-            weight="semibold"
+            size={21}
             tintColor={styles.actionIcon.color}
           />
         </Pressable>

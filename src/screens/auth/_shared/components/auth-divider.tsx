@@ -33,13 +33,12 @@ const useStyles = () => {
     line: {
       flex: 1,
       height: StyleSheet.hairlineWidth,
-      backgroundColor: isDark ? 'rgba(191, 177, 255, 0.20)' : 'rgba(91, 73, 184, 0.16)',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(24,21,31,0.10)',
     },
     label: {
-      color: isDark ? '#9F98AD' : '#777181',
-      fontSize: 12,
+      color: isDark ? '#9A95A6' : '#77727F',
+      fontSize: 13,
       lineHeight: 18,
-      fontWeight: '500',
     },
   });
 };

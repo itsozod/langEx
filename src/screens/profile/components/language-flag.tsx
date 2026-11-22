@@ -13,11 +13,11 @@ export function LanguageFlag({ language }: { language?: string | null }) {
   return (
     <View style={styles.flagCircle}>
       {countryCode ? (
-        <CountryFlag country={countryCode} size={32} boxSize={32} />
+        <CountryFlag country={countryCode} size={30} boxSize={30} />
       ) : (
         <SymbolView
           name={{ ios: 'globe', android: 'public', web: 'public' }}
-          size={22}
+          size={18}
           tintColor={styles.languageFlagFallback.color}
         />
       )}

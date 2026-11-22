@@ -1,7 +1,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/providers/theme-provider';
@@ -9,6 +10,9 @@ import {
   removeActiveAccount,
   switchToSavedAccount,
 } from '@/screens/auth/_shared/utils/session-transition';
+import { CollapsedTitleBar } from '@/shared/components/island-header/collapsed-title-bar';
+import { IslandAvatar } from '@/shared/components/island-header/island-avatar';
+import { useIslandCollapse } from '@/shared/components/island-header/use-island-collapse';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
@@ -16,7 +20,15 @@ import { useAuthStore } from '@/shared/store/auth-store';
 import { useUserStore } from '@/shared/store/user.store';
 
 import { ProfileAccounts } from './components/profile-accounts';
-import { ProfileHeaderCard } from './components/profile-header-card';
+import {
+  getProfileDisplayName,
+  PROFILE_AVATAR_SIZE,
+  ProfileAvatarBadge,
+  ProfileAvatarButton,
+  ProfileHeaderCard,
+} from './components/profile-header-card';
+import { ListRow, ListSection } from '@/shared/components/ui/grouped-list';
+
 import { ProfileDetails, ProfileLanguages } from './components/profile-sections';
 import {
   useChangeAvatarMutation,
@@ -25,9 +37,12 @@ import {
 } from './hooks';
 import { useProfileStyles } from './styles/profile-styles';
 import { useTranslation } from 'react-i18next';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 export default function ProfileScreen() {
   const styles = useProfileStyles();
+  const tokens = useUiTokens();
+  const collapse = useIslandCollapse();
   const { theme } = useAppTheme();
   const { t } = useTranslation(['profile', 'common', 'onboarding']);
   const user = useUserStore((state) => state.user);
@@ -39,7 +54,7 @@ export default function ProfileScreen() {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [switchingAccountId, setSwitchingAccountId] = useState<string | null>(null);
-  const refreshColor = theme === 'dark' ? '#B8A9FF' : '#6654C7';
+  const refreshColor = tokens.loader;
 
   if (!user) return null;
 
@@ -109,83 +124,96 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const settingsButton = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('openSettings')}
+      hitSlop={8}
+      onPress={() => router.push('/profile/settings')}
+      style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+      <SymbolView
+        name={{ ios: 'gearshape', android: 'settings', web: 'settings' }}
+        size={19}
+        weight="medium"
+        tintColor={styles.iconButtonIcon.color}
+      />
+    </Pressable>
+  );
+
   return (
     <GradientBackground>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshProfile.isPending}
-            onRefresh={() => void onRefresh()}
-            colors={[refreshColor]}
-            progressBackgroundColor={theme === 'dark' ? '#251F33' : '#FFFFFF'}
-            tintColor={refreshColor}
-          />
-        }
-        showsVerticalScrollIndicator={false}>
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-          <View style={styles.content}>
-            <View style={styles.titleRow}>
-              <View style={styles.titleCopy}>
-                <ThemedText type="title" style={styles.screenTitle}>
+      {/* Safe area wraps the scroll view (as on Chats) so the pull-to-refresh spinner appears
+          below the status bar instead of hidden under it. */}
+      <SafeAreaView style={styles.screen} edges={['top']}>
+        <Animated.ScrollView
+          contentContainerStyle={[styles.scrollContent, { minHeight: collapse.contentMinHeight }]}
+          onContentSizeChange={collapse.remeasure}
+          onLayout={collapse.remeasure}
+          onScroll={collapse.scrollHandler}
+          scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshProfile.isPending}
+              onRefresh={() => void onRefresh()}
+              colors={[refreshColor]}
+              progressBackgroundColor={theme === 'dark' ? '#1F1D27' : '#FFFFFF'}
+              tintColor={refreshColor}
+            />
+          }
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.safeArea}>
+            <View onLayout={collapse.remeasure} style={styles.content}>
+              <View style={styles.titleRow}>
+                <ThemedText accessibilityRole="header" style={styles.screenTitle}>
                   {t('title')}
                 </ThemedText>
-                <ThemedText themeColor="textSecondary" style={styles.screenSubtitle}>
-                  {t('subtitle')}
-                </ThemedText>
+                {settingsButton}
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('openSettings')}
-                hitSlop={8}
-                onPress={() => router.push('/profile/settings')}
-                style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}>
-                <SymbolView
-                  name={{ ios: 'gearshape', android: 'settings', web: 'settings' }}
-                  size={21}
-                  weight="semibold"
-                  tintColor={styles.settingsIcon.color}
-                />
-              </Pressable>
-            </View>
 
-            <ProfileHeaderCard
-              user={user}
-              avatarUri={previewUri ?? user.avatarUrl}
-              avatarPending={changeAvatar.isPending || removeAvatar.isPending}
-              avatarError={avatarError}
-              onChooseAvatar={() => void chooseAvatar()}
-              onRemovePhoto={() => void removePhoto()}
-            />
-            <ProfileAccounts
-              users={users}
-              activeAccountId={activeAccountId ?? user.id}
-              switchingAccountId={switchingAccountId}
-              onSwitchAccount={(userId) => void switchAccount(userId)}
-            />
-            <ProfileLanguages user={user} />
-            <ProfileDetails user={user} />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('logout.action')}
-              onPress={confirmLogout}
-              style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
-              <SymbolView
-                name={{
-                  ios: 'rectangle.portrait.and.arrow.right',
-                  android: 'logout',
-                  web: 'logout',
-                }}
-                size={19}
-                weight="semibold"
-                tintColor={styles.logoutText.color}
+              <ProfileHeaderCard collapse={collapse} user={user} avatarError={avatarError} />
+              <ProfileAccounts
+                users={users}
+                activeAccountId={activeAccountId ?? user.id}
+                switchingAccountId={switchingAccountId}
+                onSwitchAccount={(userId) => void switchAccount(userId)}
               />
-              <ThemedText style={styles.logoutText}>{t('logout.action')}</ThemedText>
-            </Pressable>
+              <ProfileLanguages user={user} />
+              <ProfileDetails user={user} />
+              <ListSection>
+                <ListRow
+                  destructive
+                  icon={{
+                    ios: 'rectangle.portrait.and.arrow.right',
+                    android: 'logout',
+                    web: 'logout',
+                  }}
+                  onPress={confirmLogout}
+                  title={t('logout.action')}
+                />
+              </ListSection>
+            </View>
           </View>
-        </SafeAreaView>
-      </ScrollView>
+        </Animated.ScrollView>
+      </SafeAreaView>
+
+      <CollapsedTitleBar
+        collapse={collapse}
+        right={settingsButton}
+        title={getProfileDisplayName(user)}
+      />
+      <IslandAvatar
+        badge={<ProfileAvatarBadge />}
+        blurImageUri={previewUri ?? user.avatarUrl}
+        collapse={collapse}
+        size={PROFILE_AVATAR_SIZE}>
+        <ProfileAvatarButton
+          avatarPending={changeAvatar.isPending || removeAvatar.isPending}
+          avatarUri={previewUri ?? user.avatarUrl}
+          onChooseAvatar={() => void chooseAvatar()}
+          onRemovePhoto={() => void removePhoto()}
+          user={user}
+        />
+      </IslandAvatar>
     </GradientBackground>
   );
 }

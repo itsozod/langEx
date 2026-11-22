@@ -4,6 +4,7 @@ import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatThreadStyles } from '../styles/chat-thread-styles';
 import { useTranslation } from 'react-i18next';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 type ChatMessageLoadStatusProps = {
   failed: boolean;
@@ -13,6 +14,7 @@ type ChatMessageLoadStatusProps = {
 
 export function ChatMessageLoadStatus({ failed, loading, onRetry }: ChatMessageLoadStatusProps) {
   const styles = useChatThreadStyles();
+  const tokens = useUiTokens();
   const { t } = useTranslation('chat');
 
   if (failed) {
@@ -45,7 +47,7 @@ export function ChatMessageLoadStatus({ failed, loading, onRetry }: ChatMessageL
         accessibilityRole="progressbar"
         accessible
         style={styles.messageLoadStatus}>
-        <ActivityIndicator color="#7460D3" size="small" />
+        <ActivityIndicator color={tokens.loader} size="small" />
         <ThemedText style={styles.messageLoadStatusText}>{t('loadStatus.loading')}</ThemedText>
       </View>
     </View>

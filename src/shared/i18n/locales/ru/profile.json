@@ -15,12 +15,15 @@
   "header": {
     "changePhoto": "Изменить фото профиля",
     "removePhoto": "Удалить фото",
-    "editProfile": "Редактировать профиль"
+    "editProfile": "Редактировать профиль",
+    "choosePhoto": "Выбрать новое фото"
   },
   "accounts": {
     "title": "Аккаунты",
     "fallbackName": "Аккаунт LangEx",
-    "add": "Добавить аккаунт"
+    "add": "Добавить аккаунт",
+    "activeLabel": "{{name}}, активный аккаунт",
+    "switchTo": "Переключиться на {{name}}"
   },
   "sections": {
     "languages": "Языки",
@@ -56,7 +59,7 @@
     "yourProfile": "Ваш профиль",
     "partnerProfile": "Профиль партнёра",
     "fallbackName": "Языковой партнёр",
-    "sharedWithYou": "Общие с вами",
+    "sharedWithYou": "Выделены интересы, которые есть и у вас.",
     "about": "О себе",
     "sendMessage": "Написать сообщение",
     "openConversationFailed": "Не удалось открыть переписку."
@@ -69,7 +72,8 @@
     "accountSubtitle": "Безопасность и удаление аккаунта",
     "themeHint": "Открывает выбор темы",
     "themeSubtitle": "Системная, светлая или тёмная",
-    "languageHint": "Открывает выбор языка приложения"
+    "languageHint": "Открывает выбор языка приложения",
+    "version": "LangEx {{version}}"
   },
   "account": {
     "title": "Аккаунт",

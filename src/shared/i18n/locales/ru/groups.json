@@ -45,6 +45,26 @@
     "members": "Участники",
     "ownerNotice": "Перед выходом из группы передайте права владельца другому участнику."
   },
+  "edit": {
+    "accessibilityLabel": "Изменить название группы",
+    "title": "Изменить название группы",
+    "message": "Выберите название, которое узнают все участники.",
+    "nameLabel": "Название группы",
+    "save": "Сохранить"
+  },
+  "feedback": {
+    "created": "Группа создана",
+    "renamed": "Название группы обновлено",
+    "peopleAdded_one": "Добавлен 1 участник",
+    "peopleAdded_few": "Добавлено {{count}} участника",
+    "peopleAdded_many": "Добавлено {{count}} участников",
+    "peopleAdded_other": "Добавлено {{count}} участника",
+    "adminAdded": "{{name}} теперь администратор",
+    "adminRemoved": "{{name}} больше не администратор",
+    "ownerTransferred": "Права владельца переданы: {{name}}",
+    "memberRemoved": "{{name}} удалён(а) из группы",
+    "groupRemoved": "Группа удалена"
+  },
   "roles": {
     "you": "Вы",
     "youOwner": "Вы · Владелец",
@@ -59,7 +79,8 @@
     "select": "Добавить: {{name}}",
     "deselect": "Убрать: {{name}}",
     "view": "Открыть: {{name}}",
-    "fromChats": "Из ваших чатов"
+    "fromChats": "Из ваших чатов",
+    "manage": "Управлять: {{name}}"
   },
   "actions": {
     "viewProfile": "Открыть профиль",

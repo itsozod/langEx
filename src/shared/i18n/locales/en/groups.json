@@ -43,6 +43,24 @@
     "members": "Members",
     "ownerNotice": "Transfer ownership to another member before leaving this group."
   },
+  "edit": {
+    "accessibilityLabel": "Edit group name",
+    "title": "Edit group name",
+    "message": "Choose a name everyone in the group will recognize.",
+    "nameLabel": "Group name",
+    "save": "Save"
+  },
+  "feedback": {
+    "created": "Group created",
+    "renamed": "Group name updated",
+    "peopleAdded_one": "1 person added",
+    "peopleAdded_other": "{{count}} people added",
+    "adminAdded": "{{name}} is now an admin",
+    "adminRemoved": "{{name}} is no longer an admin",
+    "ownerTransferred": "Ownership transferred to {{name}}",
+    "memberRemoved": "{{name}} was removed from the group",
+    "groupRemoved": "Group removed"
+  },
   "roles": {
     "you": "You",
     "youOwner": "You · Owner",
@@ -57,7 +75,8 @@
     "select": "Add {{name}}",
     "deselect": "Remove {{name}}",
     "view": "View {{name}}",
-    "fromChats": "From your chats"
+    "fromChats": "From your chats",
+    "manage": "Manage {{name}}"
   },
   "actions": {
     "viewProfile": "View profile",

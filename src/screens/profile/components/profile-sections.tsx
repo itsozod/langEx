@@ -1,66 +1,55 @@
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import type { AuthUser } from '@/screens/auth/types';
+import { getLanguageLabel } from '@/screens/onboarding/data';
+import { ListRow, ListSection } from '@/shared/components/ui/grouped-list';
 import { getInterestLabel, InterestIcon } from '@/shared/components/ui/interest-icon';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { getLevelLabel } from '@/shared/constants/language-levels';
 
 import { useProfileStyles } from '../styles/profile-styles';
 import { LanguageFlag } from './language-flag';
-import { useTranslation } from 'react-i18next';
-import { getLanguageLabel } from '@/screens/onboarding/data';
-import { getLevelLabel } from '@/shared/constants/language-levels';
 
-export function ProfileLanguages({ user }: { user: AuthUser }) {
+/** Separator inset for rows that start with a 30pt flag (16 padding + flag + 12 gap). */
+const FLAG_ROW_INSET = 58;
+
+type LanguageUser = Pick<AuthUser, 'nativeLanguage' | 'learningLanguage' | 'proficiencyLevel'>;
+
+export function ProfileLanguages({ user }: { user: LanguageUser }) {
   const styles = useProfileStyles();
   const { t } = useTranslation('profile');
+
   return (
-    <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
-      <ThemedText type="bold" style={styles.sectionTitle}>
-        {t('sections.languages')}
-      </ThemedText>
-      <View style={styles.languageRow}>
-        <LanguageFlag language={user.nativeLanguage} />
-        <View style={styles.languageCopy}>
-          <ThemedText themeColor="textSecondary" style={styles.eyebrow}>
-            {t('sections.nativeLanguage')}
-          </ThemedText>
-          <ThemedText type="bold" style={styles.languageName}>
-            {getLanguageLabel(user.nativeLanguage) || t('sections.notAdded')}
-          </ThemedText>
-        </View>
-      </View>
-      <View style={styles.divider} />
-      <View style={styles.languageRow}>
-        <LanguageFlag language={user?.learningLanguage} />
-        <View style={styles.languageCopy}>
-          <ThemedText themeColor="textSecondary" style={styles.eyebrow}>
-            {t('sections.learning')}
-          </ThemedText>
-          <ThemedText type="bold" style={styles.languageName}>
-            {getLanguageLabel(user.learningLanguage) || t('sections.notAdded')}
-          </ThemedText>
-        </View>
-        {user.proficiencyLevel ? (
-          <View style={styles.levelPill}>
+    <ListSection title={t('sections.languages')} inset={FLAG_ROW_INSET}>
+      <ListRow
+        leading={<LanguageFlag language={user.nativeLanguage} />}
+        subtitle={t('sections.nativeLanguage')}
+        title={getLanguageLabel(user.nativeLanguage) || t('sections.notAdded')}
+      />
+      <ListRow
+        leading={<LanguageFlag language={user.learningLanguage} />}
+        subtitle={t('sections.learning')}
+        title={getLanguageLabel(user.learningLanguage) || t('sections.notAdded')}
+        trailing={
+          user.proficiencyLevel ? (
             <ThemedText style={styles.levelText}>{getLevelLabel(user.proficiencyLevel)}</ThemedText>
-          </View>
-        ) : null}
-      </View>
-    </View>
+          ) : undefined
+        }
+      />
+    </ListSection>
   );
 }
 
 export function ProfileDetails({ user }: { user: AuthUser }) {
   const styles = useProfileStyles();
   const { t } = useTranslation('profile');
+
   return (
     <>
       {user.interests?.length ? (
-        <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
-          <ThemedText type="bold" style={styles.sectionTitle}>
-            {t('sections.interests')}
-          </ThemedText>
-          <View style={styles.interests}>
+        <ListSection title={t('sections.interests')}>
+          <View style={[styles.sectionBody, styles.interests]}>
             {user.interests.map((interest) => (
               <View key={interest} style={styles.interestPill}>
                 <InterestIcon
@@ -72,17 +61,14 @@ export function ProfileDetails({ user }: { user: AuthUser }) {
               </View>
             ))}
           </View>
-        </View>
+        </ListSection>
       ) : null}
       {user.bio ? (
-        <View style={[styles.sectionCard, styles.elevatedSectionCard]}>
-          <ThemedText type="bold" style={styles.sectionTitle}>
-            {t('sections.aboutMe')}
-          </ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.bio}>
-            {user.bio}
-          </ThemedText>
-        </View>
+        <ListSection title={t('sections.aboutMe')}>
+          <View style={styles.sectionBody}>
+            <ThemedText style={styles.bio}>{user.bio}</ThemedText>
+          </View>
+        </ListSection>
       ) : null}
     </>
   );

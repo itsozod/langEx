@@ -1,14 +1,13 @@
-import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
+import { ContactAvatar } from '@/shared/components/ui/contact-avatar';
 import { CountryFlag } from '@/screens/onboarding/components/country-flag';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
 
 import { useChatHeaderStyles } from '../styles/chat-header-styles';
 import type { ChatParticipant, UserPresence } from '../types/message.types';
-import { getInitials } from '../utils/messages';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/shared/i18n';
 
@@ -88,39 +87,21 @@ export function ChatHeader({
         hitSlop={4}
         onPress={onOpenProfile}
         style={({ pressed }) => [styles.headerProfileButton, pressed && styles.pressed]}>
-        <View style={styles.headerAvatarWrap}>
-          {isGroup ? (
-            <View style={styles.groupAvatarPlaceholder}>
-              <SymbolView
-                name={{ ios: 'person.3.fill', android: 'group', web: 'group' }}
-                size={21}
-                weight="semibold"
-                tintColor={styles.groupAvatarIcon.color}
-              />
-            </View>
-          ) : participant?.avatarUrl ? (
-            <Image
-              source={{ uri: participant.avatarUrl }}
-              contentFit="cover"
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <ThemedText type="bold" style={styles.initials}>
-                {getInitials(name)}
-              </ThemedText>
-            </View>
-          )}
-          {!isGroup && participant?.country ? (
-            <View style={styles.headerCountryBadge}>
-              <CountryFlag country={participant.country} size={11} boxSize={16} />
-            </View>
-          ) : null}
-        </View>
+        <ContactAvatar
+          avatarUrl={participant?.avatarUrl}
+          name={name}
+          size={40}
+          variant={isGroup ? 'group' : participant?.isDeleted ? 'deleted' : 'person'}
+        />
         <View style={styles.headerCopy}>
-          <ThemedText type="bold" numberOfLines={1} style={styles.headerName}>
-            {name}
-          </ThemedText>
+          <View style={styles.headerNameRow}>
+            <ThemedText type="bold" numberOfLines={1} style={styles.headerName}>
+              {name}
+            </ThemedText>
+            {!isGroup && participant?.country ? (
+              <CountryFlag country={participant.country} size={13} boxSize={15} />
+            ) : null}
+          </View>
           <View
             accessibilityLabel={presenceLabel}
             accessibilityRole="text"

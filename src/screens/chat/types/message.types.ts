@@ -178,10 +178,6 @@ export type PinnedMessagesResponse = {
   pinnedMessages: Message[];
 };
 
-export type DirectConversationResponse = {
-  conversationId: string | null;
-};
-
 export type ConversationReadResponse = {
   conversationId: string;
   userId: string;

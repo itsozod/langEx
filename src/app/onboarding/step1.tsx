@@ -182,9 +182,9 @@ const useStyles = () => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 46,
-      backgroundColor: isDark ? '#29213A' : '#EEEAF8',
+      backgroundColor: isDark ? '#26242E' : '#F1F0F4',
       borderWidth: 2,
-      borderColor: isDark ? '#4A405F' : '#DDD5F1',
+      borderColor: 'transparent',
     },
     avatarImage: {
       width: '100%',
@@ -192,7 +192,7 @@ const useStyles = () => {
       borderRadius: 46,
     },
     avatarIcon: {
-      color: isDark ? '#8F82BE' : '#A093D0',
+      color: isDark ? '#6E6979' : '#A9A4B1',
     },
     editBadge: {
       position: 'absolute',
@@ -203,9 +203,9 @@ const useStyles = () => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 16,
-      backgroundColor: '#6654C7',
+      backgroundColor: '#6B57D6',
       borderWidth: 2,
-      borderColor: isDark ? '#1F192F' : '#FFFFFF',
+      borderColor: isDark ? '#17141F' : '#FAF9FC',
     },
     avatarCopy: {
       flex: 1,
@@ -220,7 +220,7 @@ const useStyles = () => {
     },
     error: {
       marginTop: -8,
-      color: isDark ? '#FF9A9A' : '#B42318',
+      color: isDark ? '#FF6B7D' : '#D2364B',
       fontSize: 12,
       lineHeight: 17,
     },

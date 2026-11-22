@@ -1,4 +1,4 @@
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { manipulateAsync, SaveFormat, type Action } from 'expo-image-manipulator';
 import type { ImagePickerAsset } from 'expo-image-picker';
 
 const MAX_IMAGE_EDGE = 2048;
@@ -6,16 +6,17 @@ const OPTIMIZATION_CONCURRENCY = 2;
 
 async function optimizeImage(asset: ImagePickerAsset): Promise<ImagePickerAsset> {
   try {
-    const context = ImageManipulator.manipulate(asset.uri);
+    const actions: Action[] = [];
     if (Math.max(asset.width, asset.height) > MAX_IMAGE_EDGE) {
-      context.resize(
-        asset.width >= asset.height
-          ? { width: MAX_IMAGE_EDGE, height: null }
-          : { width: null, height: MAX_IMAGE_EDGE },
-      );
+      actions.push({
+        resize:
+          asset.width >= asset.height ? { width: MAX_IMAGE_EDGE } : { height: MAX_IMAGE_EDGE },
+      });
     }
-    const rendered = await context.renderAsync();
-    const result = await rendered.saveAsync({ compress: 0.82, format: SaveFormat.JPEG });
+    const result = await manipulateAsync(asset.uri, actions, {
+      compress: 0.82,
+      format: SaveFormat.JPEG,
+    });
     return {
       ...asset,
       ...result,

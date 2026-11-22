@@ -8,14 +8,18 @@ import type { ChatParticipant } from '@/screens/chat/types/message.types';
 import GradientBackground from '@/shared/components/ui/gradient-background';
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 import { ThemedText } from '@/shared/components/ui/themed-text';
+import { useActionToast } from '@/shared/components/ui/action-toast-provider';
 import { useUserStore } from '@/shared/store/user.store';
 
 import { GroupAvatar } from './components/group-avatar';
 import { GroupListState } from './components/group-list-state';
 import { GroupMemberActionsSheet } from './components/group-member-actions-sheet';
+import { GroupNameEditSheet } from './components/group-name-edit-sheet';
+import { GroupNameHeading } from './components/group-name-heading';
 import { GroupPersonRow } from './components/group-person-row';
 import { GroupScreenHeader } from './components/group-screen-header';
 import { useGroupManagementActions } from './hooks/use-group-management-actions';
+import { useRenameGroup } from './hooks';
 import { useGroupManagementStyles } from './styles/group-management-styles';
 import { useGroupStyles } from './styles/group-styles';
 import type { GroupRole } from './types';
@@ -26,12 +30,15 @@ export default function GroupInfoScreen() {
   const conversationId = firstParam(params.id);
   const styles = useGroupStyles();
   const { t } = useTranslation('groups');
+  const { showToast } = useActionToast();
   const { styles: managementStyles } = useGroupManagementStyles();
   const currentUserId = useUserStore((state) => state.user?.id);
   const query = useConversation(conversationId);
+  const renameGroup = useRenameGroup();
   const conversation = query.data?.pages[0]?.conversation;
   const adminIds = useMemo(() => conversation?.adminIds ?? [], [conversation?.adminIds]);
   const [selectedMember, setSelectedMember] = useState<ChatParticipant | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
   const participants = useMemo(
     () =>
       [...(conversation?.participants ?? [])].sort((first, second) => {
@@ -47,6 +54,10 @@ export default function GroupInfoScreen() {
     participants.length < 50 &&
     !conversation?.isReadOnly,
   );
+  const canRename = Boolean(
+    (viewerRole === 'owner' || viewerRole === 'admin') && !conversation?.isReadOnly,
+  );
+  const groupName = conversation?.name?.trim() || t('fallbackName');
   const closeMemberActions = useCallback(() => setSelectedMember(null), []);
   const management = useGroupManagementActions({
     conversationId,
@@ -127,10 +138,15 @@ export default function GroupInfoScreen() {
             conversation ? (
               <View>
                 <View style={styles.intro}>
-                  <GroupAvatar size="large" />
-                  <ThemedText type="bold" style={styles.introTitle}>
-                    {conversation.name?.trim() || t('fallbackName')}
-                  </ThemedText>
+                  <GroupAvatar name={groupName} size="large" />
+                  <GroupNameHeading
+                    canEdit={canRename}
+                    name={groupName}
+                    onEdit={() => {
+                      renameGroup.reset();
+                      setIsRenaming(true);
+                    }}
+                  />
                   <ThemedText themeColor="textSecondary" style={styles.memberSummary}>
                     {t('info.memberCount', { count: participants.length })}
                   </ThemedText>
@@ -147,13 +163,11 @@ export default function GroupInfoScreen() {
                     style={({ pressed }) => [styles.addPeopleButton, pressed && styles.pressed]}>
                     <SymbolView
                       name={{ ios: 'person.badge.plus', android: 'person_add', web: 'person_add' }}
-                      size={21}
+                      size={17}
                       weight="semibold"
-                      tintColor="#FFFFFF"
+                      tintColor={styles.addPeopleIcon.color}
                     />
-                    <ThemedText type="bold" style={styles.addPeopleText}>
-                      {t('addPeople')}
-                    </ThemedText>
+                    <ThemedText style={styles.addPeopleText}>{t('addPeople')}</ThemedText>
                   </Pressable>
                 ) : null}
                 {query.isError ? (
@@ -243,6 +257,22 @@ export default function GroupInfoScreen() {
           role={selectedMemberRole}
           viewerRole={viewerRole}
         />
+        {isRenaming ? (
+          <GroupNameEditSheet
+            errorMessage={
+              renameGroup.error instanceof Error ? renameGroup.error.message : undefined
+            }
+            isPending={renameGroup.isPending}
+            name={groupName}
+            onDismiss={() => setIsRenaming(false)}
+            onSave={async (name) => {
+              if (!conversationId) return;
+              await renameGroup.mutateAsync({ conversationId, name });
+              showToast({ message: t('feedback.renamed') });
+            }}
+            onStartEditing={renameGroup.reset}
+          />
+        ) : null}
       </SafeAreaView>
     </GradientBackground>
   );

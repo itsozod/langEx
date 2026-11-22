@@ -29,6 +29,15 @@ export type AddGroupParticipantsResponse = {
   systemMessages: Message[];
 };
 
+export type RenameGroupInput = {
+  conversationId: string;
+  name: string;
+};
+
+export type RenameGroupResponse = {
+  conversation: Conversation;
+};
+
 export type GroupManagementInput =
   | { type: 'promote-admin'; conversationId: string; participantId: string }
   | { type: 'revoke-admin'; conversationId: string; participantId: string }

@@ -45,7 +45,7 @@ const useStyles = () => {
 
   return StyleSheet.create({
     safeArea: {
-      backgroundColor: theme === 'dark' ? '#2B2440' : '#F2EFFF',
+      backgroundColor: theme === 'dark' ? '#1B1923' : '#F6F5F9',
     },
     row: {
       flexDirection: 'row',
@@ -60,7 +60,7 @@ const useStyles = () => {
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: 20,
-      backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.72)',
+      backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
     },
     sidePlaceholder: {
       width: 40,

@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, Pressable, TextInput, View } from 'react-n
 import { SymbolView } from '@/shared/components/ui/symbol-view';
 
 import { SEARCH_ACCENT_COLOR, useSearchOverlayStyles } from './search-overlay-styles';
+import { useUiTokens } from '@/shared/hooks/use-ui-tokens';
 
 type SearchFieldProps = {
   accessibilityLabel: string;
@@ -30,6 +31,7 @@ export function SearchField({
   value,
 }: SearchFieldProps) {
   const styles = useSearchOverlayStyles();
+  const tokens = useUiTokens();
 
   return (
     <View style={styles.field}>
@@ -59,7 +61,7 @@ export function SearchField({
       />
       <View style={styles.trailingSlot}>
         {isPending && value ? (
-          <ActivityIndicator size="small" color={styles.fieldIcon.color} />
+          <ActivityIndicator size="small" color={tokens.loader} />
         ) : value ? (
           <Pressable
             accessibilityLabel={clearLabel}

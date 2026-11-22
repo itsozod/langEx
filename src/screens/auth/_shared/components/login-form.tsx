@@ -164,7 +164,7 @@ const useStyles = () => {
       marginTop: -4,
     },
     forgotPassword: {
-      color: isDark ? '#BFB1FF' : '#5B49B8',
+      color: isDark ? '#A898FF' : '#5F4CC9',
       fontSize: 13,
       fontWeight: '600',
       paddingVertical: 4,
@@ -173,12 +173,12 @@ const useStyles = () => {
       paddingHorizontal: 12,
       paddingVertical: 10,
       borderRadius: 12,
-      backgroundColor: isDark ? 'rgba(255, 112, 112, 0.10)' : '#FFF1F0',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
       borderWidth: 1,
-      borderColor: isDark ? 'rgba(255, 140, 140, 0.22)' : '#FFD0CC',
+      borderColor: 'transparent',
     },
     serverErrorText: {
-      color: isDark ? '#FFAAAA' : '#9F2018',
+      color: isDark ? '#FF6B7D' : '#D2364B',
       fontSize: 12,
       lineHeight: 18,
     },
@@ -192,7 +192,7 @@ const useStyles = () => {
       fontSize: 13,
     },
     footerLink: {
-      color: isDark ? '#BFB1FF' : '#5B49B8',
+      color: isDark ? '#A898FF' : '#5F4CC9',
       fontSize: 13,
       fontWeight: '700',
     },

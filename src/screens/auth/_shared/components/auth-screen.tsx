@@ -99,7 +99,7 @@ function useModalHeaderStyles() {
       left: 0,
       right: 0,
       paddingTop: topInset,
-      backgroundColor: theme === 'dark' ? '#2B2440' : '#F2EFFF',
+      backgroundColor: theme === 'dark' ? '#1B1923' : '#F6F5F9',
     },
     row: {
       minHeight: 56,
@@ -116,7 +116,7 @@ function useModalHeaderStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 20,
-      backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.72)',
+      backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(24,21,31,0.06)',
     },
     pressed: { opacity: 0.6 },
   });
@@ -152,13 +152,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
+    fontFamily: 'PlusJakartaSansBold',
     fontSize: 32,
-    lineHeight: 40,
+    lineHeight: 38,
     letterSpacing: -0.8,
   },
   subtitle: {
     maxWidth: 380,
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 23,
   },
 });

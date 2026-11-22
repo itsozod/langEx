@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
 import type { ChatParticipant } from '../types/message.types';
+import { useActionToast } from '@/shared/components/ui/action-toast-provider';
 import {
   getActiveDeleteConversationVariables,
   useDeleteConversation,
@@ -26,6 +27,7 @@ export function useChatHeaderActions({
   setSocketError,
 }: UseChatHeaderActionsOptions) {
   const deleteConversation = useDeleteConversation();
+  const { showToast } = useActionToast();
   const participantId = participant?.id;
   const participantName = participant?.displayName;
 
@@ -75,9 +77,11 @@ export function useChatHeaderActions({
 
             deleteConversation.mutate(variables, {
               onSuccess: () => {
-                if (process.env.EXPO_OS === 'ios') {
-                  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                }
+                showToast({
+                  message: isGroup
+                    ? i18n.t('groups:feedback.groupRemoved')
+                    : i18n.t('chat:deleteConversation.removed'),
+                });
                 router.replace('/(tabs)/chats');
               },
               onError: (error) => {
@@ -100,6 +104,7 @@ export function useChatHeaderActions({
     isGroup,
     participantName,
     setSocketError,
+    showToast,
   ]);
 
   return {

@@ -1,5 +1,6 @@
 import * as Application from 'expo-application';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/shared/components/ui/themed-text';
@@ -13,13 +14,12 @@ const applicationVersion =
 const buildVersion = !isExpoGo ? Application.nativeBuildVersion : null;
 
 export function AppVersion() {
+  const { t } = useTranslation('profile');
+  const version = buildVersion ? `${applicationVersion} (${buildVersion})` : applicationVersion;
+
   return (
-    <ThemedText
-      accessibilityLabel={`LangEx version ${applicationVersion}${buildVersion ? `, build ${buildVersion}` : ''}`}
-      themeColor="textSecondary"
-      style={styles.text}>
-      Version {applicationVersion}
-      {buildVersion ? ` (${buildVersion})` : ''}
+    <ThemedText themeColor="textSecondary" style={styles.text}>
+      {t('settings.version', { version })}
     </ThemedText>
   );
 }

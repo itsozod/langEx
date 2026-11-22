@@ -4,7 +4,7 @@ import { useAppTheme, type AppTheme } from '@/providers/theme-provider';
 
 const createChatThreadStyles = (theme: AppTheme) => {
   const isDark = theme === 'dark';
-  const border = isDark ? 'rgba(190,176,255,0.13)' : 'rgba(97,76,190,0.10)';
+  const border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(24,21,31,0.08)';
 
   return StyleSheet.create({
     typingIndicator: {
@@ -19,13 +19,13 @@ const createChatThreadStyles = (theme: AppTheme) => {
       borderRadius: 15,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
-      backgroundColor: isDark ? '#302A3D' : '#FFFFFF',
+      backgroundColor: isDark ? '#26242E' : '#FFFFFF',
     },
     typingDot: {
       width: 6,
       height: 6,
       borderRadius: 3,
-      backgroundColor: isDark ? '#BEB0FF' : '#6654C7',
+      backgroundColor: isDark ? '#BEB0FF' : '#6B57D6',
     },
     jumpToLatest: { position: 'absolute', right: 14, bottom: 10 },
     messageLoadStatusLayer: {
@@ -47,17 +47,13 @@ const createChatThreadStyles = (theme: AppTheme) => {
       paddingVertical: 10,
       borderRadius: 21,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? 'rgba(190,176,255,0.22)' : 'rgba(97,76,190,0.14)',
-      backgroundColor: isDark ? '#302A3D' : '#FFFFFF',
-      shadowColor: '#000000',
-      shadowOpacity: isDark ? 0.3 : 0.12,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 5 },
+      borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(24,21,31,0.10)',
+      backgroundColor: isDark ? '#26242E' : '#FFFFFF',
       elevation: 5,
     },
     messageLoadStatusPressed: { opacity: 0.72 },
     messageLoadStatusText: {
-      color: isDark ? '#E9E3F1' : '#403949',
+      color: isDark ? '#E8E7EC' : '#3A3842',
       fontSize: 12,
       lineHeight: 17,
     },
@@ -68,7 +64,7 @@ const createChatThreadStyles = (theme: AppTheme) => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 24,
-      backgroundColor: '#6654C7',
+      backgroundColor: '#6B57D6',
       shadowColor: '#2E2168',
       shadowOpacity: 0.28,
       shadowRadius: 8,
@@ -84,7 +80,7 @@ const createChatThreadStyles = (theme: AppTheme) => {
       paddingHorizontal: 5,
       borderRadius: 10,
       borderWidth: 2,
-      borderColor: isDark ? '#181420' : '#F8F6FC',
+      borderColor: isDark ? '#121117' : '#F6F5F9',
       backgroundColor: '#E95D8F',
       color: '#FFFFFF',
       fontSize: 10,
@@ -111,7 +107,7 @@ const createChatThreadStyles = (theme: AppTheme) => {
       paddingVertical: 12,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: border,
-      backgroundColor: isDark ? '#211C2A' : '#FFFFFF',
+      backgroundColor: isDark ? '#18161E' : '#FFFFFF',
     },
     deletedUserTitle: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
     deletedUserMessage: { marginTop: 3, fontSize: 11, lineHeight: 16, textAlign: 'center' },
